@@ -1,0 +1,201 @@
+// SD4A Portal — Database Schema
+// Módulo 2 se implementará aquí con el modelo completo
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── ENUMS ────────────────────────────────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  ENGINEER
+  CLIENT
+}
+
+enum ProjectStatus {
+  PENDING_ADVANCE      // Pendiente anticipo
+  IN_PROGRESS          // En ejecución
+  IN_REVIEW            // En revisión
+  FINISHED             // Finalizado
+  PENDING_FINAL        // Pendiente pago final
+  PAID                 // Pagado
+  DELIVERED            // Entregado
+}
+
+enum PaymentType {
+  ADVANCE
+  PARTIAL
+  FINAL
+}
+
+enum PaymentStatus {
+  PENDING
+  CONFIRMED
+  FAILED
+}
+
+enum FileCategory {
+  MEMORIAS
+  MODELOS_REVIT
+  DWG
+  PLANOS_PDF
+  INFORMES
+  ENTREGABLES
+  RESPALDOS
+}
+
+// ─── MODELS ──────────────────────────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String
+  passwordHash  String
+  role          Role      @default(CLIENT)
+  phone         String?
+  company       String?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  clientProjects  Project[]       @relation("ClientProjects")
+  engineerProjects ProjectMember[]
+  uploadedFiles   ProjectFile[]
+  activityLogs    ActivityLog[]
+  payments        Payment[]
+
+  @@map("users")
+}
+
+model Project {
+  id              String        @id @default(cuid())
+  code            String        @unique  // SD4A-2026-001
+  name            String
+  description     String?
+  status          ProjectStatus @default(PENDING_ADVANCE)
+  totalValue      Decimal       @db.Decimal(18, 2)
+  advancePercent  Int           // % requerido de anticipo (ej: 40)
+  progress        Int           @default(0) // 0-100
+  startDate       DateTime?
+  estimatedDate   DateTime?
+  deliveredAt     DateTime?
+  driveFolderId   String?       // ID carpeta raíz del proyecto en Drive
+
+  clientId        String
+  client          User          @relation("ClientProjects", fields: [clientId], references: [id])
+
+  members         ProjectMember[]
+  files           ProjectFile[]
+  payments        Payment[]
+  activityLogs    ActivityLog[]
+  deliverables    Deliverable[]
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@map("projects")
+}
+
+model ProjectMember {
+  id        String  @id @default(cuid())
+  projectId String
+  userId    String
+  project   Project @relation(fields: [projectId], references: [id])
+  user      User    @relation(fields: [userId], references: [id])
+
+  @@unique([projectId, userId])
+  @@map("project_members")
+}
+
+model ProjectFile {
+  id            String       @id @default(cuid())
+  projectId     String
+  uploadedById  String
+  name          String
+  originalName  String
+  category      FileCategory
+  version       String       @default("V1")  // V1, V2, Final...
+  mimeType      String
+  sizeBytes     BigInt
+  driveFileId   String       @unique   // ID en Google Drive
+  driveFolderId String
+  isDeliverable Boolean      @default(false)
+  isVisible     Boolean      @default(true)  // el cliente puede ver metadata
+  createdAt     DateTime     @default(now())
+
+  project       Project      @relation(fields: [projectId], references: [id])
+  uploadedBy    User         @relation(fields: [uploadedById], references: [id])
+  versions      FileVersion[]
+
+  @@map("project_files")
+}
+
+model FileVersion {
+  id           String      @id @default(cuid())
+  fileId       String
+  version      String
+  driveFileId  String      @unique
+  sizeBytes    BigInt
+  uploadedById String
+  note         String?
+  createdAt    DateTime    @default(now())
+
+  file         ProjectFile @relation(fields: [fileId], references: [id])
+
+  @@map("file_versions")
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+  projectId     String
+  userId        String
+  type          PaymentType
+  status        PaymentStatus @default(PENDING)
+  amount        Decimal       @db.Decimal(18, 2)
+  wompiRef      String?       @unique  // referencia Wompi
+  wompiId       String?
+  confirmedAt   DateTime?
+  notes         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  project       Project       @relation(fields: [projectId], references: [id])
+  user          User          @relation(fields: [userId], references: [id])
+
+  @@map("payments")
+}
+
+model Deliverable {
+  id          String   @id @default(cuid())
+  projectId   String
+  name        String
+  description String?
+  driveFileId String   @unique
+  deliveredAt DateTime @default(now())
+  acta        String?  // contenido del acta de entrega
+
+  project     Project  @relation(fields: [projectId], references: [id])
+
+  @@map("deliverables")
+}
+
+model ActivityLog {
+  id          String   @id @default(cuid())
+  projectId   String?
+  userId      String?
+  action      String
+  description String
+  metadata    Json?    // datos adicionales del evento
+  createdAt   DateTime @default(now())
+
+  project     Project? @relation(fields: [projectId], references: [id])
+  user        User?    @relation(fields: [userId], references: [id])
+
+  @@map("activity_logs")
+}

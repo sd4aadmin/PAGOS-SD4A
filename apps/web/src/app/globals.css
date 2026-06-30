@@ -1,0 +1,82 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background:   184 35% 97%;
+    --foreground:   184 70% 10%;
+    --card:         0 0% 100%;
+    --card-foreground: 184 70% 10%;
+    --primary:      184 86% 27%;
+    --primary-foreground: 0 0% 100%;
+    --secondary:    184 35% 56%;
+    --secondary-foreground: 0 0% 100%;
+    --muted:        184 20% 93%;
+    --muted-foreground: 184 20% 45%;
+    --accent:       184 35% 90%;
+    --accent-foreground: 184 70% 15%;
+    --destructive:  0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border:       184 20% 88%;
+    --input:        184 20% 88%;
+    --ring:         184 86% 27%;
+    --radius:       0.5rem;
+    --sidebar-bg:          184 90% 14%;
+    --sidebar-hover:       184 80% 20%;
+    --sidebar-active:      184 86% 27%;
+    --sidebar-border:      184 70% 20%;
+    --sidebar-foreground:  184 30% 85%;
+    --sidebar-muted:       184 40% 55%;
+  }
+
+  .dark {
+    --background:   222 47% 11%;
+    --foreground:   184 20% 90%;
+    --card:         222 40% 15%;
+    --card-foreground: 184 20% 90%;
+    --primary:      184 50% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary:    184 30% 40%;
+    --secondary-foreground: 0 0% 100%;
+    --muted:        222 35% 20%;
+    --muted-foreground: 184 15% 55%;
+    --accent:       222 35% 22%;
+    --accent-foreground: 184 20% 85%;
+    --destructive:  0 62% 45%;
+    --destructive-foreground: 0 0% 100%;
+    --border:       222 30% 22%;
+    --input:        222 30% 22%;
+    --ring:         184 50% 50%;
+    --sidebar-bg:          222 47% 8%;
+    --sidebar-hover:       222 40% 14%;
+    --sidebar-active:      184 50% 22%;
+    --sidebar-border:      222 35% 16%;
+    --sidebar-foreground:  184 20% 75%;
+    --sidebar-muted:       184 20% 45%;
+  }
+
+  * {
+    @apply border-border;
+    transition: background-color 200ms, border-color 200ms, color 200ms;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .card-shadow {
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.07), 0 1px 2px -1px rgb(0 0 0 / 0.07);
+  }
+  .card-shadow-md {
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.08);
+  }
+}
+
+@media print {
+  aside, header, nav, .print\:hidden { display: none !important; }
+  body, main { background: white !important; color: black !important; }
+  .card-shadow, .card-shadow-md { box-shadow: none !important; }
+}
