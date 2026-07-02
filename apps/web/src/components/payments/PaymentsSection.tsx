@@ -87,7 +87,7 @@ export function PaymentsSection({ project, role }: { project: Project; role: str
       )}
 
       {showCreate && (
-        <CreatePaymentModal project={project} onClose={() => setShowCreate(false)} onCreated={load} />
+        <CreatePaymentModal project={project} totalPaid={totalPaid} onClose={() => setShowCreate(false)} onCreated={load} />
       )}
     </div>
   );
@@ -172,7 +172,7 @@ function ClientPayButton({ paymentId, amount, type }: { paymentId: string; amoun
   );
 }
 
-function CreatePaymentModal({ project, onClose, onCreated }: { project: Project; onClose: () => void; onCreated: () => void }) {
+function CreatePaymentModal({ project, totalPaid, onClose, onCreated }: { project: Project; totalPaid: number; onClose: () => void; onCreated: () => void }) {
   const [type, setType] = useState<PaymentType>("ADVANCE");
   const [amount, setAmount] = useState("");
   const [notes, setNotes] = useState("");
