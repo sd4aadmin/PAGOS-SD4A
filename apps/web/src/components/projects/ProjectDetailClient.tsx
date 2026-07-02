@@ -11,6 +11,7 @@ import { PaymentsSection } from "@/components/payments/PaymentsSection";
 import { ActivityTimeline } from "@/components/activity/ActivityTimeline";
 import DeliverablesSection from "@/components/deliverables/DeliverablesSection";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import FilesSection from "@/components/files/FilesSection";
 import { cn } from "@/lib/utils";
 
 const COP = new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 });
@@ -215,6 +216,9 @@ export function ProjectDetailClient({ projectId, role }: { projectId: string; ro
           </div>
         )}
       </div>
+
+      {/* Files */}
+      <FilesSection projectId={project.id} canUpload={canEdit} />
 
       {/* Deliverables */}
       <DeliverablesSection projectId={project.id} role={role} />

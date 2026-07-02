@@ -1,13 +1,18 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
+import uuid
+from decimal import Decimal
+
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query, status
 from fastapi.responses import Response
-from sqlalchemy import select
+from sqlalchemy import select, func as sqlfunc
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from db.session import get_db
 from deps import get_current_user, require_roles
 from models.user import User, Role
 from models.project import Project
-from core.drive import list_files, upload_file, delete_file, download_file, get_file_metadata
+from models.project_file import ProjectFile, FolderCategory
+from models.payment import Payment, PaymentStatus
+from core.drive import list_files, upload_file, delete_file, download_file, get_file_metadata, create_project_folder
 from core.audit import log_action
 
 router = APIRouter(prefix="/files", tags=["files"])
@@ -46,18 +51,71 @@ async def _get_project_or_403(project_id: str, user: User, db: AsyncSession) -> 
     return proj
 
 
+async def _ensure_drive_folders(proj: Project, db: AsyncSession) -> None:
+    """Crea carpeta raíz + subcarpetas en Drive si no existen aún."""
+    if not proj.drive_folder_id:
+        root_id, subfolders = create_project_folder(proj.code, proj.name)
+        proj.drive_folder_id = root_id
+        proj.drive_subfolders = subfolders
+        await db.commit()
+
+
+async def _pending_balance(project_id: str, db: AsyncSession) -> Decimal:
+    """Retorna el saldo pendiente del proyecto (total_value - pagos confirmados)."""
+    proj = (await db.execute(select(Project).where(Project.id == project_id))).scalar_one_or_none()
+    if not proj:
+        return Decimal("0")
+    paid = (await db.execute(
+        select(sqlfunc.coalesce(sqlfunc.sum(Payment.amount), 0)).where(
+            Payment.project_id == project_id,
+            Payment.status == PaymentStatus.CONFIRMED,
+        )
+    )).scalar_one()
+    return proj.total_value - Decimal(str(paid))
+
+
 # ─── LIST FILES ───────────────────────────────────────────────────────────────
 
 @router.get("/project/{project_id}")
 async def list_project_files(
     project_id: str,
+    category: str | None = Query(None),
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     proj = await _get_project_or_403(project_id, current_user, db)
     if not proj.drive_folder_id:
         return []
-    return list_files(proj.drive_folder_id)
+
+    q = select(ProjectFile).where(
+        ProjectFile.project_id == project_id,
+        ProjectFile.deleted_at.is_(None),
+    )
+    if category:
+        q = q.where(ProjectFile.category == category)
+    q = q.order_by(ProjectFile.created_at.desc())
+
+    rows = (await db.execute(q)).scalars().all()
+
+    pending = await _pending_balance(project_id, db)
+    can_download = current_user.role != Role.CLIENT or pending <= 0
+
+    return [
+        {
+            "id": f.id,
+            "drive_file_id": f.drive_file_id,
+            "filename": f.filename,
+            "category": f.category,
+            "mime_type": f.mime_type,
+            "size_bytes": f.size_bytes,
+            "version": f.version,
+            "is_deliverable": f.is_deliverable,
+            "uploaded_by": f.uploaded_by,
+            "created_at": f.created_at.isoformat() if f.created_at else None,
+            "can_download": can_download,
+        }
+        for f in rows
+    ]
 
 
 # ─── UPLOAD FILE ──────────────────────────────────────────────────────────────
@@ -66,31 +124,63 @@ async def list_project_files(
 async def upload_project_file(
     project_id: str,
     file: UploadFile = File(...),
+    category: str = Query(FolderCategory.MEMORIAS.value),
+    is_deliverable: bool = Query(False),
     current_user: User = Depends(require_roles(Role.ADMIN, Role.ENGINEER)),
     db: AsyncSession = Depends(get_db),
 ):
-    proj = await _get_project_or_403(project_id, current_user, db)
+    if category not in [c.value for c in FolderCategory]:
+        raise HTTPException(400, f"Categoría inválida. Opciones: {[c.value for c in FolderCategory]}")
 
-    # Crear carpeta Drive si el proyecto no tiene una
-    if not proj.drive_folder_id:
-        from core.drive import create_project_folder
-        folder_id = create_project_folder(proj.code, proj.name)
-        proj.drive_folder_id = folder_id
-        await db.commit()
+    proj = await _get_project_or_403(project_id, current_user, db)
+    await _ensure_drive_folders(proj, db)
 
     content = await file.read()
-    size_mb = len(content) / (1024 * 1024)
-    if size_mb > MAX_SIZE_MB:
+    size_bytes = len(content)
+    if size_bytes > MAX_SIZE_MB * 1024 * 1024:
         raise HTTPException(400, f"Archivo demasiado grande (máx {MAX_SIZE_MB} MB)")
 
-    mime = file.content_type or "application/octet-stream"
-    result = upload_file(proj.drive_folder_id, file.filename, content, mime)
+    subfolders: dict = proj.drive_subfolders or {}
+    target_folder = subfolders.get(category, proj.drive_folder_id)
 
-    await log_action(db, "FILE_UPLOADED", f"Archivo subido: {file.filename}",
-                     user_id=current_user.id, project_id=project_id,
-                     metadata={"file_id": result["id"], "name": file.filename, "size_mb": round(size_mb, 2)})
+    # Calcular versión: cuántos archivos con el mismo nombre base existen
+    base_name = file.filename or "archivo"
+    existing = (await db.execute(
+        select(sqlfunc.count()).where(
+            ProjectFile.project_id == project_id,
+            ProjectFile.filename == base_name,
+            ProjectFile.deleted_at.is_(None),
+        )
+    )).scalar_one()
+    version = existing + 1
+
+    mime = file.content_type or "application/octet-stream"
+    versioned_name = f"{base_name}" if version == 1 else f"[V{version}] {base_name}"
+    drive_file = upload_file(target_folder, versioned_name, content, mime)
+
+    pf = ProjectFile(
+        id=str(uuid.uuid4()),
+        project_id=project_id,
+        uploaded_by=current_user.id,
+        drive_file_id=drive_file["id"],
+        drive_folder_id=target_folder,
+        category=category,
+        filename=base_name,
+        mime_type=mime,
+        size_bytes=size_bytes,
+        version=version,
+        is_deliverable=is_deliverable,
+    )
+    db.add(pf)
+
+    await log_action(
+        db, "FILE_UPLOADED",
+        f"Archivo subido: {versioned_name} ({category})",
+        user_id=current_user.id, project_id=project_id,
+        metadata={"file_id": drive_file["id"], "category": category, "version": version, "size_mb": round(size_bytes / 1024 / 1024, 2)},
+    )
     await db.commit()
-    return result
+    return {"id": pf.id, "drive_file_id": drive_file["id"], "filename": base_name, "version": version, "category": category}
 
 
 # ─── DOWNLOAD FILE ────────────────────────────────────────────────────────────
@@ -99,15 +189,39 @@ async def upload_project_file(
 async def download_project_file(
     file_id: str,
     current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
-    try:
-        content, filename = download_file(file_id)
-    except Exception:
+    pf = (await db.execute(
+        select(ProjectFile).where(ProjectFile.id == file_id, ProjectFile.deleted_at.is_(None))
+    )).scalar_one_or_none()
+
+    if not pf:
         raise HTTPException(404, "Archivo no encontrado")
+
+    # Verificar acceso al proyecto
+    await _get_project_or_403(pf.project_id, current_user, db)
+
+    # Bloquear descarga a clientes con saldo pendiente
+    if current_user.role == Role.CLIENT:
+        pending = await _pending_balance(pf.project_id, db)
+        if pending > 0:
+            raise HTTPException(403, f"Debes pagar el saldo pendiente (${pending:,.0f}) para descargar archivos")
+
+    try:
+        content, filename = download_file(pf.drive_file_id)
+    except Exception:
+        raise HTTPException(404, "Archivo no disponible en Drive")
+
+    await log_action(
+        db, "FILE_DOWNLOADED", f"Archivo descargado: {pf.filename}",
+        user_id=current_user.id, project_id=pf.project_id,
+        metadata={"file_id": file_id},
+    )
+    await db.commit()
 
     return Response(
         content=content,
-        media_type="application/octet-stream",
+        media_type=pf.mime_type or "application/octet-stream",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'},
     )
 
@@ -117,17 +231,34 @@ async def download_project_file(
 @router.delete("/{file_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_project_file(
     file_id: str,
-    project_id: str,
     current_user: User = Depends(require_roles(Role.ADMIN)),
     db: AsyncSession = Depends(get_db),
 ):
-    try:
-        meta = get_file_metadata(file_id)
-        delete_file(file_id)
-    except Exception:
+    from datetime import datetime, timezone
+
+    pf = (await db.execute(
+        select(ProjectFile).where(ProjectFile.id == file_id, ProjectFile.deleted_at.is_(None))
+    )).scalar_one_or_none()
+    if not pf:
         raise HTTPException(404, "Archivo no encontrado")
 
-    await log_action(db, "FILE_DELETED", f"Archivo eliminado: {meta.get('name', file_id)}",
-                     user_id=current_user.id, project_id=project_id,
-                     metadata={"file_id": file_id})
+    try:
+        delete_file(pf.drive_file_id)
+    except Exception:
+        pass  # Si ya no existe en Drive, igual marcamos como eliminado
+
+    pf.deleted_at = datetime.now(timezone.utc).replace(tzinfo=None)
+
+    await log_action(
+        db, "FILE_DELETED", f"Archivo eliminado: {pf.filename}",
+        user_id=current_user.id, project_id=pf.project_id,
+        metadata={"file_id": file_id},
+    )
     await db.commit()
+
+
+# ─── CATEGORÍAS DISPONIBLES ───────────────────────────────────────────────────
+
+@router.get("/categories")
+async def get_categories():
+    return [{"value": c.value, "label": c.value} for c in FolderCategory]

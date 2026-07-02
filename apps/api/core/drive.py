@@ -35,15 +35,39 @@ def _get_service():
     return _cached_service
 
 
-def create_project_folder(project_code: str, project_name: str) -> str:
+SUBCARPETAS = [
+    "01_MEMORIAS",
+    "02_PLANOS",
+    "03_CALCULOS",
+    "04_LICENCIAS",
+    "05_FOTOGRAFIAS",
+    "06_MODELOS_BIM",
+    "07_RESPALDOS",
+]
+
+
+def _create_folder(name: str, parent_id: str) -> str:
     svc = _get_service()
     meta = {
-        "name": f"{project_code} — {project_name}",
+        "name": name,
         "mimeType": "application/vnd.google-apps.folder",
-        "parents": [settings.GOOGLE_DRIVE_ROOT_FOLDER],
+        "parents": [parent_id],
     }
-    folder = svc.files().create(body=meta, fields="id").execute()
-    return folder["id"]
+    return svc.files().create(body=meta, fields="id").execute()["id"]
+
+
+def create_project_folder(project_code: str, project_name: str) -> tuple[str, dict[str, str]]:
+    """Crea carpeta raíz del proyecto y sus 7 subcarpetas.
+    Retorna (root_folder_id, {categoria: subfolder_id}).
+    """
+    root_id = _create_folder(
+        project_name,
+        settings.GOOGLE_DRIVE_ROOT_FOLDER,
+    )
+    subfolders: dict[str, str] = {}
+    for sub in SUBCARPETAS:
+        subfolders[sub] = _create_folder(sub, root_id)
+    return root_id, subfolders
 
 
 def list_files(folder_id: str) -> list[dict]:

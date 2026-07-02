@@ -261,7 +261,7 @@ async def add_member(
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="El usuario ya es miembro")
 
-    member = ProjectMember(id=str(uuid.uuid4()), project_id=project_id, user_id=body.user_id)
+    member = ProjectMember(project_id=project_id, user_id=body.user_id)
     db.add(member)
     await db.commit()
     await db.refresh(project)

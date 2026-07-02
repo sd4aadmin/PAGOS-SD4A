@@ -1,7 +1,7 @@
 import enum
 from datetime import datetime, timezone
 from decimal import Decimal
-from sqlalchemy import String, Integer, Numeric, DateTime, Date, ForeignKey, func, UniqueConstraint
+from sqlalchemy import String, Integer, Numeric, DateTime, Date, ForeignKey, func, UniqueConstraint, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from db.session import Base
@@ -36,6 +36,7 @@ class Project(Base):
     estimated_date: Mapped[datetime | None] = mapped_column("estimated_date", DateTime(timezone=True), nullable=True)
     delivered_at: Mapped[datetime | None] = mapped_column("delivered_at", DateTime(timezone=True), nullable=True)
     drive_folder_id: Mapped[str | None] = mapped_column("drive_folder_id", String, nullable=True)
+    drive_subfolders: Mapped[dict | None] = mapped_column("drive_subfolders", JSON, nullable=True)
     client_id: Mapped[str] = mapped_column("client_id", String, ForeignKey("users.id"), nullable=False)
     created_at: Mapped[datetime] = mapped_column("created_at", DateTime, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column("updated_at", DateTime, default=_now, onupdate=_now)
