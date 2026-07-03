@@ -53,13 +53,14 @@ export function MaintenanceToggle({ enabled, onToggle }: { enabled: boolean; onT
   return (
     <button
       onClick={onToggle}
-      className={`text-xs px-2.5 py-1.5 rounded-lg font-medium transition-colors ${
+      className={`text-xs px-2.5 py-1.5 rounded-lg font-medium transition-colors flex items-center gap-1.5 ${
         enabled
           ? "bg-amber-100 text-amber-700 hover:bg-amber-200"
           : "bg-muted text-muted-foreground hover:bg-muted/80"
       }`}
     >
-      {enabled ? "Mantenimiento activo" : "Modo mantenimiento"}
+      <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+      <span className="hidden md:inline">{enabled ? "Mantenimiento activo" : "Modo mantenimiento"}</span>
     </button>
   );
 }
