@@ -113,7 +113,7 @@ function PaymentRow({ payment, isAdmin, onConfirmed, onEdit, onDeleted }: {
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  async function confirm() {
+  async function confirmPayment() {
     setConfirming(true);
     await fetch(`/api/proxy/payments/${payment.id}/confirm`, { method: "POST" });
     await onConfirmed();
@@ -121,7 +121,7 @@ function PaymentRow({ payment, isAdmin, onConfirmed, onEdit, onDeleted }: {
   }
 
   async function del() {
-    if (!confirm(`¿Eliminar este pago de ${COP.format(Number(payment.amount))}? No se puede deshacer.`)) return;
+    if (!window.confirm(`¿Eliminar este pago de ${COP.format(Number(payment.amount))}? No se puede deshacer.`)) return;
     setDeleting(true);
     await fetch(`/api/proxy/payments/${payment.id}`, { method: "DELETE" });
     await onDeleted();
@@ -152,7 +152,7 @@ function PaymentRow({ payment, isAdmin, onConfirmed, onEdit, onDeleted }: {
         {isAdmin && payment.status === "PENDING" && (
           <>
             <button
-              onClick={confirm}
+              onClick={confirmPayment}
               disabled={confirming}
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs border border-emerald-300 text-emerald-700 rounded-lg hover:bg-emerald-50 disabled:opacity-50"
             >
