@@ -195,17 +195,20 @@ export function ProjectDetailClient({ projectId, role }: { projectId: string; ro
         </div>
         <div className="flex items-center gap-3">
           <div className="flex-1 bg-muted rounded-full h-3">
-            <div className="bg-sd4a-dark h-3 rounded-full transition-all" style={{ width: `${project.progress}%` }} />
+            <div className="bg-sd4a-dark h-3 rounded-full transition-all" style={{ width: `${editProgress ? progress : project.progress}%` }} />
           </div>
-          <span className="text-lg font-bold text-foreground w-12 text-right">{project.progress}%</span>
+          <span className="text-lg font-bold text-foreground w-12 text-right">{editProgress ? progress : project.progress}%</span>
         </div>
         {editProgress && (
           <div className="space-y-2">
-            <input
-              type="range" min={0} max={100} value={progress}
-              onChange={(e) => setProgress(Number(e.target.value))}
-              className="w-full accent-sd4a-dark"
-            />
+            <div className="flex items-center gap-3">
+              <input
+                type="range" min={0} max={100} value={progress}
+                onChange={(e) => setProgress(Number(e.target.value))}
+                className="flex-1 accent-sd4a-dark"
+              />
+              <span className="text-lg font-bold text-foreground w-12 text-right">{progress}%</span>
+            </div>
             <div className="flex gap-2">
               <button onClick={() => setEditProgress(false)} className="flex-1 py-1.5 text-sm border border-border rounded-lg hover:bg-muted text-foreground">Cancelar</button>
               <button onClick={saveProgress} disabled={saving} className="flex-1 py-1.5 text-sm bg-sd4a-dark text-white rounded-lg flex items-center justify-center gap-1">
