@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { SidebarNav } from "@/components/layout/SidebarNav";
 import { TopBar } from "@/components/layout/TopBar";
 import { MaintenanceBanner } from "@/components/layout/MaintenanceBanner";
+import { InactivityGuard } from "@/components/layout/InactivityGuard";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -16,6 +17,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <MaintenanceBanner isAdmin={session.user.role === "ADMIN"} />
         <main className="flex-1 overflow-y-auto">{children}</main>
       </div>
+      <InactivityGuard />
     </div>
   );
 }
