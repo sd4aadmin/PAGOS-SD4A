@@ -71,7 +71,7 @@ export function TopBar({ user }: { user: TopBarUser }) {
         </button>
 
         <button
-          onClick={() => signOut({ callbackUrl: `${window.location.origin}/login` })}
+          onClick={async () => { await signOut({ redirect: false }); window.location.href = "/login"; }}
           className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
           title="Cerrar sesión"
         >
