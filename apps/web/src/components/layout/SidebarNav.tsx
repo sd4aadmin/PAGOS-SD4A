@@ -3,14 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard,
-  FolderKanban,
-  Users,
-  CreditCard,
-  Settings,
-  HardHat,
-  Activity,
-  UserCircle,
+  LayoutDashboard, FolderKanban, Users, CreditCard,
+  Settings, HardHat, Activity, UserCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -30,49 +24,57 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Ingenieros", href: "/admin/engineers", icon: HardHat, roles: ["ADMIN"], group: "admin" },
   { label: "Pagos", href: "/admin/payments", icon: CreditCard, roles: ["ADMIN"], group: "admin" },
   { label: "Actividad", href: "/admin/activity", icon: Activity, roles: ["ADMIN", "ENGINEER"], group: "admin" },
-  { label: "Configuración", href: "/admin/settings", icon: Settings, roles: ["ADMIN"], group: "admin" },
+  { label: "Config", href: "/admin/settings", icon: Settings, roles: ["ADMIN"], group: "admin" },
 ];
 
 export function SidebarNav({ role }: { role: string }) {
   const pathname = usePathname();
   const items = NAV_ITEMS.filter((item) => item.roles.includes(role));
-
   const mainItems = items.filter((i) => !i.group);
   const adminItems = items.filter((i) => i.group === "admin");
 
   return (
-    <aside className="w-56 bg-sidebar-bg flex flex-col shrink-0 min-w-[14rem]">
-      {/* Logo */}
-      <div className="h-16 flex items-center px-5 border-b border-white/10">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 bg-sd4a-mid rounded-lg flex items-center justify-center shrink-0">
-            <span className="text-white font-bold text-sm">S</span>
-          </div>
-          <div>
-            <span className="text-white font-bold text-base tracking-tight leading-none block">SD4A</span>
-            <span className="text-blue-300 text-[10px] leading-none">Portal BIM</span>
+    <>
+      {/* ── Desktop sidebar ── */}
+      <aside className="hidden md:flex w-56 bg-sidebar-bg flex-col shrink-0">
+        {/* Logo */}
+        <div className="h-16 flex items-center px-5 border-b border-white/10">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 bg-sd4a-mid rounded-lg flex items-center justify-center shrink-0">
+              <span className="text-white font-bold text-sm">S</span>
+            </div>
+            <div>
+              <span className="text-white font-bold text-base tracking-tight leading-none block">SD4A</span>
+              <span className="text-blue-300 text-[10px] leading-none">Portal BIM</span>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-        {mainItems.map((item) => <NavLink key={item.href} item={item} pathname={pathname} />)}
+        {/* Nav */}
+        <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+          {mainItems.map((item) => <NavLink key={item.href} item={item} pathname={pathname} />)}
+          {adminItems.length > 0 && (
+            <>
+              <div className="pt-4 pb-1.5 px-3">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-sd4a-mid">Administración</span>
+              </div>
+              {adminItems.map((item) => <NavLink key={item.href} item={item} pathname={pathname} />)}
+            </>
+          )}
+        </nav>
 
-        {adminItems.length > 0 && (
-          <>
-            <div className="pt-4 pb-1.5 px-3">
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-sd4a-mid">Administración</span>
-            </div>
-            {adminItems.map((item) => <NavLink key={item.href} item={item} pathname={pathname} />)}
-          </>
-        )}
+        <div className="p-4 border-t border-white/10">
+          <p className="text-sidebar-muted text-xs text-center">v1.0.0</p>
+        </div>
+      </aside>
+
+      {/* ── Mobile bottom bar ── */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-sidebar-bg border-t border-white/10 flex items-center justify-around px-1 py-1 safe-bottom">
+        {[...mainItems, ...adminItems].slice(0, 5).map((item) => (
+          <MobileNavLink key={item.href} item={item} pathname={pathname} />
+        ))}
       </nav>
-
-      <div className="p-4 border-t border-white/10">
-        <p className="text-sidebar-muted text-xs text-center">v1.0.0</p>
-      </div>
-    </aside>
+    </>
   );
 }
 
@@ -91,6 +93,23 @@ function NavLink({ item, pathname }: { item: NavItem; pathname: string }) {
     >
       <Icon className="w-4 h-4 shrink-0" />
       {item.label}
+    </Link>
+  );
+}
+
+function MobileNavLink({ item, pathname }: { item: NavItem; pathname: string }) {
+  const Icon = item.icon;
+  const active = pathname === item.href || pathname.startsWith(item.href + "/");
+  return (
+    <Link
+      href={item.href}
+      className={cn(
+        "flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-colors min-w-0 flex-1",
+        active ? "text-white" : "text-sidebar-foreground"
+      )}
+    >
+      <Icon className={cn("w-5 h-5", active && "text-sd4a-cyan")} />
+      <span className="text-[9px] font-medium leading-tight truncate">{item.label}</span>
     </Link>
   );
 }

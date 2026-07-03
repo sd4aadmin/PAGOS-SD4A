@@ -91,7 +91,7 @@ export default function PaymentsAdminPage() {
   const totalPending = payments.filter((p) => p.status === "PENDING").reduce((s, p) => s + Number(p.amount), 0);
 
   return (
-    <div className="p-6 space-y-5">
+    <div className="p-3 md:p-6 space-y-5">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-semibold text-foreground">Pagos</h1>
@@ -121,14 +121,14 @@ export default function PaymentsAdminPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex gap-3 flex-wrap items-center">
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:flex-wrap sm:items-center">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
             placeholder="Buscar por referencia o proyecto..."
-            className="pl-9 pr-8 py-2 border border-border rounded-lg text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-sd4a-mid/50 focus:border-sd4a-mid w-72"
+            className="pl-9 pr-8 py-2 border border-border rounded-lg text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-sd4a-mid/50 focus:border-sd4a-mid w-full sm:w-72"
           />
           {search && (
             <button onClick={() => setSearch("")} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
@@ -167,8 +167,8 @@ export default function PaymentsAdminPage() {
           <p className="text-sm">No hay pagos que mostrar</p>
         </div>
       ) : (
-        <div className="bg-card rounded-xl border border-border overflow-hidden card-shadow">
-          <table className="w-full text-sm">
+        <div className="bg-card rounded-xl border border-border overflow-x-auto card-shadow">
+          <table className="w-full text-sm min-w-[700px]">
             <thead className="bg-muted/50 border-b border-border">
               <tr>
                 <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wide">Proyecto</th>

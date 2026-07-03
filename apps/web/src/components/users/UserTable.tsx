@@ -48,7 +48,8 @@ export function UserTable({ users, onRefresh }: Props) {
   return (
     <>
       <div className="bg-card rounded-xl border overflow-visible">
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+        <table className="w-full text-sm min-w-[600px]">
           <thead>
             <tr className="border-b bg-muted/50 rounded-t-xl">
               <th className="text-left px-4 py-3 font-medium text-muted-foreground">Nombre</th>
@@ -131,6 +132,7 @@ export function UserTable({ users, onRefresh }: Props) {
             )}
           </tbody>
         </table>
+        </div>
         <Pagination page={page} totalPages={totalPages} totalItems={users.length} pageSize={PAGE_SIZE} onChange={setPage} />
       </div>
 

@@ -38,8 +38,15 @@ export function TopBar({ user }: { user: TopBarUser }) {
   }
 
   return (
-    <header className="h-14 bg-card border-b border-border flex items-center justify-between px-5 shrink-0">
-      <div />
+    <header className="h-14 bg-card border-b border-border flex items-center justify-between px-3 md:px-5 shrink-0">
+      {/* Logo solo en móvil */}
+      <div className="md:hidden flex items-center gap-2">
+        <div className="w-7 h-7 bg-sd4a-mid rounded-lg flex items-center justify-center">
+          <span className="text-white font-bold text-xs">S</span>
+        </div>
+        <span className="text-foreground font-bold text-sm">SD4A</span>
+      </div>
+      <div className="hidden md:block" />
       <div className="flex items-center gap-2">
         {user.role === "ADMIN" && (
           <MaintenanceToggle enabled={maintenance} onToggle={toggleMaintenance} />

@@ -68,7 +68,7 @@ export function ActivityPageClient() {
   const uniqueActions = [...new Set(logs.map((l) => l.action))];
 
   return (
-    <div className="p-6 space-y-5">
+    <div className="p-3 md:p-6 space-y-5">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-semibold text-foreground">Log de actividad</h1>
@@ -80,14 +80,14 @@ export function ActivityPageClient() {
       </div>
 
       {/* Filters */}
-      <div className="flex gap-3 flex-wrap">
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:flex-wrap">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar en descripción..."
-            className="pl-9 pr-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sd4a-cyan w-64"
+            className="pl-9 pr-3 py-2 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-sd4a-cyan w-full sm:w-64"
           />
         </div>
         <select
@@ -113,8 +113,8 @@ export function ActivityPageClient() {
           <p className="text-sm">Sin eventos que mostrar</p>
         </div>
       ) : (
-        <div className="bg-card rounded-xl border overflow-hidden">
-          <table className="w-full text-sm">
+        <div className="bg-card rounded-xl border overflow-x-auto">
+          <table className="w-full text-sm min-w-[500px]">
             <thead className="bg-muted/50 border-b">
               <tr>
                 <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wide">Acción</th>

@@ -47,7 +47,7 @@ export function ProfileClient({ user }: { user: SessionUser }) {
   }
 
   return (
-    <div className="p-6 max-w-2xl space-y-6">
+    <div className="p-3 md:p-6 max-w-2xl space-y-6">
       <div>
         <h1 className="text-xl font-semibold text-foreground">Mi Perfil</h1>
         <p className="text-sm text-muted-foreground mt-0.5">Información de tu cuenta</p>

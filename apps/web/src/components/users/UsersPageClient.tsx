@@ -26,18 +26,19 @@ export function UsersPageClient({ initialUsers, role, title, description }: Prop
   }
 
   return (
-    <div>
-      <div className="flex items-start justify-between mb-6">
+    <div className="p-3 md:p-6">
+      <div className="flex items-start justify-between mb-4 md:mb-6 gap-2">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">{title}</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-foreground">{title}</h1>
           <p className="text-sm text-muted-foreground mt-0.5">{description}</p>
         </div>
         <button
           onClick={() => setCreating(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-sd4a-blue text-white rounded-lg text-sm font-medium hover:bg-[#0d2d7a] transition"
+          className="flex items-center gap-1.5 px-3 py-2 bg-sd4a-blue text-white rounded-lg text-sm font-medium hover:bg-[#0d2d7a] transition shrink-0"
         >
           <UserPlus className="w-4 h-4" />
-          Nuevo {role === "CLIENT" ? "cliente" : "ingeniero"}
+          <span className="hidden sm:inline">Nuevo {role === "CLIENT" ? "cliente" : "ingeniero"}</span>
+          <span className="sm:hidden">Nuevo</span>
         </button>
       </div>
 

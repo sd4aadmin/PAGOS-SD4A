@@ -29,7 +29,7 @@ export function AdminDashboard({ userName }: { userName: string }) {
   const recent = [...projects].sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()).slice(0, 5);
 
   return (
-    <div className="space-y-6">
+    <div className="p-3 md:p-6 space-y-4 md:space-y-6">
       <div>
         <h1 className="text-xl font-semibold text-foreground">Bienvenido, {userName}</h1>
         <p className="text-sm text-muted-foreground mt-0.5">Panel de administración</p>
@@ -45,16 +45,16 @@ export function AdminDashboard({ userName }: { userName: string }) {
 
       {/* Revenue banner */}
       {!loading && projects.length > 0 && (
-        <div className="rounded-xl p-5 flex items-center justify-between text-white" style={{ background: "linear-gradient(135deg, #0A7881 0%, #68B2B7 60%, #9BE3BF 100%)" }}>
+        <div className="rounded-xl p-4 md:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-white" style={{ background: "linear-gradient(135deg, #0A7881 0%, #68B2B7 60%, #9BE3BF 100%)" }}>
           <div>
             <p className="text-white/70 text-xs font-medium uppercase tracking-wide mb-1">Valor total en cartera</p>
-            <p className="text-white text-2xl font-bold">
+            <p className="text-white text-xl md:text-2xl font-bold">
               {COP.format(projects.reduce((s, p) => s + Number(p.total_value), 0))}
             </p>
           </div>
-          <div className="text-right">
+          <div className="sm:text-right">
             <p className="text-white/70 text-xs mb-1">Proyectos activos</p>
-            <p className="text-white text-2xl font-bold">{active.length}</p>
+            <p className="text-white text-xl md:text-2xl font-bold">{active.length}</p>
           </div>
         </div>
       )}

@@ -93,28 +93,28 @@ export function ProjectDetailClient({ projectId, role }: { projectId: string; ro
   const advanceAmount = (Number(project.total_value) * project.advance_percent) / 100;
 
   return (
-    <div className="p-6 space-y-6 max-w-5xl">
+    <div className="p-3 md:p-6 space-y-4 md:space-y-6 max-w-5xl">
       {/* Back + header */}
-      <div className="flex items-start justify-between">
-        <div className="flex items-start gap-3">
-          <button onClick={() => router.push("/dashboard/projects")} className="mt-1 p-1.5 hover:bg-muted rounded-lg transition-colors">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-start gap-2 min-w-0">
+          <button onClick={() => router.push("/dashboard/projects")} className="mt-1 p-1.5 hover:bg-muted rounded-lg transition-colors shrink-0">
             <ArrowLeft className="w-4 h-4 text-muted-foreground" />
           </button>
-          <div>
-            <div className="flex items-center gap-2 mb-1">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
               <span className="font-mono text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">{project.code}</span>
               <span className={cn("px-2 py-0.5 rounded-full text-xs font-medium", STATUS_COLORS[project.status])}>
                 {STATUS_LABELS[project.status]}
               </span>
             </div>
-            <h1 className="text-xl font-semibold text-foreground">{project.name}</h1>
+            <h1 className="text-lg md:text-xl font-semibold text-foreground leading-tight">{project.name}</h1>
             {project.description && <p className="text-sm text-muted-foreground mt-1">{project.description}</p>}
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 shrink-0">
           <button
             onClick={() => window.print()}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-muted-foreground border border-border rounded-lg hover:bg-muted transition-colors"
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-sm text-muted-foreground border border-border rounded-lg hover:bg-muted transition-colors"
           >
             <Printer className="w-3.5 h-3.5" /> Imprimir
           </button>
@@ -122,10 +122,10 @@ export function ProjectDetailClient({ projectId, role }: { projectId: string; ro
             <button
               onClick={() => setConfirmDelete(true)}
               disabled={deleting}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50 disabled:opacity-50 transition-colors"
+              className="flex items-center gap-1 px-2 md:px-3 py-1.5 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50 disabled:opacity-50 transition-colors"
             >
               {deleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
-              Eliminar
+              <span className="hidden sm:inline">Eliminar</span>
             </button>
           )}
         </div>
