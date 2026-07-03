@@ -1,10 +1,13 @@
 import uuid
+import logging
 from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query, status
 from fastapi.responses import Response
 from sqlalchemy import select, func as sqlfunc
 from sqlalchemy.ext.asyncio import AsyncSession
+
+logger = logging.getLogger(__name__)
 
 from db.session import get_db
 from deps import get_current_user, require_roles
@@ -54,7 +57,11 @@ async def _get_project_or_403(project_id: str, user: User, db: AsyncSession) -> 
 async def _ensure_drive_folders(proj: Project, db: AsyncSession) -> None:
     """Crea carpeta raíz + subcarpetas en Drive si no existen aún."""
     if not proj.drive_folder_id:
-        root_id, subfolders = create_project_folder(proj.code, proj.name)
+        try:
+            root_id, subfolders = create_project_folder(proj.code, proj.name)
+        except Exception as exc:
+            logger.error("Drive folder creation failed: %s", exc, exc_info=True)
+            raise HTTPException(500, f"Error al crear carpeta en Google Drive: {exc}")
         proj.drive_folder_id = root_id
         proj.drive_subfolders = subfolders
         await db.commit()
@@ -156,7 +163,11 @@ async def upload_project_file(
 
     mime = file.content_type or "application/octet-stream"
     versioned_name = f"{base_name}" if version == 1 else f"[V{version}] {base_name}"
-    drive_file = upload_file(target_folder, versioned_name, content, mime)
+    try:
+        drive_file = upload_file(target_folder, versioned_name, content, mime)
+    except Exception as exc:
+        logger.error("Drive upload failed: %s", exc, exc_info=True)
+        raise HTTPException(500, f"Error al subir a Google Drive: {exc}")
 
     pf = ProjectFile(
         id=str(uuid.uuid4()),
