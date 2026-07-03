@@ -47,10 +47,10 @@ export function UserTable({ users, onRefresh }: Props) {
 
   return (
     <>
-      <div className="bg-card rounded-xl border overflow-hidden">
+      <div className="bg-card rounded-xl border overflow-visible">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b bg-muted/50">
+            <tr className="border-b bg-muted/50 rounded-t-xl">
               <th className="text-left px-4 py-3 font-medium text-muted-foreground">Nombre</th>
               <th className="text-left px-4 py-3 font-medium text-muted-foreground">Email</th>
               <th className="text-left px-4 py-3 font-medium text-muted-foreground">Rol</th>
@@ -94,7 +94,7 @@ export function UserTable({ users, onRefresh }: Props) {
 
                     {openMenu === user.id && (
                       <div
-                        className="absolute right-0 top-8 z-10 bg-card border border-border rounded-xl shadow-lg w-44 py-1"
+                        className="absolute right-0 top-8 z-50 bg-card border border-border rounded-xl shadow-lg w-44 py-1"
                         onMouseLeave={() => setOpenMenu(null)}
                       >
                         <button
