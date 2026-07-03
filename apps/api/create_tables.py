@@ -6,7 +6,7 @@ loop = asyncio.SelectorEventLoop(selectors.SelectSelector())
 asyncio.set_event_loop(loop)
 
 from db.session import Base, engine
-import models.user, models.project, models.payment, models.deliverable, models.project_file
+import models.user, models.project, models.payment, models.deliverable, models.activity_log
 
 async def create():
     async with engine.begin() as conn:
