@@ -9,7 +9,6 @@ import {
 import { Project, ProjectStatus, STATUS_LABELS, STATUS_COLORS } from "@/types/project";
 import { PaymentsSection } from "@/components/payments/PaymentsSection";
 import { ActivityTimeline } from "@/components/activity/ActivityTimeline";
-import DeliverablesSection from "@/components/deliverables/DeliverablesSection";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import FilesSection from "@/components/files/FilesSection";
 import { cn } from "@/lib/utils";
@@ -218,10 +217,7 @@ export function ProjectDetailClient({ projectId, role }: { projectId: string; ro
       </div>
 
       {/* Files */}
-      <FilesSection projectId={project.id} canUpload={canEdit} />
-
-      {/* Deliverables */}
-      <DeliverablesSection projectId={project.id} role={role} />
+      <FilesSection projectId={project.id} canUpload={canEdit} role={role} />
 
       {/* Payments */}
       <PaymentsSection project={project} role={role} />

@@ -19,6 +19,7 @@ interface ProjectFile {
 interface Props {
   projectId: string;
   canUpload: boolean;
+  role?: string;
 }
 
 const CATEGORIES = [
@@ -49,7 +50,7 @@ function formatSize(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export default function FilesSection({ projectId, canUpload }: Props) {
+export default function FilesSection({ projectId, canUpload, role }: Props) {
   const [files, setFiles] = useState<ProjectFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
