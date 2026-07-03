@@ -36,14 +36,17 @@ async def send_email(to: str, subject: str, html: str) -> None:
     msg.attach(MIMEText(html, "html", "utf-8"))
 
     try:
+        port = int(settings.SMTP_PORT)
+        use_ssl = port == 465
         await aiosmtplib.send(
             msg,
             hostname=settings.SMTP_HOST,
-            port=int(settings.SMTP_PORT),
+            port=port,
             username=settings.SMTP_USER,
             password=settings.SMTP_PASSWORD,
-            start_tls=True,
-            timeout=15,
+            use_tls=use_ssl,
+            start_tls=not use_ssl,
+            timeout=20,
         )
         logger.info("Email enviado a %s: %s", to, subject)
     except Exception as exc:
