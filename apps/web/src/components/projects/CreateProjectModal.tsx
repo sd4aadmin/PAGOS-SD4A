@@ -98,7 +98,7 @@ export function CreateProjectModal({
             </select>
           </Field>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Field label="Valor total (COP)" error={errors.total_value?.message}>
               <input {...register("total_value")} type="number" className={inputCls} placeholder="15000000" />
             </Field>
@@ -108,7 +108,7 @@ export function CreateProjectModal({
             <Field label="Fecha inicio" error={errors.start_date?.message}>
               <input {...register("start_date")} type="date" className={inputCls} />
             </Field>
-            <Field label="Fecha estimada entrega" error={errors.estimated_date?.message}>
+            <Field label="Fecha estimada de entrega" error={errors.estimated_date?.message}>
               <input {...register("estimated_date")} type="date" className={inputCls} />
             </Field>
           </div>
