@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
-import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { logout } from "@/app/actions/auth";
 import { LogOut, Sun, Moon, User } from "lucide-react";
 import { useTheme } from "@/components/providers/ThemeProvider";
 import { NotificationBell } from "@/components/layout/NotificationBell";
@@ -71,7 +71,7 @@ export function TopBar({ user }: { user: TopBarUser }) {
         </button>
 
         <button
-          onClick={async () => { await signOut({ redirect: false }); window.location.href = "/login"; }}
+          onClick={() => logout()}
           className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
           title="Cerrar sesión"
         >
