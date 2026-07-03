@@ -1,13 +1,11 @@
 """
-Servicio de email async — envía notificaciones HTML via SMTP (Gmail/TLS).
+Servicio de email — envía notificaciones HTML via Resend (HTTP API).
 """
 import asyncio
 import logging
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 from typing import Coroutine
 
-import aiosmtplib
+import resend
 
 from core.config import settings
 
@@ -25,29 +23,18 @@ def fire(coro: Coroutine) -> None:
 
 
 async def send_email(to: str, subject: str, html: str) -> None:
-    if not settings.SMTP_USER or not settings.SMTP_PASSWORD:
-        logger.warning("SMTP no configurado — email no enviado: %s", subject)
+    if not settings.RESEND_API_KEY:
+        logger.warning("RESEND_API_KEY no configurado — email no enviado: %s", subject)
         return
 
-    msg = MIMEMultipart("alternative")
-    msg["Subject"] = subject
-    msg["From"] = f"{settings.SMTP_FROM_NAME} <{settings.SMTP_USER}>"
-    msg["To"] = to
-    msg.attach(MIMEText(html, "html", "utf-8"))
-
     try:
-        port = int(settings.SMTP_PORT)
-        use_ssl = port == 465
-        await aiosmtplib.send(
-            msg,
-            hostname=settings.SMTP_HOST,
-            port=port,
-            username=settings.SMTP_USER,
-            password=settings.SMTP_PASSWORD,
-            use_tls=use_ssl,
-            start_tls=not use_ssl,
-            timeout=20,
-        )
+        resend.api_key = settings.RESEND_API_KEY
+        resend.Emails.send({
+            "from": settings.EMAIL_FROM,
+            "to": [to],
+            "subject": subject,
+            "html": html,
+        })
         logger.info("Email enviado a %s: %s", to, subject)
     except Exception as exc:
         logger.error("Error enviando email a %s: %s", to, exc)

@@ -33,12 +33,9 @@ class Settings(BaseSettings):
     # App URL (para redirect después de pago)
     APP_URL: str = "http://localhost:3000"
 
-    # SMTP / Email
-    SMTP_HOST: str = "smtp.gmail.com"
-    SMTP_PORT: int = 587
-    SMTP_USER: str = ""
-    SMTP_PASSWORD: str = ""
-    SMTP_FROM_NAME: str = "SD4A Portal"
+    # Email (Resend)
+    RESEND_API_KEY: str = ""
+    EMAIL_FROM: str = "SD4A Portal <onboarding@resend.dev>"
 
     # Autodesk Platform Services
     APS_CLIENT_ID: str = ""
