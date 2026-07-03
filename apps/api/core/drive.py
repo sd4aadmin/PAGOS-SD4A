@@ -21,10 +21,15 @@ def _get_service():
     if _cached_service is not None:
         return _cached_service
 
-    # Opción 1: JSON completo en variable de entorno (Railway)
-    sa_json = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON")
-    if sa_json:
-        info = json.loads(sa_json)
+    # Opción 1: JSON en base64 (evita problemas de escape en Railway)
+    sa_b64 = os.environ.get("GOOGLE_SERVICE_ACCOUNT_B64")
+    if sa_b64:
+        import base64
+        info = json.loads(base64.b64decode(sa_b64).decode("utf-8"))
+        creds = service_account.Credentials.from_service_account_info(info, scopes=SCOPES)
+    # Opción 2: JSON completo en variable de entorno
+    elif os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON"):
+        info = json.loads(os.environ["GOOGLE_SERVICE_ACCOUNT_JSON"])
         creds = service_account.Credentials.from_service_account_info(info, scopes=SCOPES)
     else:
         # Opción 2: archivo local (desarrollo)
