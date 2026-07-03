@@ -1,6 +1,6 @@
 import enum
 from datetime import datetime, timezone
-from sqlalchemy import String, Boolean, DateTime, func, TypeDecorator, cast
+from sqlalchemy import String, Boolean, DateTime, Integer, func, TypeDecorator, cast
 from sqlalchemy.dialects.postgresql import ENUM as PgEnum
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -55,5 +55,6 @@ class User(Base):
     phone: Mapped[str | None] = mapped_column(String, nullable=True)
     company: Mapped[str | None] = mapped_column(String, nullable=True)
     is_active: Mapped[bool] = mapped_column("is_active", Boolean, default=True)
+    session_version: Mapped[int] = mapped_column("session_version", Integer, default=1, server_default="1")
     created_at: Mapped[datetime] = mapped_column("created_at", DateTime, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column("updated_at", DateTime, default=_now, onupdate=_now)

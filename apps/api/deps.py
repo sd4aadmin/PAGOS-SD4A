@@ -23,6 +23,11 @@ async def get_current_user(
     if not user or not user.is_active:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Usuario no encontrado o inactivo")
 
+    # Verificar que el token corresponde a la sesión activa (single-session)
+    token_sv = payload.get("sv")
+    if token_sv is not None and token_sv != user.session_version:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Sesión cerrada en otro dispositivo")
+
     return user
 
 

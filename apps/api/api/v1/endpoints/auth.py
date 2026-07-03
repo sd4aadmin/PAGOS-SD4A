@@ -57,7 +57,10 @@ async def login(request: Request, body: LoginRequest, db: AsyncSession = Depends
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Cuenta desactivada")
 
     reset_account_attempts(body.email)
-    token = create_access_token(subject=user.id, role=str(user.role))
+    # Invalidar sesiones anteriores en otros dispositivos
+    user.session_version = (user.session_version or 0) + 1
+    await db.flush()
+    token = create_access_token(subject=user.id, role=str(user.role), extra={"sv": user.session_version})
 
     await log_action(db, "LOGIN_SUCCESS", f"Login exitoso desde {ip}",
                      user_id=user.id, metadata={"ip": ip})
