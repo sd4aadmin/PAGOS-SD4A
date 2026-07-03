@@ -1,11 +1,11 @@
 """
-Google Drive service — usa OAuth2 con refresh token del propietario de la cuenta.
-Los archivos se guardan en el Drive personal del usuario autorizado.
+Google Drive service — usa Service Account para autenticación permanente.
 """
 import io
+import json
+import os
 
-from google.oauth2.credentials import Credentials
-from google.auth.transport.requests import Request
+from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload, MediaIoBaseUpload
 
@@ -14,24 +14,24 @@ from core.config import settings
 SCOPES = ["https://www.googleapis.com/auth/drive"]
 
 _cached_service = None
-_cached_token = None
 
 
 def _get_service():
-    global _cached_service, _cached_token
-    current_token = settings.GOOGLE_REFRESH_TOKEN
-    if _cached_service is None or _cached_token != current_token:
-        creds = Credentials(
-            token=None,
-            refresh_token=current_token,
-            token_uri="https://oauth2.googleapis.com/token",
-            client_id=settings.GOOGLE_CLIENT_ID,
-            client_secret=settings.GOOGLE_CLIENT_SECRET,
-            scopes=SCOPES,
-        )
-        creds.refresh(Request())
-        _cached_service = build("drive", "v3", credentials=creds, cache_discovery=False)
-        _cached_token = current_token
+    global _cached_service
+    if _cached_service is not None:
+        return _cached_service
+
+    # Opción 1: JSON completo en variable de entorno (Railway)
+    sa_json = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON")
+    if sa_json:
+        info = json.loads(sa_json)
+        creds = service_account.Credentials.from_service_account_info(info, scopes=SCOPES)
+    else:
+        # Opción 2: archivo local (desarrollo)
+        sa_path = os.path.join(os.path.dirname(__file__), "..", "sd4a-service-account.json")
+        creds = service_account.Credentials.from_service_account_file(sa_path, scopes=SCOPES)
+
+    _cached_service = build("drive", "v3", credentials=creds, cache_discovery=False)
     return _cached_service
 
 
@@ -57,13 +57,7 @@ def _create_folder(name: str, parent_id: str) -> str:
 
 
 def create_project_folder(project_code: str, project_name: str) -> tuple[str, dict[str, str]]:
-    """Crea carpeta raíz del proyecto y sus 7 subcarpetas.
-    Retorna (root_folder_id, {categoria: subfolder_id}).
-    """
-    root_id = _create_folder(
-        project_name,
-        settings.GOOGLE_DRIVE_ROOT_FOLDER,
-    )
+    root_id = _create_folder(project_name, settings.GOOGLE_DRIVE_ROOT_FOLDER)
     subfolders: dict[str, str] = {}
     for sub in SUBCARPETAS:
         subfolders[sub] = _create_folder(sub, root_id)
