@@ -70,13 +70,15 @@ export function TopBar({ user }: { user: TopBarUser }) {
           </div>
         </button>
 
-        <button
-          onClick={() => logout()}
-          className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-          title="Cerrar sesión"
-        >
-          <LogOut className="w-4 h-4" />
-        </button>
+        <form action={logout}>
+          <button
+            type="submit"
+            className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+            title="Cerrar sesión"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+        </form>
       </div>
     </header>
   );
