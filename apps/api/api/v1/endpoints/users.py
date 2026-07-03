@@ -65,7 +65,7 @@ async def create_user(
     await db.refresh(user)
 
     if body.role == Role.CLIENT:
-        asyncio.create_task(mailer.send_welcome_client(
+        mailer.fire(mailer.send_welcome_client(
             to=user.email,
             client_name=user.name,
             email=user.email,

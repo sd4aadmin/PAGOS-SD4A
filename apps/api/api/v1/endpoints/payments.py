@@ -78,7 +78,7 @@ async def create_payment(
     client_result = await db.execute(select(User).where(User.id == proj.client_id))
     client = client_result.scalar_one_or_none()
     if client:
-        asyncio.create_task(mailer.send_payment_link(
+        mailer.fire(mailer.send_payment_link(
             to=client.email,
             client_name=client.name,
             project_name=proj.name,
@@ -368,7 +368,7 @@ async def manual_confirm(
     client_result = await db.execute(select(User).where(User.id == payment.user_id))
     client = client_result.scalar_one_or_none()
     if client and proj:
-        asyncio.create_task(mailer.send_payment_confirmed(
+        mailer.fire(mailer.send_payment_confirmed(
             to=client.email,
             client_name=client.name,
             project_name=proj.name,

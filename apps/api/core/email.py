@@ -1,15 +1,27 @@
 """
 Servicio de email async — envía notificaciones HTML via SMTP (Gmail/TLS).
 """
+import asyncio
 import logging
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from typing import Coroutine
 
 import aiosmtplib
 
 from core.config import settings
 
 logger = logging.getLogger(__name__)
+
+
+def fire(coro: Coroutine) -> None:
+    """Lanza una corutina en background logueando cualquier excepción."""
+    async def _run():
+        try:
+            await coro
+        except Exception as exc:
+            logger.error("Background email task failed: %s", exc, exc_info=True)
+    asyncio.create_task(_run())
 
 
 async def send_email(to: str, subject: str, html: str) -> None:
@@ -27,10 +39,11 @@ async def send_email(to: str, subject: str, html: str) -> None:
         await aiosmtplib.send(
             msg,
             hostname=settings.SMTP_HOST,
-            port=settings.SMTP_PORT,
+            port=int(settings.SMTP_PORT),
             username=settings.SMTP_USER,
             password=settings.SMTP_PASSWORD,
             start_tls=True,
+            timeout=15,
         )
         logger.info("Email enviado a %s: %s", to, subject)
     except Exception as exc:

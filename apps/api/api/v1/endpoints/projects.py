@@ -126,7 +126,7 @@ async def create_project(
     # Email al cliente — fire & forget
     if client:
         advance_amount = float(body.total_value) * body.advance_percent / 100
-        asyncio.create_task(mailer.send_project_created(
+        mailer.fire(mailer.send_project_created(
             to=client.email,
             client_name=client.name,
             project_name=body.name,
@@ -195,7 +195,7 @@ async def update_project(
     if client and changes:
         new_status = str(project.status)
         if "status" in changes and old_status != new_status:
-            asyncio.create_task(mailer.send_status_changed(
+            mailer.fire(mailer.send_status_changed(
                 to=client.email,
                 client_name=client.name,
                 project_name=project.name,
@@ -206,7 +206,7 @@ async def update_project(
                 project_id=project.id,
             ))
         else:
-            asyncio.create_task(mailer.send_project_updated(
+            mailer.fire(mailer.send_project_updated(
                 to=client.email,
                 client_name=client.name,
                 project_name=project.name,

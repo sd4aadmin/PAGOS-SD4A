@@ -159,7 +159,7 @@ async def upload_deliverable(
     client_result = await db.execute(select(User).where(User.id == proj.client_id))
     client = client_result.scalar_one_or_none()
     if client:
-        asyncio.create_task(mailer.send_deliverable_uploaded(
+        mailer.fire(mailer.send_deliverable_uploaded(
             to=client.email,
             client_name=client.name,
             project_name=proj.name,
