@@ -1,11 +1,10 @@
 """
-Google Drive service — usa Service Account para autenticación permanente.
+Google Drive service — OAuth2 con refresh token del propietario.
 """
 import io
-import json
-import os
 
-from google.oauth2 import service_account
+from google.oauth2.credentials import Credentials
+from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload, MediaIoBaseUpload
 
@@ -14,29 +13,24 @@ from core.config import settings
 SCOPES = ["https://www.googleapis.com/auth/drive"]
 
 _cached_service = None
+_cached_token = None
 
 
 def _get_service():
-    global _cached_service
-    if _cached_service is not None:
-        return _cached_service
-
-    # Opción 1: JSON en base64 (evita problemas de escape en Railway)
-    sa_b64 = os.environ.get("GOOGLE_SERVICE_ACCOUNT_B64")
-    if sa_b64:
-        import base64
-        info = json.loads(base64.b64decode(sa_b64).decode("utf-8"))
-        creds = service_account.Credentials.from_service_account_info(info, scopes=SCOPES)
-    # Opción 2: JSON completo en variable de entorno
-    elif os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON"):
-        info = json.loads(os.environ["GOOGLE_SERVICE_ACCOUNT_JSON"])
-        creds = service_account.Credentials.from_service_account_info(info, scopes=SCOPES)
-    else:
-        # Opción 2: archivo local (desarrollo)
-        sa_path = os.path.join(os.path.dirname(__file__), "..", "sd4a-service-account.json")
-        creds = service_account.Credentials.from_service_account_file(sa_path, scopes=SCOPES)
-
-    _cached_service = build("drive", "v3", credentials=creds, cache_discovery=False)
+    global _cached_service, _cached_token
+    current_token = settings.GOOGLE_REFRESH_TOKEN
+    if _cached_service is None or _cached_token != current_token:
+        creds = Credentials(
+            token=None,
+            refresh_token=current_token,
+            token_uri="https://oauth2.googleapis.com/token",
+            client_id=settings.GOOGLE_CLIENT_ID,
+            client_secret=settings.GOOGLE_CLIENT_SECRET,
+            scopes=SCOPES,
+        )
+        creds.refresh(Request())
+        _cached_service = build("drive", "v3", credentials=creds, cache_discovery=False)
+        _cached_token = current_token
     return _cached_service
 
 
