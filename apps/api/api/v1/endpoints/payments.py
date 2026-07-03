@@ -275,6 +275,63 @@ async def wompi_webhook(event: WompiWebhookEvent, db: AsyncSession = Depends(get
     return {"received": True}
 
 
+# ─── UPDATE PAYMENT (admin) ──────────────────────────────────────────────────
+
+@router.patch("/{payment_id}", response_model=PaymentOut)
+async def update_payment(
+    payment_id: str,
+    body: dict,
+    current_user: User = Depends(require_roles(Role.ADMIN)),
+    db: AsyncSession = Depends(get_db),
+):
+    payment = (await db.execute(select(Payment).where(Payment.id == payment_id))).scalar_one_or_none()
+    if not payment:
+        raise HTTPException(404, "Pago no encontrado")
+    if payment.status == PaymentStatus.CONFIRMED:
+        raise HTTPException(400, "No se puede editar un pago confirmado")
+
+    if "amount" in body:
+        payment.amount = body["amount"]
+    if "type" in body:
+        try:
+            payment.type = PaymentType(body["type"])
+        except ValueError:
+            raise HTTPException(400, "Tipo de pago inválido")
+    if "notes" in body:
+        payment.notes = body["notes"] or None
+
+    payment.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
+    await log_action(db, "PAYMENT_UPDATED",
+                     f"Pago editado: ${float(payment.amount):,.0f} COP",
+                     user_id=current_user.id, project_id=payment.project_id,
+                     metadata={"payment_id": payment_id})
+    await db.commit()
+    await db.refresh(payment)
+    return payment
+
+
+# ─── DELETE PAYMENT (admin) ───────────────────────────────────────────────────
+
+@router.delete("/{payment_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_payment(
+    payment_id: str,
+    current_user: User = Depends(require_roles(Role.ADMIN)),
+    db: AsyncSession = Depends(get_db),
+):
+    payment = (await db.execute(select(Payment).where(Payment.id == payment_id))).scalar_one_or_none()
+    if not payment:
+        raise HTTPException(404, "Pago no encontrado")
+    if payment.status == PaymentStatus.CONFIRMED:
+        raise HTTPException(400, "No se puede eliminar un pago confirmado")
+
+    await log_action(db, "PAYMENT_DELETED",
+                     f"Pago eliminado: {PAYMENT_TYPE_ES.get(payment.type.value, payment.type.value)} ${float(payment.amount):,.0f} COP",
+                     user_id=current_user.id, project_id=payment.project_id,
+                     metadata={"payment_id": payment_id})
+    await db.delete(payment)
+    await db.commit()
+
+
 # ─── MANUAL CONFIRM (admin, para sandbox/testing) ─────────────────────────────
 
 @router.post("/{payment_id}/confirm", response_model=PaymentOut)
