@@ -33,10 +33,16 @@ class Settings(BaseSettings):
     # App URL (para redirect después de pago)
     APP_URL: str = "http://localhost:3000"
 
-    # Email (Brevo)
+    # Email (Brevo fallback → SMTP)
     BREVO_API_KEY: str = ""
     EMAIL_FROM_NAME: str = "SD4A"
     EMAIL_FROM_ADDRESS: str = "sd4aadmin@gmail.com"
+
+    # SMTP (Gmail)
+    SMTP_HOST: str = "smtp.gmail.com"
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
 
     # Autodesk Platform Services
     APS_CLIENT_ID: str = ""

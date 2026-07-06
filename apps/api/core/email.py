@@ -1,8 +1,12 @@
 """
-Servicio de email — envía notificaciones HTML via Brevo (HTTP API).
+Servicio de email — usa Brevo si hay API key, si no usa SMTP (Gmail).
 """
 import asyncio
 import logging
+import smtplib
+import ssl
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from typing import Coroutine
 
 import httpx
@@ -15,7 +19,6 @@ BREVO_URL = "https://api.brevo.com/v3/smtp/email"
 
 
 def fire(coro: Coroutine) -> None:
-    """Lanza una corutina en background logueando cualquier excepción."""
     async def _run():
         try:
             await coro
@@ -25,37 +28,54 @@ def fire(coro: Coroutine) -> None:
 
 
 async def send_email(to: str, subject: str, html: str) -> None:
-    if not settings.BREVO_API_KEY:
-        logger.warning("BREVO_API_KEY no configurado — email no enviado: %s", subject)
+    # ── Brevo (si está configurado) ──────────────────────────────────────────
+    if settings.BREVO_API_KEY:
+        payload = {
+            "sender": {"name": settings.EMAIL_FROM_NAME, "email": settings.EMAIL_FROM_ADDRESS},
+            "to": [{"email": to}],
+            "subject": subject,
+            "htmlContent": html,
+        }
+        try:
+            async with httpx.AsyncClient(timeout=10) as client:
+                r = await client.post(
+                    BREVO_URL, json=payload,
+                    headers={"accept": "application/json", "api-key": settings.BREVO_API_KEY, "content-type": "application/json"},
+                )
+            if r.status_code >= 400:
+                logger.error("Brevo error %s: %s", r.status_code, r.text)
+            else:
+                logger.info("Email enviado (Brevo) a %s: %s", to, subject)
+        except Exception as exc:
+            logger.error("Error Brevo a %s: %s", to, exc)
         return
 
-    payload = {
-        "sender": {
-            "name": settings.EMAIL_FROM_NAME,
-            "email": settings.EMAIL_FROM_ADDRESS,
-        },
-        "to": [{"email": to}],
-        "subject": subject,
-        "htmlContent": html,
-    }
+    # ── SMTP Gmail (fallback) ────────────────────────────────────────────────
+    if not settings.SMTP_USER or not settings.SMTP_PASSWORD:
+        logger.warning("Sin credenciales de email — no enviado: %s", subject)
+        return
 
     try:
-        async with httpx.AsyncClient(timeout=10) as client:
-            r = await client.post(
-                BREVO_URL,
-                json=payload,
-                headers={
-                    "accept": "application/json",
-                    "api-key": settings.BREVO_API_KEY,
-                    "content-type": "application/json",
-                },
-            )
-        if r.status_code >= 400:
-            logger.error("Brevo error %s: %s", r.status_code, r.text)
-        else:
-            logger.info("Email enviado a %s: %s", to, subject)
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = subject
+        msg["From"] = f"{settings.EMAIL_FROM_NAME} <{settings.SMTP_USER}>"
+        msg["To"] = to
+        msg.attach(MIMEText(html, "html", "utf-8"))
+
+        context = ssl.create_default_context()
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(None, _smtp_send, msg, to, context)
+        logger.info("Email enviado (SMTP) a %s: %s", to, subject)
     except Exception as exc:
-        logger.error("Error enviando email a %s: %s", to, exc)
+        logger.error("Error SMTP a %s: %s", to, exc)
+
+
+def _smtp_send(msg: MIMEMultipart, to: str, context: ssl.SSLContext) -> None:
+    with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
+        server.ehlo()
+        server.starttls(context=context)
+        server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+        server.sendmail(settings.SMTP_USER, to, msg.as_string())
 
 
 # ─── PLANTILLAS ───────────────────────────────────────────────────────────────
