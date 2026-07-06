@@ -33,9 +33,10 @@ class Settings(BaseSettings):
     # App URL (para redirect después de pago)
     APP_URL: str = "http://localhost:3000"
 
-    # Email (Resend)
-    RESEND_API_KEY: str = ""
-    EMAIL_FROM: str = "SD4A Portal <onboarding@resend.dev>"
+    # Email (Brevo)
+    BREVO_API_KEY: str = ""
+    EMAIL_FROM_NAME: str = "SD4A"
+    EMAIL_FROM_ADDRESS: str = "sd4aadmin@gmail.com"
 
     # Autodesk Platform Services
     APS_CLIENT_ID: str = ""

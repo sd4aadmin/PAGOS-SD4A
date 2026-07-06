@@ -1,15 +1,17 @@
 """
-Servicio de email — envía notificaciones HTML via Resend (HTTP API).
+Servicio de email — envía notificaciones HTML via Brevo (HTTP API).
 """
 import asyncio
 import logging
 from typing import Coroutine
 
-import resend
+import httpx
 
 from core.config import settings
 
 logger = logging.getLogger(__name__)
+
+BREVO_URL = "https://api.brevo.com/v3/smtp/email"
 
 
 def fire(coro: Coroutine) -> None:
@@ -23,19 +25,35 @@ def fire(coro: Coroutine) -> None:
 
 
 async def send_email(to: str, subject: str, html: str) -> None:
-    if not settings.RESEND_API_KEY:
-        logger.warning("RESEND_API_KEY no configurado — email no enviado: %s", subject)
+    if not settings.BREVO_API_KEY:
+        logger.warning("BREVO_API_KEY no configurado — email no enviado: %s", subject)
         return
 
+    payload = {
+        "sender": {
+            "name": settings.EMAIL_FROM_NAME,
+            "email": settings.EMAIL_FROM_ADDRESS,
+        },
+        "to": [{"email": to}],
+        "subject": subject,
+        "htmlContent": html,
+    }
+
     try:
-        resend.api_key = settings.RESEND_API_KEY
-        resend.Emails.send({
-            "from": settings.EMAIL_FROM,
-            "to": [to],
-            "subject": subject,
-            "html": html,
-        })
-        logger.info("Email enviado a %s: %s", to, subject)
+        async with httpx.AsyncClient(timeout=10) as client:
+            r = await client.post(
+                BREVO_URL,
+                json=payload,
+                headers={
+                    "accept": "application/json",
+                    "api-key": settings.BREVO_API_KEY,
+                    "content-type": "application/json",
+                },
+            )
+        if r.status_code >= 400:
+            logger.error("Brevo error %s: %s", r.status_code, r.text)
+        else:
+            logger.info("Email enviado a %s: %s", to, subject)
     except Exception as exc:
         logger.error("Error enviando email a %s: %s", to, exc)
 
@@ -55,16 +73,13 @@ def _base(title: str, body: str) -> str:
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f9;padding:32px 0;">
     <tr><td align="center">
       <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08);">
-        <!-- Header -->
         <tr>
           <td style="background:#102a6e;padding:24px 32px;">
             <span style="color:#ffffff;font-size:20px;font-weight:700;letter-spacing:-0.5px;">SD4A</span>
             <span style="color:#7dd3fc;font-size:12px;margin-left:8px;">Portal de Proyectos</span>
           </td>
         </tr>
-        <!-- Body -->
         <tr><td style="padding:32px;">{body}</td></tr>
-        <!-- Footer -->
         <tr>
           <td style="background:#f8fafc;padding:20px 32px;border-top:1px solid #e2e8f0;">
             <p style="margin:0;color:#94a3b8;font-size:12px;text-align:center;">
@@ -115,15 +130,9 @@ def _table(*rows: str) -> str:
 # ─── EMAILS ESPECÍFICOS ───────────────────────────────────────────────────────
 
 async def send_project_created(
-    to: str,
-    client_name: str,
-    project_name: str,
-    project_code: str,
-    total_value: str,
-    advance_percent: int,
-    advance_amount: str,
-    app_url: str,
-    project_id: str,
+    to: str, client_name: str, project_name: str, project_code: str,
+    total_value: str, advance_percent: int, advance_amount: str,
+    app_url: str, project_id: str,
 ) -> None:
     body = (
         _h1(f"Nuevo proyecto asignado: {project_code}")
@@ -141,79 +150,49 @@ async def send_project_created(
 
 
 async def send_status_changed(
-    to: str,
-    client_name: str,
-    project_name: str,
-    project_code: str,
-    old_status: str,
-    new_status: str,
-    app_url: str,
-    project_id: str,
+    to: str, client_name: str, project_name: str, project_code: str,
+    old_status: str, new_status: str, app_url: str, project_id: str,
 ) -> None:
     status_map = {
-        "PENDING_ADVANCE": "Pendiente anticipo",
-        "IN_PROGRESS": "En ejecución",
-        "IN_REVIEW": "En revisión",
-        "FINISHED": "Finalizado",
-        "PENDING_FINAL": "Pendiente pago final",
-        "PAID": "Pagado",
-        "DELIVERED": "Entregado",
+        "PENDING_ADVANCE": "Pendiente anticipo", "IN_PROGRESS": "En ejecución",
+        "IN_REVIEW": "En revisión", "FINISHED": "Finalizado",
+        "PENDING_FINAL": "Pendiente pago final", "PAID": "Pagado", "DELIVERED": "Entregado",
     }
     new_label = status_map.get(new_status, new_status)
     old_label = status_map.get(old_status, old_status)
-
     body = (
         _h1(f"Actualización de estado: {project_code}")
         + _p(f"Hola {client_name}, el estado de tu proyecto <strong>{project_name}</strong> ha cambiado.")
-        + _table(
-            _info_row("Antes", old_label),
-            _info_row("Ahora", f"{_badge(new_label)}"),
-        )
+        + _table(_info_row("Antes", old_label), _info_row("Ahora", _badge(new_label)))
         + _btn("Ver proyecto", f"{app_url}/dashboard/projects/{project_id}")
     )
     await send_email(to, f"SD4A — {project_code} ahora está: {new_label}", _base("Estado del proyecto", body))
 
 
 async def send_project_updated(
-    to: str,
-    client_name: str,
-    project_name: str,
-    project_code: str,
-    changes: dict,
-    app_url: str,
-    project_id: str,
+    to: str, client_name: str, project_name: str, project_code: str,
+    changes: dict, app_url: str, project_id: str,
 ) -> None:
     field_labels = {
-        "progress": "Progreso",
-        "status": "Estado",
-        "name": "Nombre",
-        "description": "Descripción",
-        "estimated_date": "Fecha estimada",
-        "total_value": "Valor total",
-        "advance_percent": "% Anticipo",
+        "progress": "Progreso", "status": "Estado", "name": "Nombre",
+        "description": "Descripción", "estimated_date": "Fecha estimada",
+        "total_value": "Valor total", "advance_percent": "% Anticipo",
     }
     status_map = {
-        "PENDING_ADVANCE": "Pendiente anticipo",
-        "IN_PROGRESS": "En ejecución",
-        "IN_REVIEW": "En revisión",
-        "FINISHED": "Finalizado",
-        "PENDING_FINAL": "Pendiente pago final",
-        "PAID": "Pagado",
-        "DELIVERED": "Entregado",
+        "PENDING_ADVANCE": "Pendiente anticipo", "IN_PROGRESS": "En ejecución",
+        "IN_REVIEW": "En revisión", "FINISHED": "Finalizado",
+        "PENDING_FINAL": "Pendiente pago final", "PAID": "Pagado", "DELIVERED": "Entregado",
     }
-
     rows = ""
     for key, val in changes.items():
         label = field_labels.get(key, key)
         if key == "status":
-            val = status_map.get(str(val), str(val))
-            val = _badge(val)
+            val = _badge(status_map.get(str(val), str(val)))
         elif key == "progress":
             val = f"{val}%"
         elif key == "total_value":
             val = f"${float(val):,.0f} COP"
         rows += _info_row(label, str(val))
-
     body = (
         _h1(f"Actualización en tu proyecto: {project_code}")
         + _p(f"Hola {client_name}, tu proyecto <strong>{project_name}</strong> ha sido actualizado.")
@@ -224,18 +203,11 @@ async def send_project_updated(
 
 
 async def send_payment_confirmed(
-    to: str,
-    client_name: str,
-    project_name: str,
-    project_code: str,
-    payment_type: str,
-    amount: str,
-    app_url: str,
-    project_id: str,
+    to: str, client_name: str, project_name: str, project_code: str,
+    payment_type: str, amount: str, app_url: str, project_id: str,
 ) -> None:
     type_map = {"ADVANCE": "Anticipo", "PARTIAL": "Pago parcial", "FINAL": "Pago final"}
     type_label = type_map.get(payment_type, payment_type)
-
     body = (
         _h1("Pago confirmado")
         + _p(f"Hola {client_name}, hemos confirmado tu pago para el proyecto <strong>{project_name}</strong>.")
@@ -243,7 +215,7 @@ async def send_payment_confirmed(
             _info_row("Proyecto", f"{project_code} — {project_name}"),
             _info_row("Tipo de pago", type_label),
             _info_row("Monto", amount),
-            _info_row("Estado", f"{_badge('Confirmado', '#d1fae5', '#065f46')}"),
+            _info_row("Estado", _badge("Confirmado", "#d1fae5", "#065f46")),
         )
         + _btn("Ver proyecto", f"{app_url}/dashboard/projects/{project_id}")
     )
@@ -251,11 +223,7 @@ async def send_payment_confirmed(
 
 
 async def send_welcome_client(
-    to: str,
-    client_name: str,
-    email: str,
-    password: str,
-    app_url: str,
+    to: str, client_name: str, email: str, password: str, app_url: str,
 ) -> None:
     body = (
         _h1(f"Bienvenido al Portal SD4A, {client_name}")
@@ -272,16 +240,11 @@ async def send_welcome_client(
 
 
 async def send_deliverable_uploaded(
-    to: str,
-    client_name: str,
-    project_name: str,
-    project_code: str,
-    file_name: str,
-    app_url: str,
-    project_id: str,
+    to: str, client_name: str, project_name: str, project_code: str,
+    file_name: str, app_url: str, project_id: str,
 ) -> None:
     body = (
-        _h1(f"Nuevo entregable disponible")
+        _h1("Nuevo entregable disponible")
         + _p(f"Hola {client_name}, hay un nuevo archivo disponible en tu proyecto <strong>{project_name}</strong>.")
         + _table(
             _info_row("Proyecto", f"{project_code} — {project_name}"),
@@ -294,19 +257,13 @@ async def send_deliverable_uploaded(
 
 
 async def send_payment_link(
-    to: str,
-    client_name: str,
-    project_name: str,
-    project_code: str,
-    payment_type: str,
-    amount: str,
-    checkout_url: str,
+    to: str, client_name: str, project_name: str, project_code: str,
+    payment_type: str, amount: str, checkout_url: str,
 ) -> None:
     type_map = {"ADVANCE": "Anticipo", "PARTIAL": "Pago parcial", "FINAL": "Pago final"}
     type_label = type_map.get(payment_type, payment_type)
-
     body = (
-        _h1(f"Enlace de pago disponible")
+        _h1("Enlace de pago disponible")
         + _p(f"Hola {client_name}, tienes un pago pendiente para el proyecto <strong>{project_name}</strong>.")
         + _table(
             _info_row("Proyecto", f"{project_code} — {project_name}"),
