@@ -108,6 +108,12 @@ def _base(title: str, body: str) -> str:
         <!-- FOOTER -->
         <tr>
           <td style="background:#f0fafa;padding:20px 36px;border-top:1px solid #cde8e9;">
+            <p style="margin:0 0 8px;text-align:center;">
+              <a href="https://pagos-sd-4-a.vercel.app/login"
+                 style="color:#0A7881;font-size:13px;font-weight:600;text-decoration:none;">
+                Ingresar al portal →
+              </a>
+            </p>
             <p style="margin:0;color:#7aadaf;font-size:12px;text-align:center;line-height:1.6;">
               SD4A Ingeniería Estructural &nbsp;|&nbsp; Este es un correo automático, no responder.
             </p>
