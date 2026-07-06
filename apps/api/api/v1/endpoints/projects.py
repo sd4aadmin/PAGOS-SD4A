@@ -238,6 +238,18 @@ async def delete_project(
     project = result.scalar_one_or_none()
     if not project:
         raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+
+    from sqlalchemy import delete as sql_delete
+    from models.project_file import ProjectFile
+    from models.payment import Payment
+    from models.activity_log import ActivityLog
+
+    # Eliminar registros dependientes antes de borrar el proyecto
+    await db.execute(sql_delete(ProjectMember).where(ProjectMember.project_id == project_id))
+    await db.execute(sql_delete(ProjectFile).where(ProjectFile.project_id == project_id))
+    await db.execute(sql_delete(Payment).where(Payment.project_id == project_id))
+    await db.execute(sql_delete(ActivityLog).where(ActivityLog.project_id == project_id))
+
     await log_action(db, "PROJECT_DELETED", f"Proyecto {project.code} eliminado: {project.name}",
                      user_id=current_user.id, metadata={"code": project.code})
     await db.delete(project)
