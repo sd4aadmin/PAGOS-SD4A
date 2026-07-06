@@ -36,8 +36,8 @@ async def login(request: Request, body: LoginRequest, db: AsyncSession = Depends
             detail=f"Cuenta bloqueada temporalmente. Intenta en {remaining} segundos.",
         )
 
-    result = await db.execute(select(User).where(User.email == body.email))
-    user = result.scalar_one_or_none()
+    result = await db.execute(select(User).where(User.email == body.email).limit(1))
+    user = result.scalars().first()
 
     if not user or not verify_password(body.password, user.password_hash):
         attempts = record_failed_login(body.email)
