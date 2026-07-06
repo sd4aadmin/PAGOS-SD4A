@@ -178,20 +178,28 @@ async def delete_user(
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado")
 
-    # Verificar que no tenga proyectos asignados como cliente o miembro
     from models.project import Project, ProjectMember
+    from models.project_file import ProjectFile
+    from models.payment import Payment
+    from models.activity_log import ActivityLog
+    from sqlalchemy import delete as sql_delete, update as sql_update
+
+    # Bloquear si es cliente con proyectos (no se puede reasignar automáticamente)
     has_projects = (await db.execute(
         select(func.count()).where(Project.client_id == user_id)
     )).scalar_one()
-    has_memberships = (await db.execute(
-        select(func.count()).where(ProjectMember.user_id == user_id)
-    )).scalar_one()
-
-    if has_projects or has_memberships:
+    if has_projects:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No se puede eliminar: el usuario tiene proyectos asignados. Primero desasígnalo de todos los proyectos."
+            detail="No se puede eliminar: el usuario es cliente de proyectos activos."
         )
+
+    # Limpiar todas las referencias antes de eliminar
+    await db.execute(sql_delete(ProjectMember).where(ProjectMember.user_id == user_id))
+    await db.execute(sql_update(ActivityLog).where(ActivityLog.user_id == user_id).values(user_id=None))
+    # project_files y payments tienen uploaded_by/user_id NOT NULL → reemplazar con el admin actual
+    await db.execute(sql_update(ProjectFile).where(ProjectFile.uploaded_by == user_id).values(uploaded_by=current_user.id))
+    await db.execute(sql_update(Payment).where(Payment.user_id == user_id).values(user_id=current_user.id))
 
     try:
         await db.delete(user)
