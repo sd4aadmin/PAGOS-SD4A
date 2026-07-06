@@ -47,17 +47,24 @@ async def create_user(
     db: AsyncSession = Depends(get_db),
     _: User = AdminOnly,
 ):
-    # Solo bloquear email duplicado si no es ingeniero (los ingenieros pueden compartir correo)
+    # Solo bloquear email duplicado si no es ingeniero
+    existing_user = None
     if body.role != "ENGINEER":
         existing = await db.execute(select(User).where(User.email == body.email))
         if existing.scalar_one_or_none():
             raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="El email ya está registrado")
+    else:
+        # Si es ingeniero con email existente, reusar el hash de contraseña
+        result = await db.execute(select(User).where(User.email == body.email).limit(1))
+        existing_user = result.scalar_one_or_none()
+
+    password_hash = existing_user.password_hash if existing_user else hash_password(body.password)
 
     user = User(
         id=str(uuid.uuid4()),
         email=body.email,
         name=body.name,
-        password_hash=hash_password(body.password),
+        password_hash=password_hash,
         role=body.role,
         phone=body.phone,
         company=body.company,
@@ -66,7 +73,8 @@ async def create_user(
     await db.commit()
     await db.refresh(user)
 
-    if body.role in (Role.CLIENT, Role.ENGINEER):
+    # Solo enviar correo si es cuenta nueva (sin email previo)
+    if body.role in (Role.CLIENT, Role.ENGINEER) and not existing_user:
         mailer.fire(mailer.send_welcome_client(
             to=user.email,
             client_name=user.name,
