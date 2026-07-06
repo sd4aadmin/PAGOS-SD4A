@@ -47,7 +47,7 @@ export function UserTable({ users, onRefresh }: Props) {
   }
 
   async function deleteUser(user: User) {
-    if (!window.confirm(`¿Eliminar permanentemente a ${user.full_name}? Esta acción no se puede deshacer.`)) return;
+    if (!window.confirm(`¿Eliminar permanentemente a ${user.name}? Esta acción no se puede deshacer.`)) return;
     const res = await fetch(`/api/proxy/users/${user.id}`, { method: "DELETE" });
     if (res.ok || res.status === 204) onRefresh();
     else {
