@@ -42,8 +42,8 @@ export function TopBar({ user }: { user: TopBarUser }) {
     <header className="h-14 bg-card border-b border-border flex items-center justify-between px-3 md:px-5 shrink-0">
       {/* Logo solo en móvil */}
       <div className="md:hidden flex items-center">
-        <Image src="/logo-light.png" alt="SD4A" width={90} height={28} className="object-contain dark:hidden" priority />
-        <Image src="/logo-dark.png" alt="SD4A" width={90} height={28} className="object-contain hidden dark:block" priority />
+        <Image src="/logo-light.png" alt="SD4A" width={115} height={36} className="object-contain dark:hidden" priority />
+        <Image src="/logo-dark.png" alt="SD4A" width={115} height={36} className="object-contain hidden dark:block" priority />
       </div>
       <div className="hidden md:block" />
       <div className="flex items-center gap-2">

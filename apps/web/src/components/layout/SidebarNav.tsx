@@ -15,17 +15,17 @@ type NavItem = {
   icon: React.ElementType;
   roles: string[];
   group?: string;
+  exact?: boolean;
 };
 
 const NAV_ITEMS: NavItem[] = [
-  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, roles: ["ADMIN", "ENGINEER"] },
+  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, roles: ["ADMIN", "ENGINEER"], exact: true },
   { label: "Proyectos", href: "/dashboard/projects", icon: FolderKanban, roles: ["ADMIN", "ENGINEER", "CLIENT"] },
   { label: "Mi Perfil", href: "/dashboard/profile", icon: UserCircle, roles: ["ADMIN", "ENGINEER", "CLIENT"] },
   { label: "Clientes", href: "/admin/clients", icon: Users, roles: ["ADMIN"], group: "admin" },
   { label: "Ingenieros", href: "/admin/engineers", icon: HardHat, roles: ["ADMIN"], group: "admin" },
   { label: "Pagos", href: "/admin/payments", icon: CreditCard, roles: ["ADMIN"], group: "admin" },
   { label: "Actividad", href: "/admin/activity", icon: Activity, roles: ["ADMIN", "ENGINEER"], group: "admin" },
-  { label: "Config", href: "/admin/settings", icon: Settings, roles: ["ADMIN"], group: "admin" },
 ];
 
 export function SidebarNav({ role }: { role: string }) {
@@ -40,7 +40,7 @@ export function SidebarNav({ role }: { role: string }) {
       <aside className="hidden md:flex w-56 bg-sidebar-bg flex-col shrink-0">
         {/* Logo */}
         <div className="h-16 flex items-center px-4 border-b border-white/10">
-          <Image src="/logo-dark.png" alt="SD4A" width={130} height={40} className="object-contain" priority />
+          <Image src="/logo-dark.png" alt="SD4A" width={155} height={48} className="object-contain" priority />
         </div>
 
         {/* Nav */}
@@ -73,7 +73,7 @@ export function SidebarNav({ role }: { role: string }) {
 
 function NavLink({ item, pathname }: { item: NavItem; pathname: string }) {
   const Icon = item.icon;
-  const active = pathname === item.href || pathname.startsWith(item.href + "/");
+  const active = item.exact ? pathname === item.href : (pathname === item.href || pathname.startsWith(item.href + "/"));
   return (
     <Link
       href={item.href}
@@ -92,7 +92,7 @@ function NavLink({ item, pathname }: { item: NavItem; pathname: string }) {
 
 function MobileNavLink({ item, pathname }: { item: NavItem; pathname: string }) {
   const Icon = item.icon;
-  const active = pathname === item.href || pathname.startsWith(item.href + "/");
+  const active = item.exact ? pathname === item.href : (pathname === item.href || pathname.startsWith(item.href + "/"));
   return (
     <Link
       href={item.href}

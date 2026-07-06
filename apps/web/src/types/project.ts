@@ -40,11 +40,11 @@ export const STATUS_LABELS: Record<ProjectStatus, string> = {
 };
 
 export const STATUS_COLORS: Record<ProjectStatus, string> = {
-  PENDING_ADVANCE: "bg-yellow-100 text-yellow-800",
-  IN_PROGRESS: "bg-blue-100 text-blue-800",
-  IN_REVIEW: "bg-purple-100 text-purple-800",
-  FINISHED: "bg-green-100 text-green-800",
-  PENDING_FINAL: "bg-orange-100 text-orange-800",
-  PAID: "bg-emerald-100 text-emerald-800",
-  DELIVERED: "bg-gray-100 text-gray-800",
+  PENDING_ADVANCE: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300",
+  IN_PROGRESS:     "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300",
+  IN_REVIEW:       "bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300",
+  FINISHED:        "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300",
+  PENDING_FINAL:   "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300",
+  PAID:            "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300",
+  DELIVERED:       "bg-gray-100 text-gray-700 dark:bg-gray-700/50 dark:text-gray-300",
 };

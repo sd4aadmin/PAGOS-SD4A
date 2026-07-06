@@ -33,7 +33,7 @@ export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
 };
 
 export const PAYMENT_STATUS_COLORS: Record<PaymentStatus, string> = {
-  PENDING: "bg-yellow-100 text-yellow-800",
-  CONFIRMED: "bg-emerald-100 text-emerald-800",
-  FAILED: "bg-red-100 text-red-800",
+  PENDING:   "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300",
+  CONFIRMED: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300",
+  FAILED:    "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300",
 };

@@ -1,90 +1,95 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { logout } from "@/app/actions/auth";
+import { signOut } from "next-auth/react";
+import { LogOut, Clock } from "lucide-react";
 
-const INACTIVE_MS = 10 * 60 * 1000;  // 10 minutos
-const WARNING_MS = 60 * 1000;         // aviso 1 minuto antes
+const INACTIVITY_MS = 20 * 60 * 1000;  // 20 min de inactividad → logout
+const WARNING_MS    =  2 * 60 * 1000;  // aviso 2 min antes
 
 const EVENTS = ["mousemove", "mousedown", "keydown", "touchstart", "scroll", "click"];
 
 export function InactivityGuard() {
   const [showWarning, setShowWarning] = useState(false);
-  const [secondsLeft, setSecondsLeft] = useState(60);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const warningRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [secondsLeft, setSecondsLeft] = useState(WARNING_MS / 1000);
+  const logoutTimer  = useRef<ReturnType<typeof setTimeout>>();
+  const warningTimer = useRef<ReturnType<typeof setTimeout>>();
+  const countdownRef = useRef<ReturnType<typeof setInterval>>();
 
-  const clearAll = () => {
-    if (timerRef.current) clearTimeout(timerRef.current);
-    if (warningRef.current) clearTimeout(warningRef.current);
-    if (countdownRef.current) clearInterval(countdownRef.current);
-  };
+  function clearTimers() {
+    clearTimeout(logoutTimer.current);
+    clearTimeout(warningTimer.current);
+    clearInterval(countdownRef.current);
+  }
 
   const doLogout = useCallback(async () => {
-    clearAll();
-    await logout();
+    clearTimers();
+    await signOut({ callbackUrl: "/login" });
   }, []);
 
-  const reset = useCallback(() => {
-    clearAll();
+  const resetTimers = useCallback(() => {
+    clearTimers();
     setShowWarning(false);
-    setSecondsLeft(60);
 
-    warningRef.current = setTimeout(() => {
+    warningTimer.current = setTimeout(() => {
       setShowWarning(true);
-      setSecondsLeft(60);
+      setSecondsLeft(WARNING_MS / 1000);
       countdownRef.current = setInterval(() => {
         setSecondsLeft((s) => {
-          if (s <= 1) {
-            clearInterval(countdownRef.current!);
-            return 0;
-          }
+          if (s <= 1) { clearInterval(countdownRef.current); return 0; }
           return s - 1;
         });
       }, 1000);
-    }, INACTIVE_MS - WARNING_MS);
+    }, INACTIVITY_MS - WARNING_MS);
 
-    timerRef.current = setTimeout(() => {
-      doLogout();
-    }, INACTIVE_MS);
+    logoutTimer.current = setTimeout(doLogout, INACTIVITY_MS);
   }, [doLogout]);
 
   useEffect(() => {
-    reset();
-    EVENTS.forEach((e) => window.addEventListener(e, reset, { passive: true }));
+    EVENTS.forEach((e) => window.addEventListener(e, resetTimers, { passive: true }));
+    resetTimers();
     return () => {
-      clearAll();
-      EVENTS.forEach((e) => window.removeEventListener(e, reset));
+      clearTimers();
+      EVENTS.forEach((e) => window.removeEventListener(e, resetTimers));
     };
-  }, [reset]);
+  }, [resetTimers]);
 
   if (!showWarning) return null;
 
+  const mins = Math.floor(secondsLeft / 60);
+  const secs = secondsLeft % 60;
+
   return (
-    <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="bg-card border border-border rounded-2xl shadow-xl w-full max-w-sm p-6 mx-4 text-center space-y-4">
-        <div className="w-14 h-14 rounded-full bg-amber-100 flex items-center justify-center mx-auto">
-          <span className="text-2xl">⏱️</span>
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+      style={{ background: "rgba(0,0,0,0.65)", backdropFilter: "blur(4px)" }}
+    >
+      <div className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center space-y-4">
+        <div className="w-14 h-14 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mx-auto">
+          <Clock className="w-7 h-7 text-amber-600 dark:text-amber-400" />
         </div>
         <div>
-          <h2 className="font-semibold text-foreground text-lg">¿Sigues ahí?</h2>
+          <h2 className="text-lg font-bold text-foreground">Sesión por expirar</h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Tu sesión se cerrará en <span className="font-bold text-amber-600">{secondsLeft}s</span> por inactividad.
+            Por inactividad, la sesión se cerrará en
+          </p>
+          <p className="text-4xl font-bold text-amber-600 dark:text-amber-400 mt-2 tabular-nums">
+            {mins > 0 ? `${mins}:${String(secs).padStart(2, "0")}` : `${secs}s`}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-3 pt-1">
           <button
-            onClick={doLogout}
-            className="flex-1 py-2 border border-border rounded-lg text-sm text-muted-foreground hover:bg-muted/50"
+            onClick={resetTimers}
+            className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:opacity-90"
+            style={{ background: "linear-gradient(135deg, #0A7881, #68B2B7)" }}
           >
-            Cerrar sesión
+            Seguir conectado
           </button>
           <button
-            onClick={reset}
-            className="flex-1 py-2 bg-sd4a-dark text-white rounded-lg text-sm font-medium hover:bg-[#075e69]"
+            onClick={doLogout}
+            className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium border border-border text-muted-foreground hover:bg-muted transition-colors"
           >
-            Continuar
+            <LogOut className="w-4 h-4" /> Salir
           </button>
         </div>
       </div>
