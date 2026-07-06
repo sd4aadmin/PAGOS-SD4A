@@ -1,5 +1,7 @@
 "use client";
 
+import { proxyFetch } from "@/lib/proxy-fetch";
+
 import { useState, useEffect, useCallback } from "react";
 import { CreditCard, Plus, ExternalLink, CheckCircle2, Loader2, RefreshCw, Pencil, Trash2 } from "lucide-react";
 import {
@@ -334,7 +336,7 @@ function CreatePaymentModal({ project, totalPaid, onClose, onCreated }: { projec
   async function create() {
     setError(null);
     setLoading(true);
-    const res = await fetch("/api/proxy/payments", {
+    const res = await proxyFetch("/payments", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ project_id: project.id, type, amount: Number(amount), notes: notes || null }),

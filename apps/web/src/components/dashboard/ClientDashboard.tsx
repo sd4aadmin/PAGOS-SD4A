@@ -1,5 +1,7 @@
 "use client";
 
+import { proxyFetch } from "@/lib/proxy-fetch";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -17,7 +19,7 @@ export function ClientDashboard({ userName }: { userName: string }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/proxy/projects")
+    proxyFetch("/projects")
       .then((r) => r.json())
       .then((data) => { setProjects(Array.isArray(data) ? data : []); setLoading(false); })
       .catch(() => setLoading(false));

@@ -1,5 +1,7 @@
 "use client";
 
+import { proxyFetch } from "@/lib/proxy-fetch";
+
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { FolderKanban, Users, TrendingUp, Clock, ArrowRight, RefreshCw, CalendarDays, HardHat } from "lucide-react";
@@ -14,7 +16,7 @@ export function AdminDashboard({ userName }: { userName: string }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/proxy/projects")
+    proxyFetch("/projects")
       .then((r) => r.json())
       .then((data) => { setProjects(Array.isArray(data) ? data : []); setLoading(false); })
       .catch(() => setLoading(false));

@@ -1,5 +1,7 @@
 "use client";
 
+import { proxyFetch } from "@/lib/proxy-fetch";
+
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -38,7 +40,7 @@ export default function PaymentsAdminPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const res = await fetch("/api/proxy/payments");
+    const res = await proxyFetch("/payments");
     if (res.ok) setPayments(await res.json());
     setLoading(false);
   }, []);
@@ -320,7 +322,7 @@ function CreatePaymentModal({ onClose, onCreated }: { onClose: () => void; onCre
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    fetch("/api/proxy/projects")
+    proxyFetch("/projects")
       .then(r => r.json())
       .then(data => { setProjects(Array.isArray(data) ? data : []); setLoadingProjects(false); })
       .catch(() => setLoadingProjects(false));
@@ -343,7 +345,7 @@ function CreatePaymentModal({ onClose, onCreated }: { onClose: () => void; onCre
     if (!selectedProject || !amount) return;
     setError(null);
     setLoading(true);
-    const res = await fetch("/api/proxy/payments", {
+    const res = await proxyFetch("/payments", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ project_id: selectedProject.id, type, amount: Number(amount), notes: notes || null }),

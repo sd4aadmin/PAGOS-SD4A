@@ -1,5 +1,7 @@
 "use client";
 
+import { proxyFetch } from "@/lib/proxy-fetch";
+
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Search, RefreshCw, FolderKanban, X, ChevronUp, ChevronDown, ChevronsUpDown, DollarSign, TrendingUp, Clock, Mail, Phone, HardHat } from "lucide-react";
@@ -24,7 +26,7 @@ export function ProjectsPageClient({ role }: { role: string }) {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const res = await fetch("/api/proxy/projects");
+    const res = await proxyFetch("/projects");
     if (res.ok) setProjects(await res.json());
     setLoading(false);
   }, []);

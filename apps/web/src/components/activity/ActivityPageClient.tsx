@@ -1,5 +1,7 @@
 "use client";
 
+import { proxyFetch } from "@/lib/proxy-fetch";
+
 import { useState, useEffect, useCallback } from "react";
 import { RefreshCw, Activity, Search } from "lucide-react";
 
@@ -44,7 +46,7 @@ export function ActivityPageClient() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const res = await fetch("/api/proxy/activity?limit=200");
+    const res = await proxyFetch("/activity?limit=200");
     if (res.ok) {
       const data = await res.json();
       setLogs(data);

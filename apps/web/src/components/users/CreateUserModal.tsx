@@ -1,5 +1,7 @@
 "use client";
 
+import { proxyFetch } from "@/lib/proxy-fetch";
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -36,7 +38,7 @@ export function CreateUserModal({
 
   async function onSubmit(data: FormData) {
     setError(null);
-    const res = await fetch("/api/proxy/users", {
+    const res = await proxyFetch("/users", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),

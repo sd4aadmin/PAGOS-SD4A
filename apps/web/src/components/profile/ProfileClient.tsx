@@ -1,4 +1,6 @@
 "use client";
+
+import { proxyFetch } from "@/lib/proxy-fetch";
 import { useState } from "react";
 import { Eye, EyeOff, User, Mail, Shield, Loader2, CheckCircle2 } from "lucide-react";
 
@@ -31,7 +33,7 @@ export function ProfileClient({ user }: { user: SessionUser }) {
     setLoading(true);
     setError(null);
     setSuccess(false);
-    const res = await fetch("/api/proxy/users/me/password", {
+    const res = await proxyFetch("/users/me/password", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ current_password: currentPw, new_password: newPw }),

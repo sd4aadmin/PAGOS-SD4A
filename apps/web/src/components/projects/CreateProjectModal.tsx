@@ -1,5 +1,7 @@
 "use client";
 
+import { proxyFetch } from "@/lib/proxy-fetch";
+
 import { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -50,7 +52,7 @@ export function CreateProjectModal({
   });
 
   useEffect(() => {
-    fetch("/api/proxy/users?role=CLIENT&is_active=true")
+    proxyFetch("/users?role=CLIENT&is_active=true")
       .then((r) => r.json())
       .then((data) => setClients(data.items ?? data))
       .catch(() => {});
@@ -69,7 +71,7 @@ export function CreateProjectModal({
       start_date: data.start_date ? new Date(data.start_date).toISOString() : null,
       estimated_date: data.estimated_date ? new Date(data.estimated_date).toISOString() : null,
     };
-    const res = await fetch("/api/proxy/projects", {
+    const res = await proxyFetch("/projects", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),

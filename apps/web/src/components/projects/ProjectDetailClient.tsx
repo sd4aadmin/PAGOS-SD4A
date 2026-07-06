@@ -1,5 +1,7 @@
 "use client";
 
+import { proxyFetch } from "@/lib/proxy-fetch";
+
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -310,7 +312,7 @@ function EngineersPanel({ projectId, memberIds, isAdmin, onUpdated }: {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetch("/api/proxy/users?role=ENGINEER&is_active=true")
+    proxyFetch("/users?role=ENGINEER&is_active=true")
       .then(r => r.json())
       .then(d => setEngineers(Array.isArray(d) ? d : (d.items ?? [])));
   }, []);

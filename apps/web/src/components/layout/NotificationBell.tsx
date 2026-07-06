@@ -1,4 +1,6 @@
 "use client";
+
+import { proxyFetch } from "@/lib/proxy-fetch";
 import { useState, useEffect, useRef } from "react";
 import { Bell } from "lucide-react";
 
@@ -31,7 +33,7 @@ export function NotificationBell() {
   }, []);
 
   async function load() {
-    const res = await fetch("/api/proxy/activity?limit=20");
+    const res = await proxyFetch("/activity?limit=20");
     if (res.ok) setItems(await res.json());
   }
 
