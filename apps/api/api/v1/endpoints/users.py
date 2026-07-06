@@ -64,7 +64,7 @@ async def create_user(
     await db.commit()
     await db.refresh(user)
 
-    if body.role == Role.CLIENT:
+    if body.role in (Role.CLIENT, Role.ENGINEER):
         mailer.fire(mailer.send_welcome_client(
             to=user.email,
             client_name=user.name,
