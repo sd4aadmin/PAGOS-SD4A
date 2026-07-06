@@ -24,6 +24,7 @@ export function CreateUserModal({
   // Engineer-simple state
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [engineerPassword, setEngineerPassword] = useState("");
   const [existingEmails, setExistingEmails] = useState<string[]>([]);
   const [useExisting, setUseExisting] = useState(false);
 
@@ -53,7 +54,8 @@ export function CreateUserModal({
     if (!name.trim()) { setError("El nombre es requerido"); return; }
     if (!email.trim()) { setError("El correo es requerido"); return; }
 
-    const auto_password = isEngineer ? generatePassword() : password;
+    const auto_password = isEngineer ? (useExisting ? generatePassword() : engineerPassword) : password;
+    if (isEngineer && !useExisting && auto_password.length < 8) { setError("La contraseña debe tener mínimo 8 caracteres"); return; }
     if (!isEngineer && auto_password.length < 8) { setError("La contraseña debe tener mínimo 8 caracteres"); return; }
 
     setLoading(true);
@@ -144,12 +146,27 @@ export function CreateUserModal({
               />
             )}
 
-            {isEngineer && (
-              <p className="text-xs text-muted-foreground mt-1">
-                La contraseña se generará automáticamente y se enviará al correo.
-              </p>
-            )}
           </div>
+
+          {/* Contraseña — solo cuando es ingeniero con correo nuevo */}
+          {isEngineer && !useExisting && (
+            <div>
+              <label className="block text-sm font-medium text-foreground mb-1">Contraseña</label>
+              <input
+                value={engineerPassword}
+                onChange={e => setEngineerPassword(e.target.value)}
+                type="password"
+                className={inputCls}
+                placeholder="Mínimo 8 caracteres"
+              />
+            </div>
+          )}
+
+          {isEngineer && useExisting && (
+            <p className="text-xs text-muted-foreground -mt-2">
+              Se usará la misma contraseña del correo seleccionado.
+            </p>
+          )}
 
           {/* Campos extra solo para no-ingenieros */}
           {!isEngineer && (
