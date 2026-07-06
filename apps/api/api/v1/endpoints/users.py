@@ -47,9 +47,11 @@ async def create_user(
     db: AsyncSession = Depends(get_db),
     _: User = AdminOnly,
 ):
-    existing = await db.execute(select(User).where(User.email == body.email))
-    if existing.scalar_one_or_none():
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="El email ya está registrado")
+    # Solo bloquear email duplicado si no es ingeniero (los ingenieros pueden compartir correo)
+    if body.role != "ENGINEER":
+        existing = await db.execute(select(User).where(User.email == body.email))
+        if existing.scalar_one_or_none():
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="El email ya está registrado")
 
     user = User(
         id=str(uuid.uuid4()),

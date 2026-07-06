@@ -48,7 +48,7 @@ class User(Base):
     __tablename__ = "users"
 
     id: Mapped[str] = mapped_column(String, primary_key=True)
-    email: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+    email: Mapped[str] = mapped_column(String, nullable=False)
     name: Mapped[str] = mapped_column(String, nullable=False)
     password_hash: Mapped[str] = mapped_column("password_hash", String, nullable=False)
     role: Mapped[str] = mapped_column(String, default="CLIENT")

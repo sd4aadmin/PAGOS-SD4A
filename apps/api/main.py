@@ -24,6 +24,13 @@ async def lifespan(app: FastAPI):
         await conn.execute(text(
             "ALTER TABLE project_files ADD COLUMN IF NOT EXISTS description VARCHAR(500)"
         ))
+        # Permitir emails duplicados (varios ingenieros con el mismo correo)
+        await conn.execute(text(
+            "DROP INDEX IF EXISTS ix_users_email"
+        ))
+        await conn.execute(text(
+            "ALTER TABLE users DROP CONSTRAINT IF EXISTS users_email_key"
+        ))
     yield
 
 
