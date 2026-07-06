@@ -4,7 +4,7 @@ import { proxyFetch } from "@/lib/proxy-fetch";
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Search, RefreshCw, FolderKanban, X, ChevronUp, ChevronDown, ChevronsUpDown, DollarSign, TrendingUp, Clock, Mail, Phone, HardHat } from "lucide-react";
+import { Plus, Search, RefreshCw, FolderKanban, X, ChevronUp, ChevronDown, ChevronsUpDown, DollarSign, TrendingUp, Clock, Mail, Phone, HardHat, Trash2 } from "lucide-react";
 import { Project, ProjectStatus, STATUS_LABELS, STATUS_COLORS } from "@/types/project";
 import { CreateProjectModal } from "./CreateProjectModal";
 import { cn } from "@/lib/utils";
@@ -30,6 +30,20 @@ export function ProjectsPageClient({ role }: { role: string }) {
     if (res.ok) setProjects(await res.json());
     setLoading(false);
   }, []);
+
+  async function deleteProject(e: React.MouseEvent, p: Project) {
+    e.stopPropagation();
+    if (!window.confirm(`¿Eliminar el proyecto "${p.name}" (${p.code})? Esta acción no se puede deshacer.`)) return;
+    const res = await proxyFetch(`/projects/${p.id}`, { method: "DELETE" });
+    if (res.ok || res.status === 204) {
+      load();
+    } else {
+      const text = await res.text().catch(() => "");
+      let msg = "Error al eliminar el proyecto";
+      try { msg = JSON.parse(text).detail ?? msg; } catch { if (text) msg = text; }
+      alert(msg);
+    }
+  }
 
   useEffect(() => { load(); }, [load]);
 
@@ -178,6 +192,7 @@ export function ProjectsPageClient({ role }: { role: string }) {
                   <Th field="progress" label="Avance" current={sortField} dir={sortDir} onSort={handleSort} align="center" />
                   <Th field="estimated_date" label="F. Inicio / Entrega" current={sortField} dir={sortDir} onSort={handleSort} />
                   {isAdmin && <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wide text-left">Ingeniero</th>}
+                  {isAdmin && <th className="px-4 py-3 w-10" />}
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -217,6 +232,17 @@ export function ProjectsPageClient({ role }: { role: string }) {
                             {p.member_names[0]}{p.member_names.length > 1 ? ` +${p.member_names.length - 1}` : ""}
                           </span>
                         ) : "—"}
+                      </td>
+                    )}
+                    {isAdmin && (
+                      <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={(e) => deleteProject(e, p)}
+                          className="p-1.5 rounded-lg text-muted-foreground hover:text-red-600 hover:bg-red-50 transition-colors"
+                          title="Eliminar proyecto"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </td>
                     )}
                   </tr>
