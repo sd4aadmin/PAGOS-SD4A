@@ -48,7 +48,7 @@ export default function LoginPage() {
       {/* Logo / Header */}
       <div className="text-center mb-8">
         <div className="flex justify-center mb-3">
-          <Image src="/logo-dark.png" alt="SD4A" width={180} height={56} className="object-contain" priority />
+          <Image src="/logo-dark.png" alt="SD4A" width={180} height={56} className="object-contain" priority style={{ mixBlendMode: "screen" }} />
         </div>
         <p className="text-[#9BE3BF] mt-2 text-sm font-medium tracking-wide uppercase">Portal de Proyectos</p>
       </div>

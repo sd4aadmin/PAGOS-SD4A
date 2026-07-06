@@ -99,7 +99,7 @@ export function CreateProjectModal({
 
         <form onSubmit={handleSubmit(onSubmit)} className="p-5 space-y-4">
           <Field label="Nombre del proyecto" error={errors.name?.message}>
-            <input {...register("name")} className={inputCls} placeholder="Modelado BIM Torre Norte" />
+            <input {...register("name")} className={inputCls} placeholder="Diseño estructural Torre Norte" />
           </Field>
 
           <Field label="Descripción" error={errors.description?.message}>

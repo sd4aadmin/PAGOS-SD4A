@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Search, RefreshCw, FolderKanban, X, ChevronUp, ChevronDown, ChevronsUpDown, DollarSign, TrendingUp, Clock, Mail, Phone } from "lucide-react";
+import { Plus, Search, RefreshCw, FolderKanban, X, ChevronUp, ChevronDown, ChevronsUpDown, DollarSign, TrendingUp, Clock, Mail, Phone, HardHat } from "lucide-react";
 import { Project, ProjectStatus, STATUS_LABELS, STATUS_COLORS } from "@/types/project";
 import { CreateProjectModal } from "./CreateProjectModal";
 import { cn } from "@/lib/utils";
@@ -174,7 +174,8 @@ export function ProjectsPageClient({ role }: { role: string }) {
                   <Th field="status" label="Estado" current={sortField} dir={sortDir} onSort={handleSort} />
                   <Th field="total_value" label="Valor" current={sortField} dir={sortDir} onSort={handleSort} align="right" />
                   <Th field="progress" label="Avance" current={sortField} dir={sortDir} onSort={handleSort} align="center" />
-                  <Th field="estimated_date" label="F. Estimada" current={sortField} dir={sortDir} onSort={handleSort} />
+                  <Th field="estimated_date" label="F. Inicio / Entrega" current={sortField} dir={sortDir} onSort={handleSort} />
+                  {isAdmin && <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wide text-left">Ingeniero</th>}
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -201,8 +202,21 @@ export function ProjectsPageClient({ role }: { role: string }) {
                       </div>
                     </td>
                     <td className="px-4 py-3 text-muted-foreground text-xs">
-                      {p.estimated_date ? new Date(p.estimated_date).toLocaleDateString("es-CO") : "—"}
+                      <div className="space-y-0.5">
+                        <div>{p.start_date ? new Date(p.start_date).toLocaleDateString("es-CO") : "—"}</div>
+                        <div className="text-muted-foreground/60">{p.estimated_date ? new Date(p.estimated_date).toLocaleDateString("es-CO") : "—"}</div>
+                      </div>
                     </td>
+                    {isAdmin && (
+                      <td className="px-4 py-3 text-muted-foreground text-xs">
+                        {p.member_names.length > 0 ? (
+                          <span className="flex items-center gap-1">
+                            <HardHat className="w-3 h-3 shrink-0" />
+                            {p.member_names[0]}{p.member_names.length > 1 ? ` +${p.member_names.length - 1}` : ""}
+                          </span>
+                        ) : "—"}
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -247,7 +261,7 @@ export function ProjectsPageClient({ role }: { role: string }) {
 function ClientLanding() {
   const steps = [
     { n: "1", title: "Consulta inicial", desc: "Nos reunimos para entender tu proyecto y necesidades." },
-    { n: "2", title: "Propuesta técnica", desc: "Elaboramos una propuesta BIM detallada con alcances y costos." },
+    { n: "2", title: "Propuesta técnica", desc: "Elaboramos una propuesta detallada con alcances, memorias de cálculo y costos." },
     { n: "3", title: "Anticipo y arranque", desc: "Con el anticipo aprobado, iniciamos el modelado y coordinación." },
     { n: "4", title: "Entrega y cierre", desc: "Revisión final, entrega de modelos y pago del saldo restante." },
   ];

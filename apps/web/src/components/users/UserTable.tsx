@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { User } from "@/types/user";
 import { formatDate } from "@/lib/utils";
 import { UserEditModal } from "./UserEditModal";
@@ -46,17 +47,35 @@ export function UserTable({ users, onRefresh }: Props) {
   }
 
   function UserMenu({ user }: { user: User }) {
+    const btnRef = useRef<HTMLButtonElement>(null);
+    const [menuPos, setMenuPos] = useState<{ top: number; right: number } | null>(null);
+
+    useEffect(() => {
+      if (openMenu === user.id && btnRef.current) {
+        const r = btnRef.current.getBoundingClientRect();
+        setMenuPos({ top: r.bottom + 4, right: window.innerWidth - r.right });
+      }
+    }, [openMenu]);
+
+    useEffect(() => {
+      function onScroll() { if (openMenu === user.id) setOpenMenu(null); }
+      window.addEventListener("scroll", onScroll, true);
+      return () => window.removeEventListener("scroll", onScroll, true);
+    }, [openMenu]);
+
     return (
       <div className="relative">
         <button
+          ref={btnRef}
           onClick={() => setOpenMenu(openMenu === user.id ? null : user.id)}
           className="p-1.5 rounded-lg hover:bg-muted transition"
         >
           <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
         </button>
-        {openMenu === user.id && (
+        {openMenu === user.id && menuPos && createPortal(
           <div
-            className="absolute right-0 top-8 z-50 bg-card border border-border rounded-xl shadow-lg w-44 py-1"
+            className="fixed z-[9999] bg-card border border-border rounded-xl shadow-lg w-44 py-1"
+            style={{ top: menuPos.top, right: menuPos.right }}
             onMouseLeave={() => setOpenMenu(null)}
           >
             <button
@@ -78,7 +97,8 @@ export function UserTable({ users, onRefresh }: Props) {
             >
               {user.is_active ? <><Ban className="w-3.5 h-3.5" /> Desactivar</> : <><CheckCircle className="w-3.5 h-3.5" /> Activar</>}
             </button>
-          </div>
+          </div>,
+          document.body
         )}
       </div>
     );

@@ -11,8 +11,8 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "SD4A Portal BIM",
-  description: "Portal de seguimiento de proyectos de ingeniería y BIM",
+  title: "SD4A Portal",
+  description: "Portal de seguimiento de proyectos de ingeniería estructural",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

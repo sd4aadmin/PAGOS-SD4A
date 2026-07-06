@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FolderKanban, Users, TrendingUp, Clock, ArrowRight, RefreshCw } from "lucide-react";
+import { FolderKanban, Users, TrendingUp, Clock, ArrowRight, RefreshCw, CalendarDays, HardHat } from "lucide-react";
 import { Project, STATUS_LABELS, STATUS_COLORS } from "@/types/project";
 import { cn } from "@/lib/utils";
 
@@ -90,6 +90,26 @@ export function AdminDashboard({ userName }: { userName: string }) {
                   </div>
                   <p className="text-sm font-medium text-foreground truncate mt-0.5">{p.name}</p>
                   <p className="text-xs text-muted-foreground">{p.client_name}</p>
+                  <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
+                    {p.start_date && (
+                      <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                        <CalendarDays className="w-3 h-3" />
+                        Inicio: {new Date(p.start_date).toLocaleDateString("es-CO")}
+                      </span>
+                    )}
+                    {p.estimated_date && (
+                      <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                        <CalendarDays className="w-3 h-3" />
+                        Entrega: {new Date(p.estimated_date).toLocaleDateString("es-CO")}
+                      </span>
+                    )}
+                    {p.member_names.length > 0 && (
+                      <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                        <HardHat className="w-3 h-3" />
+                        {p.member_names[0]}{p.member_names.length > 1 ? ` +${p.member_names.length - 1}` : ""}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div className="text-right shrink-0">
                   <p className="text-sm font-medium text-foreground">{COP.format(Number(p.total_value))}</p>

@@ -53,6 +53,7 @@ class ProjectOut(BaseModel):
     client_name: str = ""
     client_email: str = ""
     member_ids: list[str] = []
+    member_names: list[str] = []
     created_at: datetime
     updated_at: datetime
 

@@ -24,6 +24,7 @@ export interface Project {
   client_name: string;
   client_email: string;
   member_ids: string[];
+  member_names: string[];
   created_at: string;
   updated_at: string;
 }

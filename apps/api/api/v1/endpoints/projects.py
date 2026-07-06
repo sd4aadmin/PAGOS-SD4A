@@ -27,6 +27,12 @@ async def _build_out(project: Project, db: AsyncSession) -> ProjectOut:
 
     member_ids = [m.user_id for m in project.members]
 
+    member_names: list[str] = []
+    if member_ids:
+        members_result = await db.execute(sel(User).where(User.id.in_(member_ids)))
+        member_users = members_result.scalars().all()
+        member_names = [u.name for u in member_users]
+
     return ProjectOut(
         id=project.id,
         code=project.code,
@@ -44,6 +50,7 @@ async def _build_out(project: Project, db: AsyncSession) -> ProjectOut:
         client_name=client.name if client else "",
         client_email=client.email if client else "",
         member_ids=member_ids,
+        member_names=member_names,
         created_at=project.created_at,
         updated_at=project.updated_at,
     )
