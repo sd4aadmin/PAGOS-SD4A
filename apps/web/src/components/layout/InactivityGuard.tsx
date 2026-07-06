@@ -12,9 +12,9 @@ const EVENTS = ["mousemove", "mousedown", "keydown", "touchstart", "scroll", "cl
 export function InactivityGuard() {
   const [showWarning, setShowWarning] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(WARNING_MS / 1000);
-  const logoutTimer  = useRef<ReturnType<typeof setTimeout>>();
-  const warningTimer = useRef<ReturnType<typeof setTimeout>>();
-  const countdownRef = useRef<ReturnType<typeof setInterval>>();
+  const logoutTimer  = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const warningTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const countdownRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
 
   function clearTimers() {
     clearTimeout(logoutTimer.current);
