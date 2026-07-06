@@ -37,10 +37,10 @@ export function SidebarNav({ role }: { role: string }) {
   return (
     <>
       {/* ── Desktop sidebar ── */}
-      <aside className="hidden md:flex w-56 bg-sidebar-bg flex-col shrink-0">
+      <aside className="hidden md:flex w-60 bg-sidebar-bg flex-col shrink-0">
         {/* Logo */}
-        <div className="h-16 flex items-center px-4 border-b border-white/10">
-          <Image src="/logo-dark.png" alt="SD4A" width={155} height={48} className="object-contain" priority />
+        <div className="h-20 flex items-center justify-center px-4 border-b border-white/10">
+          <Image src="/logo-dark.png" alt="SD4A" width={180} height={64} className="object-contain" priority />
         </div>
 
         {/* Nav */}
