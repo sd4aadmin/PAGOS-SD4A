@@ -14,6 +14,16 @@ from api.v1.router import api_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Migraciones inline (idempotentes)
+    from db.session import engine
+    from sqlalchemy import text
+    async with engine.begin() as conn:
+        await conn.execute(text(
+            "ALTER TABLE project_files ADD COLUMN IF NOT EXISTS version_label VARCHAR(50)"
+        ))
+        await conn.execute(text(
+            "ALTER TABLE project_files ADD COLUMN IF NOT EXISTS description VARCHAR(500)"
+        ))
     yield
 
 

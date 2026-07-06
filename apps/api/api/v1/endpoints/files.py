@@ -116,6 +116,8 @@ async def list_project_files(
             "mime_type": f.mime_type,
             "size_bytes": f.size_bytes,
             "version": f.version,
+            "version_label": f.version_label,
+            "description": f.description,
             "is_deliverable": f.is_deliverable,
             "uploaded_by": f.uploaded_by,
             "created_at": f.created_at.isoformat() if f.created_at else None,
@@ -133,6 +135,8 @@ async def upload_project_file(
     file: UploadFile = File(...),
     category: str = Query(FolderCategory.MEMORIAS.value),
     is_deliverable: bool = Query(False),
+    description: str | None = Query(None),
+    version_label: str | None = Query(None),
     current_user: User = Depends(require_roles(Role.ADMIN, Role.ENGINEER)),
     db: AsyncSession = Depends(get_db),
 ):
@@ -180,6 +184,8 @@ async def upload_project_file(
         mime_type=mime,
         size_bytes=size_bytes,
         version=version,
+        version_label=version_label,
+        description=description,
         is_deliverable=is_deliverable,
     )
     db.add(pf)
