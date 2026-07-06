@@ -243,6 +243,7 @@ async def delete_project(
     from models.project_file import ProjectFile
     from models.payment import Payment
     from models.activity_log import ActivityLog
+    from models.deliverable import Deliverable
 
     code, name = project.code, project.name
 
@@ -251,11 +252,12 @@ async def delete_project(
                      user_id=current_user.id, metadata={"code": code})
     await db.flush()
 
-    # Eliminar dependientes (orden: primero los que tienen FK a project)
+    # Eliminar todos los dependientes antes de borrar el proyecto
     await db.execute(sql_delete(ActivityLog).where(ActivityLog.project_id == project_id))
     await db.execute(sql_delete(ProjectMember).where(ProjectMember.project_id == project_id))
     await db.execute(sql_delete(ProjectFile).where(ProjectFile.project_id == project_id))
     await db.execute(sql_delete(Payment).where(Payment.project_id == project_id))
+    await db.execute(sql_delete(Deliverable).where(Deliverable.project_id == project_id))
 
     await db.delete(project)
     await db.commit()
