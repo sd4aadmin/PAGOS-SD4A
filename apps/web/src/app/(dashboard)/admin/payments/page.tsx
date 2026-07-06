@@ -3,33 +3,25 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
-  CreditCard, RefreshCw, CheckCircle2, Loader2, Search, ArrowUpRight, ChevronDown, X,
-  TrendingUp, Clock, AlertCircle, Banknote
+  CreditCard, RefreshCw, CheckCircle2, Loader2, Search, ArrowUpRight,
+  ChevronDown, X, TrendingUp, Clock, AlertCircle, Banknote, Plus,
+  ExternalLink, Copy, Check
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { PAYMENT_TYPE_LABELS, PAYMENT_STATUS_LABELS, PAYMENT_STATUS_COLORS } from "@/types/payment";
+import { PAYMENT_TYPE_LABELS, PAYMENT_STATUS_LABELS, PAYMENT_STATUS_COLORS, PaymentType } from "@/types/payment";
 import { Pagination } from "@/components/ui/Pagination";
 
 const COP = new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 });
 const PAGE_SIZE = 15;
 
 type PaymentRow = {
-  id: string;
-  project_id: string;
-  project_name: string | null;
-  project_code: string | null;
-  user_id: string;
-  type: string;
-  status: string;
-  amount: string;
-  wompi_ref: string | null;
-  wompi_id: string | null;
-  confirmed_at: string | null;
-  notes: string | null;
-  created_at: string;
-  updated_at: string;
-  project_remaining: string;
+  id: string; project_id: string; project_name: string | null; project_code: string | null;
+  user_id: string; type: string; status: string; amount: string;
+  wompi_ref: string | null; wompi_id: string | null; confirmed_at: string | null;
+  notes: string | null; created_at: string; updated_at: string; project_remaining: string;
 };
+
+type ProjectOption = { id: string; code: string; name: string; total_value: string; advance_percent: number };
 
 const STATUS_OPTIONS = ["PENDING", "CONFIRMED", "FAILED"] as const;
 
@@ -42,6 +34,7 @@ export default function PaymentsAdminPage() {
   const [confirming, setConfirming] = useState<string | null>(null);
   const [changingStatus, setChangingStatus] = useState<string | null>(null);
   const [page, setPage] = useState(1);
+  const [showCreate, setShowCreate] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -71,16 +64,13 @@ export default function PaymentsAdminPage() {
   }
 
   const hasFilters = search.trim() !== "" || statusFilter !== "ALL";
-
   const filtered = payments.filter((p) => {
     if (statusFilter !== "ALL" && p.status !== statusFilter) return false;
     if (search.trim()) {
       const q = search.toLowerCase();
-      return (
-        (p.wompi_ref ?? "").toLowerCase().includes(q) ||
+      return (p.wompi_ref ?? "").toLowerCase().includes(q) ||
         (p.project_code ?? "").toLowerCase().includes(q) ||
-        (p.project_name ?? "").toLowerCase().includes(q)
-      );
+        (p.project_name ?? "").toLowerCase().includes(q);
     }
     return true;
   });
@@ -90,15 +80,15 @@ export default function PaymentsAdminPage() {
 
   const totalConfirmed = payments.filter((p) => p.status === "CONFIRMED").reduce((s, p) => s + Number(p.amount), 0);
   const totalPending = payments.filter((p) => p.status === "PENDING").reduce((s, p) => s + Number(p.amount), 0);
-  const totalFailed = payments.filter((p) => p.status === "FAILED").reduce((s, p) => s + Number(p.amount), 0);
   const byType = {
     ADVANCE: payments.filter((p) => p.type === "ADVANCE" && p.status === "CONFIRMED").reduce((s, p) => s + Number(p.amount), 0),
     PARTIAL: payments.filter((p) => p.type === "PARTIAL" && p.status === "CONFIRMED").reduce((s, p) => s + Number(p.amount), 0),
-    FINAL: payments.filter((p) => p.type === "FINAL" && p.status === "CONFIRMED").reduce((s, p) => s + Number(p.amount), 0),
+    FINAL:   payments.filter((p) => p.type === "FINAL"   && p.status === "CONFIRMED").reduce((s, p) => s + Number(p.amount), 0),
   };
 
   return (
     <div className="p-3 md:p-6 space-y-5">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-semibold text-foreground">Pagos</h1>
@@ -106,12 +96,22 @@ export default function PaymentsAdminPage() {
             {hasFilters ? `${filtered.length} de ${payments.length} pagos` : `${payments.length} pago${payments.length !== 1 ? "s" : ""} en total`}
           </p>
         </div>
-        <button onClick={load} className="p-2 rounded-lg border border-border hover:bg-muted transition-colors">
-          <RefreshCw className="w-4 h-4 text-muted-foreground" />
-        </button>
+        <div className="flex gap-2">
+          <button onClick={load} className="p-2 rounded-lg border border-border hover:bg-muted transition-colors">
+            <RefreshCw className="w-4 h-4 text-muted-foreground" />
+          </button>
+          <button
+            onClick={() => setShowCreate(true)}
+            className="flex items-center gap-1.5 px-3 py-2 text-white text-sm font-medium rounded-lg hover:opacity-90 transition-opacity"
+            style={{ background: "linear-gradient(135deg, #0A7881, #68B2B7)" }}
+          >
+            <Plus className="w-4 h-4" />
+            <span className="hidden sm:inline">Nuevo pago</span>
+          </button>
+        </div>
       </div>
 
-      {/* Banner recaudo total */}
+      {/* Banner recaudo */}
       {!loading && payments.length > 0 && (
         <div className="rounded-xl p-4 md:p-5 text-white" style={{ background: "linear-gradient(135deg, #0A7881 0%, #68B2B7 60%, #9BE3BF 100%)" }}>
           <p className="text-white/70 text-xs font-medium uppercase tracking-wide mb-3">Total recaudado confirmado</p>
@@ -184,20 +184,34 @@ export default function PaymentsAdminPage() {
             onClick={() => { setSearch(""); setStatusFilter("ALL"); setPage(1); }}
             className="text-xs px-3 py-2 border border-border rounded-lg text-muted-foreground hover:bg-muted transition-colors flex items-center gap-1"
           >
-            <X className="w-3 h-3" /> Limpiar filtros
+            <X className="w-3 h-3" /> Limpiar
           </button>
         )}
       </div>
 
-      {/* Table */}
+      {/* Table / Empty */}
       {loading ? (
         <div className="flex items-center justify-center py-20 text-muted-foreground">
           <RefreshCw className="w-5 h-5 animate-spin mr-2" /> Cargando pagos...
         </div>
       ) : filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
-          <CreditCard className="w-12 h-12 mb-3 opacity-30" />
-          <p className="text-sm">No hay pagos que mostrar</p>
+        <div className="flex flex-col items-center justify-center py-16 text-center space-y-4">
+          <div className="w-16 h-16 rounded-2xl flex items-center justify-center" style={{ background: "linear-gradient(135deg, #0A788120, #68B2B720)" }}>
+            <CreditCard className="w-8 h-8" style={{ color: "#0A7881" }} />
+          </div>
+          <div>
+            <p className="font-semibold text-foreground">No hay pagos registrados</p>
+            <p className="text-sm text-muted-foreground mt-1 max-w-sm">
+              Crea un enlace de pago para un proyecto y envíaselo al cliente para que realice el pago.
+            </p>
+          </div>
+          <button
+            onClick={() => setShowCreate(true)}
+            className="flex items-center gap-2 px-4 py-2.5 text-white text-sm font-medium rounded-xl hover:opacity-90 transition-opacity"
+            style={{ background: "linear-gradient(135deg, #0A7881, #68B2B7)" }}
+          >
+            <Plus className="w-4 h-4" /> Crear primer pago
+          </button>
         </div>
       ) : (
         <div className="bg-card rounded-xl border border-border overflow-x-auto card-shadow">
@@ -243,9 +257,9 @@ export default function PaymentsAdminPage() {
                   </td>
                   <td className="px-4 py-3 text-right tabular-nums">
                     {Number(p.project_remaining) > 0 ? (
-                      <span className="text-amber-600 font-medium">{COP.format(Number(p.project_remaining))}</span>
+                      <span className="text-amber-600 dark:text-amber-400 font-medium">{COP.format(Number(p.project_remaining))}</span>
                     ) : (
-                      <span className="text-emerald-600 font-medium">Pagado</span>
+                      <span className="text-emerald-600 dark:text-emerald-400 font-medium">Pagado</span>
                     )}
                   </td>
                   <td className="px-4 py-3 text-xs text-muted-foreground">
@@ -279,14 +293,224 @@ export default function PaymentsAdminPage() {
           <Pagination page={page} totalPages={totalPages} totalItems={filtered.length} pageSize={PAGE_SIZE} onChange={setPage} />
         </div>
       )}
+
+      {showCreate && <CreatePaymentModal onClose={() => setShowCreate(false)} onCreated={load} />}
     </div>
   );
 }
 
+// ─── CREATE PAYMENT MODAL ────────────────────────────────────────────────────
+
+function formatAmt(raw: string) {
+  const d = raw.replace(/\D/g, "");
+  return d ? Number(d).toLocaleString("es-CO") : "";
+}
+function parseAmt(display: string) { return display.replace(/\./g, "").replace(/\s/g, ""); }
+
+function CreatePaymentModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
+  const [projects, setProjects] = useState<ProjectOption[]>([]);
+  const [selectedProject, setSelectedProject] = useState<ProjectOption | null>(null);
+  const [type, setType] = useState<PaymentType>("ADVANCE");
+  const [amount, setAmount] = useState("");
+  const [notes, setNotes] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [loadingProjects, setLoadingProjects] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/proxy/projects")
+      .then(r => r.json())
+      .then(data => { setProjects(Array.isArray(data) ? data : []); setLoadingProjects(false); })
+      .catch(() => setLoadingProjects(false));
+  }, []);
+
+  function selectProject(p: ProjectOption) {
+    setSelectedProject(p);
+    setAmount(String(Math.round((Number(p.total_value) * p.advance_percent) / 100)));
+  }
+
+  function prefillType(t: PaymentType) {
+    setType(t);
+    if (!selectedProject) return;
+    if (t === "ADVANCE") setAmount(String(Math.round((Number(selectedProject.total_value) * selectedProject.advance_percent) / 100)));
+    else if (t === "FINAL") setAmount(String(Math.round(Number(selectedProject.total_value))));
+    else setAmount("");
+  }
+
+  async function create() {
+    if (!selectedProject || !amount) return;
+    setError(null);
+    setLoading(true);
+    const res = await fetch("/api/proxy/payments", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ project_id: selectedProject.id, type, amount: Number(amount), notes: notes || null }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      setError(err.detail ?? "Error al crear el pago");
+      setLoading(false);
+      return;
+    }
+    const data = await res.json();
+    setCheckoutUrl(data.checkout_url);
+    await onCreated();
+    setLoading(false);
+  }
+
+  async function copyUrl() {
+    if (!checkoutUrl) return;
+    await navigator.clipboard.writeText(checkoutUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-sm">
+      <div className="bg-card border border-border rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md">
+        {/* Header */}
+        <div className="sticky top-0 bg-card z-10 flex items-center justify-between px-5 py-4 border-b border-border rounded-t-2xl sm:rounded-t-2xl">
+          <div>
+            <h2 className="font-semibold text-foreground">Nuevo enlace de pago</h2>
+            {selectedProject && <p className="text-xs text-muted-foreground mt-0.5">{selectedProject.code} — {selectedProject.name}</p>}
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="p-5 space-y-4 max-h-[80vh] overflow-y-auto">
+          {checkoutUrl ? (
+            <div className="space-y-4">
+              <div className="flex items-center gap-3 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl p-4">
+                <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                <p className="text-sm text-emerald-800 dark:text-emerald-300">Enlace generado. El cliente recibirá un correo automáticamente.</p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground mb-2">Enlace de pago Wompi:</p>
+                <div className="flex gap-2">
+                  <input readOnly value={checkoutUrl} className="flex-1 px-3 py-2 border border-border rounded-lg text-xs bg-muted text-foreground truncate" />
+                  <button onClick={copyUrl} className="flex items-center gap-1.5 px-3 py-2 border border-border rounded-lg text-xs hover:bg-muted transition-colors shrink-0">
+                    {copied ? <><Check className="w-3.5 h-3.5 text-emerald-600" /> Copiado</> : <><Copy className="w-3.5 h-3.5" /> Copiar</>}
+                  </button>
+                </div>
+              </div>
+              <a
+                href={checkoutUrl} target="_blank" rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 w-full py-3 text-white rounded-xl text-sm font-medium hover:opacity-90 transition-opacity"
+                style={{ background: "linear-gradient(135deg, #0A7881, #68B2B7)" }}
+              >
+                <ExternalLink className="w-4 h-4" /> Abrir Wompi Checkout
+              </a>
+              <button onClick={onClose} className="w-full py-2.5 border border-border rounded-xl text-sm text-muted-foreground hover:bg-muted transition-colors">
+                Cerrar
+              </button>
+            </div>
+          ) : (
+            <>
+              {/* Project selector */}
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5">Proyecto</label>
+                {loadingProjects ? (
+                  <div className="flex items-center gap-2 py-3 text-muted-foreground text-sm"><Loader2 className="w-4 h-4 animate-spin" /> Cargando proyectos...</div>
+                ) : (
+                  <select
+                    value={selectedProject?.id ?? ""}
+                    onChange={(e) => {
+                      const p = projects.find(p => p.id === e.target.value);
+                      if (p) selectProject(p);
+                    }}
+                    className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-sd4a-mid/50"
+                  >
+                    <option value="">Seleccionar proyecto...</option>
+                    {projects.map((p) => (
+                      <option key={p.id} value={p.id}>{p.code} — {p.name}</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+
+              {/* Type */}
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5">Tipo de pago</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {(["ADVANCE", "PARTIAL", "FINAL"] as PaymentType[]).map((t) => (
+                    <button
+                      key={t}
+                      onClick={() => prefillType(t)}
+                      className={cn(
+                        "py-2 text-xs font-medium rounded-lg border transition-colors",
+                        type === t ? "text-white border-transparent" : "text-muted-foreground hover:bg-muted/50"
+                      )}
+                      style={type === t ? { background: "linear-gradient(135deg, #0A7881, #68B2B7)" } : {}}
+                    >
+                      {PAYMENT_TYPE_LABELS[t]}
+                    </button>
+                  ))}
+                </div>
+                {selectedProject && type === "ADVANCE" && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Anticipo sugerido: {COP.format((Number(selectedProject.total_value) * selectedProject.advance_percent) / 100)} ({selectedProject.advance_percent}%)
+                  </p>
+                )}
+              </div>
+
+              {/* Amount */}
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5">Monto (COP)</label>
+                <div className="relative">
+                  <input
+                    type="text" inputMode="numeric"
+                    value={formatAmt(amount)}
+                    onChange={(e) => setAmount(parseAmt(e.target.value))}
+                    placeholder="15.000.000"
+                    className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-sd4a-mid/50"
+                  />
+                  {amount && <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">COP</span>}
+                </div>
+              </div>
+
+              {/* Notes */}
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5">Notas (opcional)</label>
+                <input
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Anticipo proyecto Torre Norte..."
+                  className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-sd4a-mid/50"
+                />
+              </div>
+
+              {error && <p className="text-sm text-red-500 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-3 py-2">{error}</p>}
+
+              <div className="flex gap-2 pt-1">
+                <button onClick={onClose} className="flex-1 py-2.5 border border-border rounded-xl text-sm text-muted-foreground hover:bg-muted/50 transition-colors">
+                  Cancelar
+                </button>
+                <button
+                  onClick={create}
+                  disabled={loading || !amount || !selectedProject}
+                  className="flex-1 py-2.5 text-white rounded-xl text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50 hover:opacity-90 transition-opacity"
+                  style={{ background: "linear-gradient(135deg, #0A7881, #68B2B7)" }}
+                >
+                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ExternalLink className="w-4 h-4" />}
+                  Generar enlace
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── STATUS DROPDOWN ─────────────────────────────────────────────────────────
+
 function StatusDropdown({ currentStatus, loading, onChange }: {
-  currentStatus: string;
-  loading: boolean;
-  onChange: (s: string) => void;
+  currentStatus: string; loading: boolean; onChange: (s: string) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState({ top: 0, right: 0 });
@@ -302,31 +526,19 @@ function StatusDropdown({ currentStatus, loading, onChange }: {
 
   return (
     <div>
-      <button
-        ref={btnRef}
-        onClick={toggle}
-        disabled={loading}
-        className="flex items-center gap-1 px-2.5 py-1.5 text-xs border border-border rounded-lg hover:bg-muted disabled:opacity-50 text-foreground transition-colors"
-      >
+      <button ref={btnRef} onClick={toggle} disabled={loading}
+        className="flex items-center gap-1 px-2.5 py-1.5 text-xs border border-border rounded-lg hover:bg-muted disabled:opacity-50 text-foreground transition-colors">
         {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <ChevronDown className="w-3 h-3" />}
         Estado
       </button>
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div
-            className="fixed z-50 w-36 bg-card border border-border rounded-lg shadow-lg overflow-hidden"
-            style={{ top: pos.top, right: pos.right }}
-          >
+          <div className="fixed z-50 w-36 bg-card border border-border rounded-lg shadow-lg overflow-hidden"
+            style={{ top: pos.top, right: pos.right }}>
             {STATUS_OPTIONS.map((s) => (
-              <button
-                key={s}
-                onClick={() => { onChange(s); setOpen(false); }}
-                className={cn(
-                  "w-full text-left px-3 py-2 text-xs hover:bg-muted transition-colors text-foreground",
-                  s === currentStatus && "bg-muted font-medium"
-                )}
-              >
+              <button key={s} onClick={() => { onChange(s); setOpen(false); }}
+                className={cn("w-full text-left px-3 py-2 text-xs hover:bg-muted transition-colors text-foreground", s === currentStatus && "bg-muted font-medium")}>
                 {PAYMENT_STATUS_LABELS[s]}
               </button>
             ))}
