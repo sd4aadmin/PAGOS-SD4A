@@ -127,10 +127,13 @@ function PaymentRow({ payment, isAdmin, onConfirmed, onEdit, onDeleted }: {
     setDeleting(true);
     try {
       const res = await proxyFetch(`/payments/${payment.id}`, { method: "DELETE" });
-      if (res.ok || res.status === 204) await onDeleted();
-      else {
-        const err = await res.json().catch(() => ({ detail: "Error al eliminar" }));
-        alert(err.detail ?? "Error al eliminar el pago");
+      if (res.ok || res.status === 204) {
+        await onDeleted();
+      } else {
+        const text = await res.text().catch(() => "");
+        let msg = "Error al eliminar el pago";
+        try { msg = JSON.parse(text).detail ?? msg; } catch { if (text) msg = text; }
+        alert(`Error ${res.status}: ${msg}`);
       }
     } finally {
       setDeleting(false);

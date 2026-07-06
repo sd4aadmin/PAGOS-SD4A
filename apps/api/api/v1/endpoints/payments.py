@@ -221,13 +221,14 @@ async def update_payment_status(
     elif new_status == PaymentStatus.PENDING:
         payment.confirmed_at = None
 
+    old_str = old_status if isinstance(old_status, str) else old_status.value
     await log_action(db, "PAYMENT_STATUS_UPDATED",
-                     f"Estado de pago modificado: {PAYMENT_STATUS_ES.get(old_status.value, old_status.value)} → {PAYMENT_STATUS_ES.get(new_status.value, new_status.value)}",
+                     f"Estado de pago modificado: {PAYMENT_STATUS_ES.get(old_str, old_str)} → {PAYMENT_STATUS_ES.get(new_status.value, new_status.value)}",
                      user_id=current_user.id, project_id=payment.project_id,
-                     metadata={"payment_id": payment_id, "old": old_status.value, "new": new_status.value})
+                     metadata={"payment_id": payment_id, "old": old_str, "new": new_status.value})
     await db.commit()
     await db.refresh(payment)
-    return {"id": payment.id, "status": payment.status.value}
+    return {"id": payment.id, "status": payment.status if isinstance(payment.status, str) else payment.status.value}
 
 
 # ─── WOMPI WEBHOOK ────────────────────────────────────────────────────────────
@@ -325,7 +326,7 @@ async def delete_payment(
         raise HTTPException(400, "No se puede eliminar un pago confirmado")
 
     await log_action(db, "PAYMENT_DELETED",
-                     f"Pago eliminado: {PAYMENT_TYPE_ES.get(payment.type.value, payment.type.value)} ${float(payment.amount):,.0f} COP",
+                     f"Pago eliminado: {PAYMENT_TYPE_ES.get(payment.type, payment.type)} ${float(payment.amount):,.0f} COP",
                      user_id=current_user.id, project_id=payment.project_id,
                      metadata={"payment_id": payment_id})
     await db.delete(payment)
