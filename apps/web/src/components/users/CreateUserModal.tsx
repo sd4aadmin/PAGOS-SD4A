@@ -40,9 +40,9 @@ export function CreateUserModal({
     if (!isEngineer) return;
     proxyFetch("/users?role=ENGINEER&is_active=true")
       .then(r => r.json())
-      .then((d: {email: string}[]) => {
-        const emails = [...new Set((Array.isArray(d) ? d : d.items ?? []).map((u: {email: string}) => u.email))];
-        setExistingEmails(emails);
+      .then((d: unknown) => {
+        const arr: {email: string}[] = Array.isArray(d) ? d : ((d as {items?: {email: string}[]}).items ?? []);
+        setExistingEmails([...new Set(arr.map(u => u.email))]);
       })
       .catch(() => {});
   }, [isEngineer]);
