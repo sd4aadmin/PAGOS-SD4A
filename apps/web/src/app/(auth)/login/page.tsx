@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Loader2, Mail, Lock, AlertCircle } from "lucide-react";
+import Image from "next/image";
 
 const schema = z.object({
   email: z.string().email("Email inválido"),
@@ -46,14 +47,10 @@ export default function LoginPage() {
     <div className="w-full">
       {/* Logo / Header */}
       <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl mb-5 shadow-2xl relative"
-          style={{ background: "linear-gradient(135deg, #0A7881 0%, #68B2B7 60%, #9BE3BF 100%)" }}
-        >
-          <span className="text-white font-black text-3xl tracking-tighter">S</span>
-          <div className="absolute inset-0 rounded-2xl ring-1 ring-white/20" />
+        <div className="flex justify-center mb-3">
+          <Image src="/logo-dark.png" alt="SD4A" width={180} height={56} className="object-contain" priority />
         </div>
-        <h1 className="text-4xl font-black text-white tracking-tight leading-none">SD4A</h1>
-        <p className="text-[#9BE3BF] mt-2 text-sm font-medium tracking-wide uppercase">Portal de Proyectos BIM</p>
+        <p className="text-[#9BE3BF] mt-2 text-sm font-medium tracking-wide uppercase">Portal de Proyectos</p>
       </div>
 
       {/* Card */}
@@ -139,7 +136,7 @@ export default function LoginPage() {
       </div>
 
       <p className="text-center text-xs mt-6" style={{ color: "rgba(255,255,255,0.25)" }}>
-        © {new Date().getFullYear()} SD4A — Ingeniería y BIM
+        © {new Date().getFullYear()} SD4A — Ingeniería
       </p>
     </div>
   );

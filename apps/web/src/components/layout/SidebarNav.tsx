@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, FolderKanban, Users, CreditCard,
@@ -38,16 +39,8 @@ export function SidebarNav({ role }: { role: string }) {
       {/* ── Desktop sidebar ── */}
       <aside className="hidden md:flex w-56 bg-sidebar-bg flex-col shrink-0">
         {/* Logo */}
-        <div className="h-16 flex items-center px-5 border-b border-white/10">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-sd4a-mid rounded-lg flex items-center justify-center shrink-0">
-              <span className="text-white font-bold text-sm">S</span>
-            </div>
-            <div>
-              <span className="text-white font-bold text-base tracking-tight leading-none block">SD4A</span>
-              <span className="text-blue-300 text-[10px] leading-none">Portal BIM</span>
-            </div>
-          </div>
+        <div className="h-16 flex items-center px-4 border-b border-white/10">
+          <Image src="/logo-dark.png" alt="SD4A" width={130} height={40} className="object-contain" priority />
         </div>
 
         {/* Nav */}

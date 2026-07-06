@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { logout } from "@/app/actions/auth";
 import { LogOut, Sun, Moon, User } from "lucide-react";
 import { useTheme } from "@/components/providers/ThemeProvider";
@@ -40,11 +41,9 @@ export function TopBar({ user }: { user: TopBarUser }) {
   return (
     <header className="h-14 bg-card border-b border-border flex items-center justify-between px-3 md:px-5 shrink-0">
       {/* Logo solo en móvil */}
-      <div className="md:hidden flex items-center gap-2">
-        <div className="w-7 h-7 bg-sd4a-mid rounded-lg flex items-center justify-center">
-          <span className="text-white font-bold text-xs">S</span>
-        </div>
-        <span className="text-foreground font-bold text-sm">SD4A</span>
+      <div className="md:hidden flex items-center">
+        <Image src="/logo-light.png" alt="SD4A" width={90} height={28} className="object-contain dark:hidden" priority />
+        <Image src="/logo-dark.png" alt="SD4A" width={90} height={28} className="object-contain hidden dark:block" priority />
       </div>
       <div className="hidden md:block" />
       <div className="flex items-center gap-2">
