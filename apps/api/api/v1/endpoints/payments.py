@@ -322,8 +322,6 @@ async def delete_payment(
     payment = (await db.execute(select(Payment).where(Payment.id == payment_id))).scalar_one_or_none()
     if not payment:
         raise HTTPException(404, "Pago no encontrado")
-    if payment.status == PaymentStatus.CONFIRMED:
-        raise HTTPException(400, "No se puede eliminar un pago confirmado")
 
     await log_action(db, "PAYMENT_DELETED",
                      f"Pago eliminado: {PAYMENT_TYPE_ES.get(payment.type, payment.type)} ${float(payment.amount):,.0f} COP",
