@@ -125,9 +125,16 @@ function PaymentRow({ payment, isAdmin, onConfirmed, onEdit, onDeleted }: {
   async function del() {
     if (!window.confirm(`¿Eliminar este pago de ${COP.format(Number(payment.amount))}? No se puede deshacer.`)) return;
     setDeleting(true);
-    await fetch(`/api/proxy/payments/${payment.id}`, { method: "DELETE" });
-    await onDeleted();
-    setDeleting(false);
+    try {
+      const res = await proxyFetch(`/payments/${payment.id}`, { method: "DELETE" });
+      if (res.ok || res.status === 204) await onDeleted();
+      else {
+        const err = await res.json().catch(() => ({ detail: "Error al eliminar" }));
+        alert(err.detail ?? "Error al eliminar el pago");
+      }
+    } finally {
+      setDeleting(false);
+    }
   }
 
   return (

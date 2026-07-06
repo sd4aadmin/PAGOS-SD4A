@@ -6,7 +6,7 @@ import { User } from "@/types/user";
 import { formatDate } from "@/lib/utils";
 import { UserEditModal } from "./UserEditModal";
 import { UserPasswordModal } from "./UserPasswordModal";
-import { MoreHorizontal, Pencil, KeyRound, Ban, CheckCircle } from "lucide-react";
+import { MoreHorizontal, Pencil, KeyRound, Ban, CheckCircle, Trash2 } from "lucide-react";
 import { Pagination } from "@/components/ui/Pagination";
 
 const PAGE_SIZE = 10;
@@ -44,6 +44,16 @@ export function UserTable({ users, onRefresh }: Props) {
       body: JSON.stringify({ is_active: !user.is_active }),
     });
     if (res.ok) onRefresh();
+  }
+
+  async function deleteUser(user: User) {
+    if (!window.confirm(`¿Eliminar permanentemente a ${user.full_name}? Esta acción no se puede deshacer.`)) return;
+    const res = await fetch(`/api/proxy/users/${user.id}`, { method: "DELETE" });
+    if (res.ok || res.status === 204) onRefresh();
+    else {
+      const err = await res.json().catch(() => ({ detail: "Error al eliminar" }));
+      alert(err.detail ?? "No se pudo eliminar el usuario");
+    }
   }
 
   function UserMenu({ user }: { user: User }) {
@@ -93,9 +103,15 @@ export function UserTable({ users, onRefresh }: Props) {
             <div className="border-t my-1" />
             <button
               onClick={() => { toggleActive(user); setOpenMenu(null); }}
-              className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted/50 ${user.is_active ? "text-red-600" : "text-green-600"}`}
+              className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted/50 ${user.is_active ? "text-amber-600" : "text-green-600"}`}
             >
               {user.is_active ? <><Ban className="w-3.5 h-3.5" /> Desactivar</> : <><CheckCircle className="w-3.5 h-3.5" /> Activar</>}
+            </button>
+            <button
+              onClick={() => { setOpenMenu(null); deleteUser(user); }}
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-red-50 text-red-600"
+            >
+              <Trash2 className="w-3.5 h-3.5" /> Eliminar
             </button>
           </div>,
           document.body
