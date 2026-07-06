@@ -61,6 +61,8 @@ async def send_email(to: str, subject: str, html: str) -> None:
 # ─── PLANTILLAS ───────────────────────────────────────────────────────────────
 
 def _base(title: str, body: str) -> str:
+    # Logo público en Vercel (PNG transparente sobre fondo teal)
+    logo_url = "https://pagos-sd-4-a.vercel.app/logo-dark.png"
     return f"""
 <!DOCTYPE html>
 <html lang="es">
@@ -69,24 +71,49 @@ def _base(title: str, body: str) -> str:
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>{title}</title>
 </head>
-<body style="margin:0;padding:0;background:#f4f6f9;font-family:'Segoe UI',Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f9;padding:32px 0;">
+<body style="margin:0;padding:0;background:#eaf4f4;font-family:'Segoe UI',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#eaf4f4;padding:32px 16px;">
     <tr><td align="center">
-      <table width="600" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08);">
+      <table width="600" cellpadding="0" cellspacing="0"
+             style="background:#ffffff;border-radius:14px;overflow:hidden;
+                    box-shadow:0 4px 16px rgba(10,120,129,.12);max-width:600px;width:100%;">
+
+        <!-- HEADER -->
         <tr>
-          <td style="background:#102a6e;padding:24px 32px;">
-            <span style="color:#ffffff;font-size:20px;font-weight:700;letter-spacing:-0.5px;">SD4A</span>
-            <span style="color:#7dd3fc;font-size:12px;margin-left:8px;">Portal de Proyectos</span>
+          <td style="background:linear-gradient(135deg,#0A7881 0%,#68B2B7 100%);padding:28px 36px;">
+            <table cellpadding="0" cellspacing="0" width="100%">
+              <tr>
+                <td>
+                  <img src="{logo_url}" alt="SD4A" width="150" height="48"
+                       style="display:block;object-fit:contain;" />
+                </td>
+                <td align="right">
+                  <span style="color:rgba(255,255,255,.75);font-size:12px;letter-spacing:.5px;">
+                    Portal de Proyectos
+                  </span>
+                </td>
+              </tr>
+            </table>
           </td>
         </tr>
-        <tr><td style="padding:32px;">{body}</td></tr>
+
+        <!-- ACCENT LINE -->
         <tr>
-          <td style="background:#f8fafc;padding:20px 32px;border-top:1px solid #e2e8f0;">
-            <p style="margin:0;color:#94a3b8;font-size:12px;text-align:center;">
-              SD4A Ingeniería BIM &nbsp;|&nbsp; Este es un correo automático, no responder.
+          <td style="background:#9BE3BF;height:4px;font-size:0;line-height:0;">&nbsp;</td>
+        </tr>
+
+        <!-- BODY -->
+        <tr><td style="padding:36px 36px 28px;">{body}</td></tr>
+
+        <!-- FOOTER -->
+        <tr>
+          <td style="background:#f0fafa;padding:20px 36px;border-top:1px solid #cde8e9;">
+            <p style="margin:0;color:#7aadaf;font-size:12px;text-align:center;line-height:1.6;">
+              SD4A Ingeniería Estructural &nbsp;|&nbsp; Este es un correo automático, no responder.
             </p>
           </td>
         </tr>
+
       </table>
     </td></tr>
   </table>
@@ -96,14 +123,15 @@ def _base(title: str, body: str) -> str:
 
 def _btn(label: str, url: str) -> str:
     return f"""
-<p style="margin:24px 0 0;">
-  <a href="{url}" style="display:inline-block;background:#102a6e;color:#ffffff;padding:12px 28px;
-     border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">{label}</a>
+<p style="margin:28px 0 0;">
+  <a href="{url}" style="display:inline-block;background:linear-gradient(135deg,#0A7881,#68B2B7);
+     color:#ffffff;padding:13px 32px;border-radius:8px;text-decoration:none;
+     font-weight:700;font-size:14px;letter-spacing:.3px;">{label}</a>
 </p>"""
 
 
 def _h1(text: str) -> str:
-    return f'<h1 style="margin:0 0 8px;color:#0f172a;font-size:22px;font-weight:700;">{text}</h1>'
+    return f'<h1 style="margin:0 0 8px;color:#0A7881;font-size:22px;font-weight:700;">{text}</h1>'
 
 
 def _p(text: str) -> str:
