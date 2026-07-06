@@ -6,7 +6,7 @@ import { User } from "@/types/user";
 import { formatDate } from "@/lib/utils";
 import { UserEditModal } from "./UserEditModal";
 import { UserPasswordModal } from "./UserPasswordModal";
-import { MoreHorizontal, Pencil, KeyRound, Ban, CheckCircle, Trash2 } from "lucide-react";
+import { MoreHorizontal, Pencil, KeyRound, Ban, CheckCircle, Trash2, FolderMinus } from "lucide-react";
 import { Pagination } from "@/components/ui/Pagination";
 
 const PAGE_SIZE = 10;
@@ -53,6 +53,17 @@ export function UserTable({ users, onRefresh }: Props) {
     else {
       const err = await res.json().catch(() => ({ detail: "Error al eliminar" }));
       alert(err.detail ?? "No se pudo eliminar el usuario");
+    }
+  }
+
+  async function unassignUser(user: User) {
+    if (!window.confirm(`¿Desasignar a ${user.name} de todos los proyectos?`)) return;
+    const res = await fetch(`/api/proxy/users/${user.id}/memberships`, { method: "DELETE" });
+    if (res.ok || res.status === 204) {
+      alert(`${user.name} fue desasignado de todos los proyectos. Ahora puedes eliminarlo.`);
+      onRefresh();
+    } else {
+      alert("Error al desasignar");
     }
   }
 
@@ -107,6 +118,14 @@ export function UserTable({ users, onRefresh }: Props) {
             >
               {user.is_active ? <><Ban className="w-3.5 h-3.5" /> Desactivar</> : <><CheckCircle className="w-3.5 h-3.5" /> Activar</>}
             </button>
+            {user.role === "ENGINEER" && (
+              <button
+                onClick={() => { setOpenMenu(null); unassignUser(user); }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-orange-50 text-orange-600"
+              >
+                <FolderMinus className="w-3.5 h-3.5" /> Desasignar proyectos
+              </button>
+            )}
             <button
               onClick={() => { setOpenMenu(null); deleteUser(user); }}
               className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-red-50 text-red-600"

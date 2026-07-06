@@ -149,6 +149,20 @@ async def reset_password(
     await db.commit()
 
 
+@router.delete("/{user_id}/memberships", status_code=status.HTTP_204_NO_CONTENT)
+async def remove_all_memberships(
+    user_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+    _: User = AdminOnly,
+):
+    """Desasigna al usuario de todos los proyectos en los que es miembro."""
+    from models.project import ProjectMember
+    from sqlalchemy import delete as sql_delete
+    await db.execute(sql_delete(ProjectMember).where(ProjectMember.user_id == user_id))
+    await db.commit()
+
+
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_user(
     user_id: str,
