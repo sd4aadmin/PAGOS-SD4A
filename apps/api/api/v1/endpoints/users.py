@@ -150,19 +150,38 @@ async def reset_password(
 
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def deactivate_user(
+async def delete_user(
     user_id: str,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
     _: User = AdminOnly,
 ):
     if user_id == current_user.id:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No puedes desactivar tu propia cuenta")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No puedes eliminar tu propia cuenta")
 
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado")
 
-    user.is_active = False
-    await db.commit()
+    # Verificar que no tenga proyectos asignados como cliente o miembro
+    from models.project import Project, ProjectMember
+    has_projects = (await db.execute(
+        select(func.count()).where(Project.client_id == user_id)
+    )).scalar_one()
+    has_memberships = (await db.execute(
+        select(func.count()).where(ProjectMember.user_id == user_id)
+    )).scalar_one()
+
+    if has_projects or has_memberships:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No se puede eliminar: el usuario tiene proyectos asignados. Primero desasígnalo de todos los proyectos."
+        )
+
+    try:
+        await db.delete(user)
+        await db.commit()
+    except Exception:
+        await db.rollback()
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No se puede eliminar: el usuario tiene registros relacionados.")
