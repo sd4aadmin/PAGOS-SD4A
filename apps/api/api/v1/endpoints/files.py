@@ -239,7 +239,7 @@ async def download_project_file(
 @router.delete("/{file_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_project_file(
     file_id: str,
-    current_user: User = Depends(require_roles(Role.ADMIN)),
+    current_user: User = Depends(require_roles(Role.ADMIN, Role.ENGINEER)),
     db: AsyncSession = Depends(get_db),
 ):
     from datetime import datetime, timezone
