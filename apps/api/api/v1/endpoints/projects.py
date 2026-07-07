@@ -88,10 +88,7 @@ async def list_projects(
 
     if current_user.role == Role.CLIENT:
         q = q.where(Project.client_id == current_user.id)
-    elif current_user.role == Role.ENGINEER:
-        # Engineers see projects where they're members
-        member_sub = select(ProjectMember.project_id).where(ProjectMember.user_id == current_user.id)
-        q = q.where(Project.id.in_(member_sub))
+    # ENGINEER sees all projects
 
     if status:
         q = q.where(Project.status == status)
@@ -172,10 +169,7 @@ async def get_project(
 
     if current_user.role == Role.CLIENT and project.client_id != current_user.id:
         raise HTTPException(status_code=403, detail="Sin acceso a este proyecto")
-    if current_user.role == Role.ENGINEER:
-        member_ids = [m.user_id for m in project.members]
-        if current_user.id not in member_ids:
-            raise HTTPException(status_code=403, detail="Sin acceso a este proyecto")
+    # ENGINEER has access to all projects
 
     return await _build_out(project, db)
 

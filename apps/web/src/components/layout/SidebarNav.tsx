@@ -23,13 +23,14 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard",  href: "/dashboard",         icon: LayoutDashboard, roles: ["ADMIN", "ENGINEER"], exact: true },
   { label: "Proyectos",  href: "/dashboard/projects", icon: FolderKanban,    roles: ["ADMIN", "ENGINEER", "CLIENT"] },
   { label: "Mi Perfil",  href: "/dashboard/profile",  icon: UserCircle,      roles: ["ADMIN", "ENGINEER", "CLIENT"] },
-  { label: "Clientes",   href: "/admin/clients",      icon: Users,           roles: ["ADMIN"],             group: "admin" },
-  { label: "Ingenieros", href: "/admin/engineers",    icon: HardHat,         roles: ["ADMIN"],             group: "admin" },
-  { label: "Pagos",      href: "/admin/payments",     icon: CreditCard,      roles: ["ADMIN"],             group: "admin" },
-  { label: "Actividad",  href: "/admin/activity",     icon: Activity,        roles: ["ADMIN", "ENGINEER"], group: "admin" },
+  { label: "Clientes",   href: "/admin/clients",      icon: Users,           roles: ["ADMIN"],                         group: "admin" },
+  { label: "Ingenieros", href: "/admin/engineers",    icon: HardHat,         roles: ["ADMIN", "ENGINEER"],             group: "admin" },
+  { label: "Pagos",      href: "/admin/payments",     icon: CreditCard,      roles: ["ADMIN"],                         group: "admin" },
+  { label: "Actividad",  href: "/admin/activity",     icon: Activity,        roles: ["ADMIN", "ENGINEER"],             group: "admin" },
 ];
 
 export function SidebarNav({ role }: { role: string }) {
+  const sectionLabel = role === "ENGINEER" ? "Herramientas" : "Administración";
   const pathname = usePathname();
   const items      = NAV_ITEMS.filter((item) => item.roles.includes(role));
   const mainItems  = items.filter((i) => !i.group);
@@ -62,7 +63,7 @@ export function SidebarNav({ role }: { role: string }) {
                 className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sidebar-foreground hover:bg-sidebar-hover hover:text-white transition-colors group"
               >
                 <span className="text-[11px] font-semibold uppercase tracking-wider text-sd4a-mid group-hover:text-white/70 transition-colors">
-                  Administración
+                  {sectionLabel}
                 </span>
                 <ChevronDown
                   className={cn(

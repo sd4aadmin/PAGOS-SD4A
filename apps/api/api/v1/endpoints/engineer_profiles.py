@@ -31,7 +31,7 @@ class EngineerProfileOut(BaseModel):
 @router.get("", response_model=list[EngineerProfileOut])
 async def list_profiles(
     db: AsyncSession = Depends(get_db),
-    _=Depends(require_roles(Role.ADMIN)),
+    _=Depends(require_roles(Role.ADMIN, Role.ENGINEER)),
 ):
     result = await db.execute(select(EngineerProfile).order_by(EngineerProfile.name))
     return result.scalars().all()
@@ -41,7 +41,7 @@ async def list_profiles(
 async def create_profile(
     body: EngineerProfileCreate,
     db: AsyncSession = Depends(get_db),
-    _=Depends(require_roles(Role.ADMIN)),
+    _=Depends(require_roles(Role.ADMIN, Role.ENGINEER)),
 ):
     profile = EngineerProfile(
         id=str(uuid.uuid4()),
@@ -59,7 +59,7 @@ async def update_profile(
     profile_id: str,
     body: EngineerProfileCreate,
     db: AsyncSession = Depends(get_db),
-    _=Depends(require_roles(Role.ADMIN)),
+    _=Depends(require_roles(Role.ADMIN, Role.ENGINEER)),
 ):
     result = await db.execute(select(EngineerProfile).where(EngineerProfile.id == profile_id))
     profile = result.scalar_one_or_none()
@@ -76,7 +76,7 @@ async def update_profile(
 async def delete_profile(
     profile_id: str,
     db: AsyncSession = Depends(get_db),
-    _=Depends(require_roles(Role.ADMIN)),
+    _=Depends(require_roles(Role.ADMIN, Role.ENGINEER)),
 ):
     result = await db.execute(select(EngineerProfile).where(EngineerProfile.id == profile_id))
     profile = result.scalar_one_or_none()

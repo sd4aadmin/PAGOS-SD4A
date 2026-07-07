@@ -135,12 +135,16 @@ export function ProjectDetailClient({ projectId, role }: { projectId: string; ro
 
       {/* Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <InfoCard icon={<BadgeCheck className="w-4 h-4 text-sd4a-dark" />} label="Valor total">
-          {COP.format(Number(project.total_value))}
-        </InfoCard>
-        <InfoCard icon={<BadgeCheck className="w-4 h-4 text-yellow-500" />} label={`Anticipo (${project.advance_percent}%)`}>
-          {COP.format(advanceAmount)}
-        </InfoCard>
+        {role !== "ENGINEER" && (
+          <InfoCard icon={<BadgeCheck className="w-4 h-4 text-sd4a-dark" />} label="Valor total">
+            {COP.format(Number(project.total_value))}
+          </InfoCard>
+        )}
+        {role !== "ENGINEER" && (
+          <InfoCard icon={<BadgeCheck className="w-4 h-4 text-yellow-500" />} label={`Anticipo (${project.advance_percent}%)`}>
+            {COP.format(advanceAmount)}
+          </InfoCard>
+        )}
         <InfoCard icon={<CalendarDays className="w-4 h-4 text-muted-foreground" />} label="Fecha inicio">
           {project.start_date ? new Date(project.start_date).toLocaleDateString("es-CO") : "—"}
         </InfoCard>
@@ -224,8 +228,8 @@ export function ProjectDetailClient({ projectId, role }: { projectId: string; ro
       {/* Files */}
       <FilesSection projectId={project.id} canUpload={canEdit} role={role} />
 
-      {/* Payments */}
-      <PaymentsSection project={project} role={role} />
+      {/* Payments — oculto para ingenieros */}
+      {role !== "ENGINEER" && <PaymentsSection project={project} role={role} />}
 
       {/* Activity */}
       {(role === "ADMIN" || role === "ENGINEER") && (

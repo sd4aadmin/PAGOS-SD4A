@@ -23,6 +23,8 @@ export function ProjectsPageClient({ role }: { role: string }) {
   const [showCreate, setShowCreate] = useState(false);
   const [sortField, setSortField] = useState<SortField>("name");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const [engineerFilter, setEngineerFilter] = useState<string>("ALL");
+  const [engineerProfiles, setEngineerProfiles] = useState<{id: string; name: string}[]>([]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -30,6 +32,14 @@ export function ProjectsPageClient({ role }: { role: string }) {
     if (res.ok) setProjects(await res.json());
     setLoading(false);
   }, []);
+
+  useEffect(() => {
+    if (role !== "ADMIN") return;
+    proxyFetch("/engineer-profiles")
+      .then(r => r.json())
+      .then((d: {id: string; name: string}[]) => setEngineerProfiles(Array.isArray(d) ? d : []))
+      .catch(() => {});
+  }, [role]);
 
   async function deleteProject(e: React.MouseEvent, p: Project) {
     e.stopPropagation();
@@ -52,11 +62,12 @@ export function ProjectsPageClient({ role }: { role: string }) {
     else { setSortField(field); setSortDir("asc"); }
   }
 
-  const hasFilters = search.trim() !== "" || statusFilter !== "ALL";
+  const hasFilters = search.trim() !== "" || statusFilter !== "ALL" || engineerFilter !== "ALL";
 
   const filtered = projects
     .filter((p) => {
       if (statusFilter !== "ALL" && p.status !== statusFilter) return false;
+      if (engineerFilter !== "ALL" && p.engineer_profile_id !== engineerFilter) return false;
       if (search.trim()) {
         const q = search.toLowerCase();
         return p.name.toLowerCase().includes(q) || p.code.toLowerCase().includes(q) || (p.client_name ?? "").toLowerCase().includes(q);
@@ -158,9 +169,21 @@ export function ProjectsPageClient({ role }: { role: string }) {
             <option key={s} value={s}>{STATUS_LABELS[s]}</option>
           ))}
         </select>
+        {isAdmin && engineerProfiles.length > 0 && (
+          <select
+            value={engineerFilter}
+            onChange={(e) => setEngineerFilter(e.target.value)}
+            className="px-3 py-2 border border-border rounded-lg text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-sd4a-mid/50"
+          >
+            <option value="ALL">Todos los ingenieros</option>
+            {engineerProfiles.map((ep) => (
+              <option key={ep.id} value={ep.id}>{ep.name}</option>
+            ))}
+          </select>
+        )}
         {hasFilters && (
           <button
-            onClick={() => { setSearch(""); setStatusFilter("ALL"); }}
+            onClick={() => { setSearch(""); setStatusFilter("ALL"); setEngineerFilter("ALL"); }}
             className="text-xs px-3 py-2 border border-border rounded-lg text-muted-foreground hover:bg-muted transition-colors flex items-center gap-1"
           >
             <X className="w-3 h-3" /> Limpiar filtros
@@ -188,7 +211,7 @@ export function ProjectsPageClient({ role }: { role: string }) {
                   <Th field="name" label="Proyecto" current={sortField} dir={sortDir} onSort={handleSort} />
                   {isAdmin && <Th field="client_name" label="Cliente" current={sortField} dir={sortDir} onSort={handleSort} />}
                   <Th field="status" label="Estado" current={sortField} dir={sortDir} onSort={handleSort} />
-                  <Th field="total_value" label="Valor" current={sortField} dir={sortDir} onSort={handleSort} align="right" />
+                  {role !== "ENGINEER" && <Th field="total_value" label="Valor" current={sortField} dir={sortDir} onSort={handleSort} align="right" />}
                   <Th field="progress" label="Avance" current={sortField} dir={sortDir} onSort={handleSort} align="center" />
                   <Th field="estimated_date" label="F. Inicio / Entrega" current={sortField} dir={sortDir} onSort={handleSort} />
                   {isAdmin && <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wide text-left">Ingeniero</th>}
@@ -209,7 +232,7 @@ export function ProjectsPageClient({ role }: { role: string }) {
                         {STATUS_LABELS[p.status]}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-right text-foreground tabular-nums font-medium">{COP.format(Number(p.total_value))}</td>
+                    {role !== "ENGINEER" && <td className="px-4 py-3 text-right text-foreground tabular-nums font-medium">{COP.format(Number(p.total_value))}</td>}
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2 justify-center">
                         <div className="w-20 bg-muted rounded-full h-1.5">
@@ -267,7 +290,7 @@ export function ProjectsPageClient({ role }: { role: string }) {
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-foreground">{COP.format(Number(p.total_value))}</span>
+                  {role !== "ENGINEER" && <span className="text-sm font-semibold text-foreground">{COP.format(Number(p.total_value))}</span>}
                   <div className="flex items-center gap-2">
                     <div className="w-16 bg-muted rounded-full h-1.5">
                       <div className="bg-sd4a-dark h-1.5 rounded-full" style={{ width: `${p.progress}%` }} />
