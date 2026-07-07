@@ -214,7 +214,7 @@ export function ProjectsPageClient({ role }: { role: string }) {
                   {role !== "ENGINEER" && <Th field="total_value" label="Valor" current={sortField} dir={sortDir} onSort={handleSort} align="right" />}
                   <Th field="progress" label="Avance" current={sortField} dir={sortDir} onSort={handleSort} align="center" />
                   <Th field="estimated_date" label="F. Inicio / Entrega" current={sortField} dir={sortDir} onSort={handleSort} />
-                  {isAdmin && <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wide text-left">Ingeniero</th>}
+                  {(isAdmin || role === "ENGINEER") && <th className="px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wide text-left">Ingeniero</th>}
                   {isAdmin && <th className="px-4 py-3 w-10" />}
                 </tr>
               </thead>
@@ -247,7 +247,7 @@ export function ProjectsPageClient({ role }: { role: string }) {
                         <div className="text-muted-foreground/60">{p.estimated_date ? new Date(p.estimated_date).toLocaleDateString("es-CO") : "—"}</div>
                       </div>
                     </td>
-                    {isAdmin && (
+                    {(isAdmin || role === "ENGINEER") && (
                       <td className="px-4 py-3 text-muted-foreground text-xs">
                         {p.engineer_profile_name ? (
                           <span className="flex items-center gap-1">
@@ -298,6 +298,12 @@ export function ProjectsPageClient({ role }: { role: string }) {
                     <span className="text-xs text-muted-foreground">{p.progress}%</span>
                   </div>
                 </div>
+                {p.engineer_profile_name && (
+                  <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
+                    <HardHat className="w-3 h-3" />
+                    {p.engineer_profile_name}
+                  </div>
+                )}
               </div>
             ))}
           </div>
