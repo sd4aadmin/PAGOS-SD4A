@@ -25,9 +25,14 @@ export default auth((req) => {
 
   if (req.auth) {
     const role = req.auth.user?.role;
-    for (const [prefix, allowed] of Object.entries(ROLE_ROUTES)) {
-      if (pathname.startsWith(prefix) && !allowed.includes(role)) {
-        return NextResponse.redirect(new URL("/dashboard", req.url));
+    // Find the most specific matching prefix (longest first)
+    const sorted = Object.entries(ROLE_ROUTES).sort((a, b) => b[0].length - a[0].length);
+    for (const [prefix, allowed] of sorted) {
+      if (pathname.startsWith(prefix)) {
+        if (!allowed.includes(role)) {
+          return NextResponse.redirect(new URL("/dashboard", req.url));
+        }
+        break;
       }
     }
   }
