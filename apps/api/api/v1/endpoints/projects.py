@@ -20,8 +20,9 @@ router = APIRouter(prefix="/projects", tags=["projects"])
 
 
 async def _build_out(project: Project, db: AsyncSession) -> ProjectOut:
-    """Populate client info, member ids, and assigned engineer."""
+    """Populate client info, member ids, and engineer profile."""
     from sqlalchemy import select as sel
+    from models.engineer_profile import EngineerProfile
     client_result = await db.execute(sel(User).where(User.id == project.client_id))
     client = client_result.scalar_one_or_none()
 
@@ -33,11 +34,11 @@ async def _build_out(project: Project, db: AsyncSession) -> ProjectOut:
         member_users = members_result.scalars().all()
         member_names = [u.name for u in member_users]
 
-    assigned_engineer_name: str | None = None
-    if project.assigned_engineer_id:
-        eng_result = await db.execute(sel(User).where(User.id == project.assigned_engineer_id))
-        eng = eng_result.scalar_one_or_none()
-        assigned_engineer_name = eng.name if eng else None
+    engineer_profile_name: str | None = None
+    if project.engineer_profile_id:
+        ep_result = await db.execute(sel(EngineerProfile).where(EngineerProfile.id == project.engineer_profile_id))
+        ep = ep_result.scalar_one_or_none()
+        engineer_profile_name = ep.name if ep else None
 
     return ProjectOut(
         id=project.id,
@@ -58,9 +59,9 @@ async def _build_out(project: Project, db: AsyncSession) -> ProjectOut:
         member_ids=member_ids,
         member_names=member_names,
         engineer_profile_id=project.engineer_profile_id,
-        engineer_profile_name=None,
-        assigned_engineer_id=project.assigned_engineer_id,
-        assigned_engineer_name=assigned_engineer_name,
+        engineer_profile_name=engineer_profile_name,
+        assigned_engineer_id=None,
+        assigned_engineer_name=None,
         created_at=project.created_at,
         updated_at=project.updated_at,
     )
@@ -128,7 +129,7 @@ async def create_project(
         advance_percent=body.advance_percent,
         start_date=body.start_date,
         estimated_date=body.estimated_date,
-        assigned_engineer_id=body.assigned_engineer_id,
+        engineer_profile_id=body.engineer_profile_id,
     )
     db.add(project)
     await db.commit()

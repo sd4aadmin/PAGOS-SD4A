@@ -35,9 +35,9 @@ export function ProjectsPageClient({ role }: { role: string }) {
 
   useEffect(() => {
     if (role !== "ADMIN") return;
-    proxyFetch("/users?role=ENGINEER&is_active=true")
+    proxyFetch("/engineer-profiles")
       .then(r => r.json())
-      .then((d: {items?: {id: string; name: string}[]}) => setEngineerProfiles(d.items ?? []))
+      .then((d: {id: string; name: string}[]) => setEngineerProfiles(Array.isArray(d) ? d : []))
       .catch(() => {});
   }, [role]);
 
@@ -67,7 +67,7 @@ export function ProjectsPageClient({ role }: { role: string }) {
   const filtered = projects
     .filter((p) => {
       if (statusFilter !== "ALL" && p.status !== statusFilter) return false;
-      if (engineerFilter !== "ALL" && p.assigned_engineer_id !== engineerFilter) return false;
+      if (engineerFilter !== "ALL" && p.engineer_profile_id !== engineerFilter) return false;
       if (search.trim()) {
         const q = search.toLowerCase();
         return p.name.toLowerCase().includes(q) || p.code.toLowerCase().includes(q) || (p.client_name ?? "").toLowerCase().includes(q);
@@ -249,10 +249,10 @@ export function ProjectsPageClient({ role }: { role: string }) {
                     </td>
                     {isAdmin && (
                       <td className="px-4 py-3 text-muted-foreground text-xs">
-                        {p.assigned_engineer_name ? (
+                        {p.engineer_profile_name ? (
                           <span className="flex items-center gap-1">
                             <HardHat className="w-3 h-3 shrink-0" />
-                            {p.assigned_engineer_name}
+                            {p.engineer_profile_name}
                           </span>
                         ) : "—"}
                       </td>
