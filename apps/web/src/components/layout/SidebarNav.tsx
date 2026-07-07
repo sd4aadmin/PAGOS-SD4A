@@ -24,7 +24,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Proyectos",  href: "/dashboard/projects", icon: FolderKanban,    roles: ["ADMIN", "ENGINEER", "CLIENT"] },
   { label: "Mi Perfil",  href: "/dashboard/profile",  icon: UserCircle,      roles: ["ADMIN", "ENGINEER", "CLIENT"] },
   { label: "Clientes",   href: "/admin/clients",      icon: Users,           roles: ["ADMIN"],                         group: "admin" },
-  { label: "Ingenieros", href: "/admin/engineers",    icon: HardHat,         roles: ["ADMIN", "ENGINEER"],             group: "admin" },
+  { label: "Ingenieros", href: "/engineers",           icon: HardHat,         roles: ["ADMIN", "ENGINEER"],             group: "admin" },
   { label: "Pagos",      href: "/admin/payments",     icon: CreditCard,      roles: ["ADMIN"],                         group: "admin" },
   { label: "Actividad",  href: "/admin/activity",     icon: Activity,        roles: ["ADMIN", "ENGINEER"],             group: "admin" },
 ];

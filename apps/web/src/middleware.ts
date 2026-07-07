@@ -4,10 +4,9 @@ import { NextResponse } from "next/server";
 const PUBLIC_ROUTES = ["/login"];
 
 const ROLE_ROUTES: Record<string, string[]> = {
-  "/admin/engineers": ["ADMIN", "ENGINEER"],
   "/admin/activity":  ["ADMIN", "ENGINEER"],
   "/admin":           ["ADMIN"],
-  "/engineer":        ["ADMIN", "ENGINEER"],
+  "/engineers":       ["ADMIN", "ENGINEER"],
   "/dashboard":       ["ADMIN", "ENGINEER", "CLIENT"],
 };
 
