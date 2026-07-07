@@ -9,11 +9,9 @@ from db.session import Base
 class FolderCategory(str, enum.Enum):
     MEMORIAS = "01_MEMORIAS"
     PLANOS = "02_PLANOS"
-    CALCULOS = "03_CALCULOS"
-    LICENCIAS = "04_LICENCIAS"
-    FOTOGRAFIAS = "05_FOTOGRAFIAS"
-    MODELOS_BIM = "06_MODELOS_BIM"
-    RESPALDOS = "07_RESPALDOS"
+    FOTOGRAFIAS = "03_FOTOGRAFIAS"
+    MODELOS_BIM = "04_MODELOS_BIM"
+    RESPALDOS = "05_RESPALDOS"
 
 
 def _now() -> datetime:

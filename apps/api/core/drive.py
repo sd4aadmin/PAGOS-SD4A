@@ -37,11 +37,9 @@ def _get_service():
 SUBCARPETAS = [
     "01_MEMORIAS",
     "02_PLANOS",
-    "03_CALCULOS",
-    "04_LICENCIAS",
-    "05_FOTOGRAFIAS",
-    "06_MODELOS_BIM",
-    "07_RESPALDOS",
+    "03_FOTOGRAFIAS",
+    "04_MODELOS_BIM",
+    "05_RESPALDOS",
 ]
 
 

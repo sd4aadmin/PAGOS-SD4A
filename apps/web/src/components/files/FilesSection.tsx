@@ -27,11 +27,11 @@ interface Props {
 }
 
 const CATEGORIES = [
-  { value: "01_MEMORIAS",   label: "Memorias",     icon: "📋" },
-  { value: "02_PLANOS",     label: "Planos",        icon: "📐" },
-  { value: "05_FOTOGRAFIAS",label: "Fotografías",   icon: "🖼️" },
-  { value: "06_MODELOS_BIM",label: "Modelos",       icon: "🏗️" },
-  { value: "07_RESPALDOS",  label: "Respaldos",     icon: "💾" },
+  { value: "01_MEMORIAS",   label: "Memorias",    icon: "📋" },
+  { value: "02_PLANOS",     label: "Planos",       icon: "📐" },
+  { value: "03_FOTOGRAFIAS",label: "Fotografías",  icon: "🖼️" },
+  { value: "04_MODELOS_BIM",label: "Modelos",      icon: "🏗️" },
+  { value: "05_RESPALDOS",  label: "Respaldos",    icon: "💾" },
 ];
 
 function fileIcon(mime: string) {
