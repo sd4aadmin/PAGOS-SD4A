@@ -7,7 +7,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Loader2, Mail, Lock, AlertCircle } from "lucide-react";
-import Image from "next/image";
 
 const schema = z.object({
   email: z.string().email("Email inválido"),
@@ -48,7 +47,8 @@ export default function LoginPage() {
       {/* Logo / Header */}
       <div className="text-center mb-8">
         <div className="flex justify-center mb-3">
-          <Image src="/logo-dark.png" alt="SD4A" width={180} height={56} className="object-contain" priority />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-light.png" alt="SD4A" width={180} height={56} style={{ objectFit: "contain" }} />
         </div>
         <p className="text-[#9BE3BF] mt-2 text-sm font-medium tracking-wide uppercase">Portal de Proyectos</p>
       </div>

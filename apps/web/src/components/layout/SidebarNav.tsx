@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, FolderKanban, Users, CreditCard,
@@ -48,7 +47,8 @@ export function SidebarNav({ role }: { role: string }) {
       <aside className="hidden md:flex w-60 bg-sidebar-bg flex-col shrink-0">
         {/* Logo */}
         <div className="h-20 flex items-center justify-center px-4 border-b border-white/10">
-          <Image src="/logo-dark.png" alt="SD4A" width={180} height={64} className="object-contain" priority />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-light.png" alt="SD4A" width={180} height={64} style={{ objectFit: "contain" }} />
         </div>
 
         {/* Nav */}
