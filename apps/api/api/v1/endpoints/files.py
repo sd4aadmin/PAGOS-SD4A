@@ -41,16 +41,7 @@ async def _get_project_or_403(project_id: str, user: User, db: AsyncSession) -> 
         raise HTTPException(404, "Proyecto no encontrado")
     if user.role == Role.CLIENT and proj.client_id != user.id:
         raise HTTPException(403, "Sin acceso")
-    if user.role == Role.ENGINEER:
-        from models.project import ProjectMember
-        m = (await db.execute(
-            select(ProjectMember).where(
-                ProjectMember.project_id == project_id,
-                ProjectMember.user_id == user.id,
-            )
-        )).scalar_one_or_none()
-        if not m:
-            raise HTTPException(403, "Sin acceso")
+    # ENGINEER has access to all projects
     return proj
 
 
