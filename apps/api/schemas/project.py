@@ -1,4 +1,4 @@
-from datetime import datetime
+﻿from datetime import datetime
 from decimal import Decimal
 from typing import Optional
 from pydantic import BaseModel, Field
@@ -23,6 +23,7 @@ class ProjectCreate(BaseModel):
     start_date: Optional[datetime] = None
     estimated_date: Optional[datetime] = None
     engineer_profile_id: Optional[str] = None
+    assigned_engineer_id: Optional[str] = None
 
 
 class ProjectUpdate(BaseModel):
@@ -36,6 +37,7 @@ class ProjectUpdate(BaseModel):
     estimated_date: Optional[datetime] = None
     drive_folder_id: Optional[str] = None
     engineer_profile_id: Optional[str] = None
+    assigned_engineer_id: Optional[str] = None
 
 
 class ProjectOut(BaseModel):
@@ -58,6 +60,8 @@ class ProjectOut(BaseModel):
     member_names: list[str] = []
     engineer_profile_id: Optional[str] = None
     engineer_profile_name: Optional[str] = None
+    assigned_engineer_id: Optional[str] = None
+    assigned_engineer_name: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 
@@ -66,3 +70,4 @@ class ProjectOut(BaseModel):
 
 class AddMemberBody(BaseModel):
     user_id: str
+

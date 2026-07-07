@@ -27,6 +27,8 @@ export interface Project {
   member_names: string[];
   engineer_profile_id?: string | null;
   engineer_profile_name?: string | null;
+  assigned_engineer_id?: string | null;
+  assigned_engineer_name?: string | null;
   created_at: string;
   updated_at: string;
 }

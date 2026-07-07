@@ -16,7 +16,7 @@ const schema = z.object({
   advance_percent: z.coerce.number().int().min(1).max(100),
   start_date: z.string().optional(),
   estimated_date: z.string().optional(),
-  engineer_profile_id: z.string().optional(),
+  assigned_engineer_id: z.string().optional(),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -27,10 +27,10 @@ interface ClientOption {
   email: string;
 }
 
-interface EngineerProfile {
+interface EngineerOption {
   id: string;
   name: string;
-  email?: string | null;
+  email: string;
 }
 
 function formatCOP(raw: string): string {
@@ -51,7 +51,7 @@ export function CreateProjectModal({
 }) {
   const [error, setError] = useState<string | null>(null);
   const [clients, setClients] = useState<ClientOption[]>([]);
-  const [engineerProfiles, setEngineerProfiles] = useState<EngineerProfile[]>([]);
+  const [engineers, setEngineers] = useState<EngineerOption[]>([]);
   const [rawValue, setRawValue] = useState("");
 
   const { register, handleSubmit, setValue, formState: { errors, isSubmitting } } = useForm<FormData>({
@@ -64,9 +64,9 @@ export function CreateProjectModal({
       .then((r) => r.json())
       .then((data) => setClients(data.items ?? data))
       .catch(() => {});
-    proxyFetch("/engineer-profiles")
+    proxyFetch("/users?role=ENGINEER&is_active=true")
       .then((r) => r.json())
-      .then((data: EngineerProfile[]) => setEngineerProfiles(Array.isArray(data) ? data : []))
+      .then((data) => setEngineers(data.items ?? []))
       .catch(() => {});
   }, []);
 
@@ -156,12 +156,12 @@ export function CreateProjectModal({
             </Field>
           </div>
 
-          {engineerProfiles.length > 0 && (
-            <Field label="Ingeniero responsable" error={errors.engineer_profile_id?.message}>
-              <select {...register("engineer_profile_id")} className={inputCls}>
+          {engineers.length > 0 && (
+            <Field label="Ingeniero responsable" error={errors.assigned_engineer_id?.message}>
+              <select {...register("assigned_engineer_id")} className={inputCls}>
                 <option value="">Sin asignar</option>
-                {engineerProfiles.map((p) => (
-                  <option key={p.id} value={p.id}>{p.name}{p.email ? ` — ${p.email}` : ""}</option>
+                {engineers.map((e) => (
+                  <option key={e.id} value={e.id}>{e.name} — {e.email}</option>
                 ))}
               </select>
             </Field>

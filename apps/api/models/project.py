@@ -1,4 +1,4 @@
-import enum
+﻿import enum
 from datetime import datetime, timezone
 from decimal import Decimal
 from sqlalchemy import String, Integer, Numeric, DateTime, Date, ForeignKey, func, UniqueConstraint, JSON
@@ -42,6 +42,7 @@ class Project(Base):
     updated_at: Mapped[datetime] = mapped_column("updated_at", DateTime, default=_now, onupdate=_now)
 
     engineer_profile_id: Mapped[str | None] = mapped_column(String, ForeignKey("engineer_profiles.id", ondelete="SET NULL"), nullable=True)
+    assigned_engineer_id: Mapped[str | None] = mapped_column(String, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
 
     members: Mapped[list["ProjectMember"]] = relationship("ProjectMember", back_populates="project", lazy="selectin")
 
@@ -54,3 +55,4 @@ class ProjectMember(Base):
     user_id: Mapped[str] = mapped_column("user_id", String, ForeignKey("users.id"), nullable=False, primary_key=True)
 
     project: Mapped["Project"] = relationship("Project", back_populates="members")
+

@@ -46,6 +46,12 @@ async def lifespan(app: FastAPI):
             ADD COLUMN IF NOT EXISTS engineer_profile_id VARCHAR
             REFERENCES engineer_profiles(id) ON DELETE SET NULL
         """))
+        # Ingeniero responsable del proyecto → usuario con rol ENGINEER
+        await conn.execute(text("""
+            ALTER TABLE projects
+            ADD COLUMN IF NOT EXISTS assigned_engineer_id VARCHAR
+            REFERENCES users(id) ON DELETE SET NULL
+        """))
     yield
 
 

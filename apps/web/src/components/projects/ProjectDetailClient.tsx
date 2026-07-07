@@ -264,8 +264,8 @@ export function ProjectDetailClient({ projectId, role }: { projectId: string; ro
         </div>
         <EngineersPanel
           projectId={project.id}
-          currentProfileId={project.engineer_profile_id}
-          currentProfileName={project.engineer_profile_name}
+          currentEngineerId={project.assigned_engineer_id}
+          currentEngineerName={project.assigned_engineer_name}
           isAdmin={isAdmin}
           onUpdated={load}
         />
@@ -310,37 +310,37 @@ function StatusPipeline({ current }: { current: ProjectStatus }) {
   );
 }
 
-type EngineerProfile = { id: string; name: string; email?: string | null };
+type EngineerOption = { id: string; name: string; email: string };
 
-function EngineersPanel({ projectId, currentProfileId, currentProfileName, isAdmin, onUpdated }: {
+function EngineersPanel({ projectId, currentEngineerId, currentEngineerName, isAdmin, onUpdated }: {
   projectId: string;
-  currentProfileId?: string | null;
-  currentProfileName?: string | null;
+  currentEngineerId?: string | null;
+  currentEngineerName?: string | null;
   isAdmin: boolean;
   onUpdated: () => void;
 }) {
-  const [profiles, setProfiles] = useState<EngineerProfile[]>([]);
-  const [selectedId, setSelectedId] = useState(currentProfileId ?? "");
+  const [engineers, setEngineers] = useState<EngineerOption[]>([]);
+  const [selectedId, setSelectedId] = useState(currentEngineerId ?? "");
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!isAdmin) return;
-    proxyFetch("/engineer-profiles")
+    proxyFetch("/users?role=ENGINEER&is_active=true")
       .then(r => r.json())
-      .then(d => setProfiles(Array.isArray(d) ? d : []));
+      .then(d => setEngineers(d.items ?? []));
   }, [isAdmin]);
 
   useEffect(() => {
-    setSelectedId(currentProfileId ?? "");
-  }, [currentProfileId]);
+    setSelectedId(currentEngineerId ?? "");
+  }, [currentEngineerId]);
 
-  async function saveProfile() {
+  async function saveEngineer() {
     setSaving(true);
     await proxyFetch(`/projects/${projectId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ engineer_profile_id: selectedId || null }),
+      body: JSON.stringify({ assigned_engineer_id: selectedId || null }),
     });
     setEditing(false);
     await onUpdated();
@@ -355,7 +355,7 @@ function EngineersPanel({ projectId, currentProfileId, currentProfileName, isAdm
         </h3>
         {isAdmin && !editing && (
           <button onClick={() => setEditing(true)} className="text-xs text-sd4a-dark hover:underline flex items-center gap-1">
-            <UserPlus className="w-3 h-3" /> {currentProfileId ? "Cambiar" : "Asignar"}
+            <UserPlus className="w-3 h-3" /> {currentEngineerId ? "Cambiar" : "Asignar"}
           </button>
         )}
       </div>
@@ -368,10 +368,10 @@ function EngineersPanel({ projectId, currentProfileId, currentProfileName, isAdm
             className="flex-1 px-2 py-1.5 border border-border rounded-lg text-sm bg-background text-foreground"
           >
             <option value="">Sin asignar</option>
-            {profiles.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+            {engineers.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
           </select>
           <button
-            onClick={saveProfile}
+            onClick={saveEngineer}
             disabled={saving}
             className="px-3 py-1.5 bg-sd4a-dark text-white text-sm rounded-lg disabled:opacity-50 flex items-center gap-1"
           >
@@ -381,9 +381,9 @@ function EngineersPanel({ projectId, currentProfileId, currentProfileName, isAdm
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
-      ) : currentProfileName ? (
+      ) : currentEngineerName ? (
         <div>
-          <p className="text-sm font-medium text-foreground">{currentProfileName}</p>
+          <p className="text-sm font-medium text-foreground">{currentEngineerName}</p>
         </div>
       ) : (
         <p className="text-sm text-muted-foreground">Sin ingeniero asignado</p>
