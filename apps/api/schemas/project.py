@@ -22,6 +22,7 @@ class ProjectCreate(BaseModel):
     advance_percent: int = Field(..., ge=1, le=100)
     start_date: Optional[datetime] = None
     estimated_date: Optional[datetime] = None
+    engineer_profile_id: Optional[str] = None
 
 
 class ProjectUpdate(BaseModel):
@@ -34,6 +35,7 @@ class ProjectUpdate(BaseModel):
     start_date: Optional[datetime] = None
     estimated_date: Optional[datetime] = None
     drive_folder_id: Optional[str] = None
+    engineer_profile_id: Optional[str] = None
 
 
 class ProjectOut(BaseModel):
@@ -54,6 +56,8 @@ class ProjectOut(BaseModel):
     client_email: str = ""
     member_ids: list[str] = []
     member_names: list[str] = []
+    engineer_profile_id: Optional[str] = None
+    engineer_profile_name: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 

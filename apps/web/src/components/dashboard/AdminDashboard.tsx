@@ -105,10 +105,10 @@ export function AdminDashboard({ userName }: { userName: string }) {
                         Entrega: {new Date(p.estimated_date).toLocaleDateString("es-CO")}
                       </span>
                     )}
-                    {p.member_names.length > 0 && (
+                    {p.engineer_profile_name && (
                       <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
                         <HardHat className="w-3 h-3" />
-                        {p.member_names[0]}{p.member_names.length > 1 ? ` +${p.member_names.length - 1}` : ""}
+                        {p.engineer_profile_name}
                       </span>
                     )}
                   </div>

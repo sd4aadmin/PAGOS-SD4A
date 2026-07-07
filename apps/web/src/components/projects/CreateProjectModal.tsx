@@ -16,6 +16,7 @@ const schema = z.object({
   advance_percent: z.coerce.number().int().min(1).max(100),
   start_date: z.string().optional(),
   estimated_date: z.string().optional(),
+  engineer_profile_id: z.string().optional(),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -24,6 +25,12 @@ interface ClientOption {
   id: string;
   name: string;
   email: string;
+}
+
+interface EngineerProfile {
+  id: string;
+  name: string;
+  email?: string | null;
 }
 
 function formatCOP(raw: string): string {
@@ -44,6 +51,7 @@ export function CreateProjectModal({
 }) {
   const [error, setError] = useState<string | null>(null);
   const [clients, setClients] = useState<ClientOption[]>([]);
+  const [engineerProfiles, setEngineerProfiles] = useState<EngineerProfile[]>([]);
   const [rawValue, setRawValue] = useState("");
 
   const { register, handleSubmit, setValue, formState: { errors, isSubmitting } } = useForm<FormData>({
@@ -55,6 +63,10 @@ export function CreateProjectModal({
     proxyFetch("/users?role=CLIENT&is_active=true")
       .then((r) => r.json())
       .then((data) => setClients(data.items ?? data))
+      .catch(() => {});
+    proxyFetch("/engineer-profiles")
+      .then((r) => r.json())
+      .then((data: EngineerProfile[]) => setEngineerProfiles(Array.isArray(data) ? data : []))
       .catch(() => {});
   }, []);
 
@@ -143,6 +155,17 @@ export function CreateProjectModal({
               <input {...register("estimated_date")} type="date" className={inputCls} />
             </Field>
           </div>
+
+          {engineerProfiles.length > 0 && (
+            <Field label="Ingeniero responsable" error={errors.engineer_profile_id?.message}>
+              <select {...register("engineer_profile_id")} className={inputCls}>
+                <option value="">Sin asignar</option>
+                {engineerProfiles.map((p) => (
+                  <option key={p.id} value={p.id}>{p.name}{p.email ? ` — ${p.email}` : ""}</option>
+                ))}
+              </select>
+            </Field>
+          )}
 
           {error && <p className="text-sm text-red-500">{error}</p>}
 

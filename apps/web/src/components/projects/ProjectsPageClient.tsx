@@ -226,10 +226,10 @@ export function ProjectsPageClient({ role }: { role: string }) {
                     </td>
                     {isAdmin && (
                       <td className="px-4 py-3 text-muted-foreground text-xs">
-                        {p.member_names.length > 0 ? (
+                        {p.engineer_profile_name ? (
                           <span className="flex items-center gap-1">
                             <HardHat className="w-3 h-3 shrink-0" />
-                            {p.member_names[0]}{p.member_names.length > 1 ? ` +${p.member_names.length - 1}` : ""}
+                            {p.engineer_profile_name}
                           </span>
                         ) : "—"}
                       </td>

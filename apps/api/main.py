@@ -31,6 +31,21 @@ async def lifespan(app: FastAPI):
         await conn.execute(text(
             "ALTER TABLE users DROP CONSTRAINT IF EXISTS users_email_key"
         ))
+        # Tabla de perfiles de ingenieros (sin cuenta de login)
+        await conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS engineer_profiles (
+                id VARCHAR PRIMARY KEY,
+                name VARCHAR NOT NULL,
+                email VARCHAR,
+                created_at TIMESTAMP DEFAULT NOW()
+            )
+        """))
+        # FK desde proyectos hacia perfiles (SET NULL al eliminar perfil)
+        await conn.execute(text("""
+            ALTER TABLE projects
+            ADD COLUMN IF NOT EXISTS engineer_profile_id VARCHAR
+            REFERENCES engineer_profiles(id) ON DELETE SET NULL
+        """))
     yield
 
 

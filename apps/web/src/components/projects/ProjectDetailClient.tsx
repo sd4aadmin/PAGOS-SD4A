@@ -258,7 +258,13 @@ export function ProjectDetailClient({ projectId, role }: { projectId: string; ro
             <p className="text-sm text-muted-foreground">{project.client_email}</p>
           </div>
         </div>
-        <EngineersPanel projectId={project.id} memberIds={project.member_ids} isAdmin={isAdmin} onUpdated={load} />
+        <EngineersPanel
+          projectId={project.id}
+          currentProfileId={project.engineer_profile_id}
+          currentProfileName={project.engineer_profile_name}
+          isAdmin={isAdmin}
+          onUpdated={load}
+        />
       </div>
     </div>
   );
@@ -300,106 +306,83 @@ function StatusPipeline({ current }: { current: ProjectStatus }) {
   );
 }
 
-type Engineer = { id: string; name: string; email: string };
+type EngineerProfile = { id: string; name: string; email?: string | null };
 
-function EngineersPanel({ projectId, memberIds, isAdmin, onUpdated }: {
-  projectId: string; memberIds: string[]; isAdmin: boolean; onUpdated: () => void;
+function EngineersPanel({ projectId, currentProfileId, currentProfileName, isAdmin, onUpdated }: {
+  projectId: string;
+  currentProfileId?: string | null;
+  currentProfileName?: string | null;
+  isAdmin: boolean;
+  onUpdated: () => void;
 }) {
-  const [engineers, setEngineers] = useState<Engineer[]>([]);
-  const [members, setMembers] = useState<Engineer[]>([]);
-  const [showAdd, setShowAdd] = useState(false);
-  const [selectedId, setSelectedId] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [profiles, setProfiles] = useState<EngineerProfile[]>([]);
+  const [selectedId, setSelectedId] = useState(currentProfileId ?? "");
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    proxyFetch("/users?role=ENGINEER&is_active=true")
+    if (!isAdmin) return;
+    proxyFetch("/engineer-profiles")
       .then(r => r.json())
-      .then(d => setEngineers(Array.isArray(d) ? d : (d.items ?? [])));
-  }, []);
+      .then(d => setProfiles(Array.isArray(d) ? d : []));
+  }, [isAdmin]);
 
   useEffect(() => {
-    const found = engineers.filter(e => memberIds.includes(e.id));
-    setMembers(found);
-  }, [engineers, memberIds]);
+    setSelectedId(currentProfileId ?? "");
+  }, [currentProfileId]);
 
-  const available = engineers.filter(e => !memberIds.includes(e.id));
-
-  async function addMember() {
-    if (!selectedId) return;
-    setLoading(true);
-    await fetch(`/api/proxy/projects/${projectId}/members`, {
-      method: "POST",
+  async function saveProfile() {
+    setSaving(true);
+    await proxyFetch(`/projects/${projectId}`, {
+      method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_id: selectedId }),
+      body: JSON.stringify({ engineer_profile_id: selectedId || null }),
     });
-    setShowAdd(false);
-    setSelectedId("");
+    setEditing(false);
     await onUpdated();
-    setLoading(false);
-  }
-
-  async function removeMember(userId: string) {
-    setLoading(true);
-    await fetch(`/api/proxy/projects/${projectId}/members/${userId}`, { method: "DELETE" });
-    await onUpdated();
-    setLoading(false);
+    setSaving(false);
   }
 
   return (
     <div className="bg-card border border-border rounded-xl p-4">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
-          <Users className="w-4 h-4 text-sd4a-dark" /> Ingenieros asignados
+          <Users className="w-4 h-4 text-sd4a-dark" /> Ingeniero responsable
         </h3>
-        {isAdmin && available.length > 0 && (
-          <button onClick={() => setShowAdd(!showAdd)} className="text-xs text-sd4a-dark hover:underline flex items-center gap-1">
-            <UserPlus className="w-3 h-3" /> Agregar
+        {isAdmin && !editing && (
+          <button onClick={() => setEditing(true)} className="text-xs text-sd4a-dark hover:underline flex items-center gap-1">
+            <UserPlus className="w-3 h-3" /> {currentProfileId ? "Cambiar" : "Asignar"}
           </button>
         )}
       </div>
 
-      {showAdd && (
-        <div className="flex gap-2 mb-3">
+      {editing ? (
+        <div className="flex gap-2">
           <select
             value={selectedId}
             onChange={e => setSelectedId(e.target.value)}
             className="flex-1 px-2 py-1.5 border border-border rounded-lg text-sm bg-background text-foreground"
           >
-            <option value="">Seleccionar ingeniero...</option>
-            {available.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+            <option value="">Sin asignar</option>
+            {profiles.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
           <button
-            onClick={addMember}
-            disabled={!selectedId || loading}
+            onClick={saveProfile}
+            disabled={saving}
             className="px-3 py-1.5 bg-sd4a-dark text-white text-sm rounded-lg disabled:opacity-50 flex items-center gap-1"
           >
-            {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : "Agregar"}
+            {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : "Guardar"}
+          </button>
+          <button onClick={() => setEditing(false)} className="px-2 py-1.5 border border-border rounded-lg text-sm text-muted-foreground hover:bg-muted">
+            <X className="w-3.5 h-3.5" />
           </button>
         </div>
-      )}
-
-      {members.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Sin ingenieros asignados</p>
-      ) : (
-        <div className="space-y-2">
-          {members.map(e => (
-            <div key={e.id} className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-foreground">{e.name}</p>
-                <p className="text-xs text-muted-foreground">{e.email}</p>
-              </div>
-              {isAdmin && (
-                <button
-                  onClick={() => removeMember(e.id)}
-                  disabled={loading}
-                  className="p-1 hover:bg-red-50 dark:hover:bg-red-900/20 rounded text-red-500 disabled:opacity-50 transition-colors"
-                >
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              )}
-            </div>
-          ))}
+      ) : currentProfileName ? (
+        <div>
+          <p className="text-sm font-medium text-foreground">{currentProfileName}</p>
         </div>
+      ) : (
+        <p className="text-sm text-muted-foreground">Sin ingeniero asignado</p>
       )}
     </div>
   );

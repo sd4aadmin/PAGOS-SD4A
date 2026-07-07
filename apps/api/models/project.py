@@ -41,6 +41,8 @@ class Project(Base):
     created_at: Mapped[datetime] = mapped_column("created_at", DateTime, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column("updated_at", DateTime, default=_now, onupdate=_now)
 
+    engineer_profile_id: Mapped[str | None] = mapped_column(String, ForeignKey("engineer_profiles.id", ondelete="SET NULL"), nullable=True)
+
     members: Mapped[list["ProjectMember"]] = relationship("ProjectMember", back_populates="project", lazy="selectin")
 
 
