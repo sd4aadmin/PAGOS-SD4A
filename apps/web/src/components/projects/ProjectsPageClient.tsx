@@ -136,15 +136,15 @@ export function ProjectsPageClient({ role }: { role: string }) {
         >
           <div className="absolute -right-6 -top-6 w-32 h-32 rounded-full opacity-20" style={{ background: "rgba(255,255,255,0.4)" }} />
           <p className="text-white/70 text-xs font-semibold uppercase tracking-widest mb-4">Resumen financiero</p>
-          <div className="grid grid-cols-3 gap-4 relative z-10">
+          <div className="grid grid-cols-3 gap-2 relative z-10">
             {[
               { label: "Valor total",  val: totalValue },
               { label: "Anticipo",     val: totalAdvance },
               { label: "Saldo",        val: totalRemaining },
             ].map(({ label, val }) => (
-              <div key={label}>
-                <p className="text-xs text-white/70 mb-1">{label}</p>
-                <p className="text-lg md:text-xl font-black">{COP.format(val)}</p>
+              <div key={label} className="min-w-0">
+                <p className="text-xs text-white/70 mb-1 truncate">{label}</p>
+                <p className="text-sm sm:text-base md:text-xl font-black leading-tight break-all">{COP.format(val)}</p>
               </div>
             ))}
           </div>
