@@ -89,14 +89,8 @@ export default function LoginPage() {
                   lg:placeholder-slate-400 lg:text-slate-800 lg:focus:ring-[#0A7881]/30
                 "
                 style={{
-                  background: "rgba(255,255,255,0.15)",
-                  border: "1px solid rgba(255,255,255,0.35)",
-                }}
-                onFocus={e => {
-                  e.currentTarget.style.background = "rgba(255,255,255,0.22)";
-                }}
-                onBlur={e => {
-                  e.currentTarget.style.background = "rgba(255,255,255,0.15)";
+                  background: "rgba(255,255,255,0.12)",
+                  border: "1.5px solid rgba(255,255,255,0.40)",
                 }}
               />
             </div>
@@ -125,14 +119,8 @@ export default function LoginPage() {
                   lg:placeholder-slate-400 lg:text-slate-800 lg:focus:ring-[#0A7881]/30
                 "
                 style={{
-                  background: "rgba(255,255,255,0.15)",
-                  border: "1px solid rgba(255,255,255,0.35)",
-                }}
-                onFocus={e => {
-                  e.currentTarget.style.background = "rgba(255,255,255,0.22)";
-                }}
-                onBlur={e => {
-                  e.currentTarget.style.background = "rgba(255,255,255,0.15)";
+                  background: "rgba(255,255,255,0.12)",
+                  border: "1.5px solid rgba(255,255,255,0.40)",
                 }}
               />
             </div>
