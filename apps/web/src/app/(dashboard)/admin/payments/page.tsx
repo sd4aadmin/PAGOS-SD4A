@@ -37,16 +37,27 @@ export default function PaymentsAdminPage() {
   const [changingStatus, setChangingStatus] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [showCreate, setShowCreate] = useState(false);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setFetchError(null);
     try {
       const res = await proxyFetch("/payments");
+      const text = await res.text();
       if (res.ok) {
-        const data = await res.json();
-        setPayments(Array.isArray(data) ? data : (Array.isArray(data?.items) ? data.items : []));
+        try {
+          const data = JSON.parse(text);
+          setPayments(Array.isArray(data) ? data : (Array.isArray(data?.items) ? data.items : []));
+        } catch {
+          setFetchError(`Error al parsear respuesta: ${text.slice(0, 200)}`);
+        }
+      } else {
+        setFetchError(`Error ${res.status}: ${text.slice(0, 300)}`);
       }
-    } catch { /* network error */ } finally {
+    } catch (e) {
+      setFetchError(`Error de red: ${String(e)}`);
+    } finally {
       setLoading(false);
     }
   }, []);
@@ -198,6 +209,14 @@ export default function PaymentsAdminPage() {
           </button>
         )}
       </div>
+
+      {/* Error de diagnóstico */}
+      {fetchError && (
+        <div className="flex items-start gap-3 px-4 py-3 rounded-xl border text-sm" style={{ background: "#fee2e2", borderColor: "#fca5a5", color: "#991b1b" }}>
+          <span className="font-bold shrink-0">Error al cargar pagos:</span>
+          <span className="font-mono break-all">{fetchError}</span>
+        </div>
+      )}
 
       {/* Table / Empty */}
       {loading ? (
