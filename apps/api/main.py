@@ -1,5 +1,5 @@
 import sys
-import asyncio
+import asyncio  # noqa
 
 if sys.platform == "win32":
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
