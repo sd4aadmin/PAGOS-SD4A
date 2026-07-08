@@ -20,9 +20,14 @@ const ACTION_STYLE: Record<string, { bg: string; color: string }> = {
   PROJECT_DELETED:   { bg: "#fee2e2", color: "#dc2626" },
   PAYMENT_CREATED:   { bg: "#fef3c7", color: "#d97706" },
   PAYMENT_CONFIRMED: { bg: "#d1fae5", color: "#059669" },
+  PAYMENT_DELETED:   { bg: "#fee2e2", color: "#dc2626" },
   USER_CREATED:      { bg: "#f3e8ff", color: "#7c3aed" },
   USER_UPDATED:      { bg: "#fae8ff", color: "#9333ea" },
   USER_DEACTIVATED:  { bg: "#f1f5f9", color: "#64748b" },
+  FILE_UPLOADED:     { bg: "#d1fae5", color: "#059669" },
+  FILE_DELETED:      { bg: "#fee2e2", color: "#dc2626" },
+  LOGIN_SUCCESS:     { bg: "#f0fdfa", color: "#0A7881" },
+  LOGIN_FAILED:      { bg: "#fff7ed", color: "#ea580c" },
 };
 
 const ACTION_LABELS: Record<string, string> = {
@@ -31,9 +36,14 @@ const ACTION_LABELS: Record<string, string> = {
   PROJECT_DELETED:   "Proyecto eliminado",
   PAYMENT_CREATED:   "Pago generado",
   PAYMENT_CONFIRMED: "Pago confirmado",
+  PAYMENT_DELETED:   "Pago eliminado",
   USER_CREATED:      "Usuario creado",
   USER_UPDATED:      "Usuario actualizado",
   USER_DEACTIVATED:  "Usuario desactivado",
+  FILE_UPLOADED:     "Archivo subido",
+  FILE_DELETED:      "Archivo eliminado",
+  LOGIN_SUCCESS:     "Inicio de sesión",
+  LOGIN_FAILED:      "Intento fallido",
 };
 
 const ACTION_DOTS: Record<string, string> = {
@@ -42,9 +52,14 @@ const ACTION_DOTS: Record<string, string> = {
   PROJECT_DELETED:   "#dc2626",
   PAYMENT_CREATED:   "#d97706",
   PAYMENT_CONFIRMED: "#059669",
+  PAYMENT_DELETED:   "#dc2626",
   USER_CREATED:      "#7c3aed",
   USER_UPDATED:      "#9333ea",
   USER_DEACTIVATED:  "#94a3b8",
+  FILE_UPLOADED:     "#059669",
+  FILE_DELETED:      "#dc2626",
+  LOGIN_SUCCESS:     "#0A7881",
+  LOGIN_FAILED:      "#ea580c",
 };
 
 export function ActivityPageClient() {

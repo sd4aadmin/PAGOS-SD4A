@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import {
   ArrowLeft, RefreshCw, Pencil, Trash2, CalendarDays,
   TrendingUp, BadgeCheck, Loader2, Printer, UserPlus, X,
-  Users, DollarSign, FolderKanban,
+  Users, FolderKanban,
 } from "lucide-react";
 import { Project, ProjectStatus, STATUS_LABELS, STATUS_COLORS } from "@/types/project";
 import { PaymentsSection } from "@/components/payments/PaymentsSection";
