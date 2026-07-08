@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, FolderKanban, Users, CreditCard,
-  HardHat, Activity, UserCircle, ChevronDown,
+  HardHat, Activity, UserCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -35,12 +34,6 @@ export function SidebarNav({ role }: { role: string }) {
   const mainItems  = items.filter((i) => !i.group);
   const adminItems = items.filter((i) => i.group === "admin");
 
-  // Acordeón: abierto por defecto si algún item admin está activo
-  const adminActive = adminItems.some((i) =>
-    i.exact ? pathname === i.href : pathname === i.href || pathname.startsWith(i.href + "/")
-  );
-  const [adminOpen, setAdminOpen] = useState(adminActive);
-
   return (
     <>
       {/* ── Desktop sidebar ── */}
@@ -57,32 +50,11 @@ export function SidebarNav({ role }: { role: string }) {
 
           {adminItems.length > 0 && (
             <div className="pt-3">
-              {/* Acordeón header */}
-              <button
-                onClick={() => setAdminOpen((v) => !v)}
-                className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sidebar-foreground hover:bg-sidebar-hover hover:text-white transition-colors group"
-              >
-                <span className="text-[11px] font-semibold uppercase tracking-wider text-sd4a-mid group-hover:text-white/70 transition-colors">
-                  {sectionLabel}
-                </span>
-                <ChevronDown
-                  className={cn(
-                    "w-3.5 h-3.5 text-sd4a-mid group-hover:text-white/70 transition-all duration-200",
-                    adminOpen ? "rotate-180" : "rotate-0"
-                  )}
-                />
-              </button>
-
-              {/* Acordeón body */}
-              <div
-                className={cn(
-                  "overflow-hidden transition-all duration-300 ease-in-out",
-                  adminOpen ? "max-h-96 opacity-100 mt-0.5" : "max-h-0 opacity-0"
-                )}
-              >
-                <div className="space-y-0.5 pl-2 border-l border-white/10 ml-3">
-                  {adminItems.map((item) => <NavLink key={item.href} item={item} pathname={pathname} />)}
-                </div>
+              <p className="px-3 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-sd4a-mid">
+                {sectionLabel}
+              </p>
+              <div className="space-y-0.5">
+                {adminItems.map((item) => <NavLink key={item.href} item={item} pathname={pathname} />)}
               </div>
             </div>
           )}
