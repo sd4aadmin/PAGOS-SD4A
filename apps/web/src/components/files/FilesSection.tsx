@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useSession } from "next-auth/react";
 import { Upload, X, FileText, Image, Archive, FileSpreadsheet, FileType, FolderOpen, Download, Trash2, Loader2, Tag, AlignLeft, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -268,12 +269,14 @@ export default function FilesSection({ projectId, canUpload, role }: Props) {
 function UploadModal({ projectId, onClose, onUploaded }: {
   projectId: string; onClose: () => void; onUploaded: () => void;
 }) {
+  const { data: session } = useSession();
   const [category, setCategory] = useState(CATEGORIES[0].value);
   const [description, setDescription] = useState("");
   const [versionLabel, setVersionLabel] = useState("");
   const [isDeliverable, setIsDeliverable] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -281,9 +284,10 @@ function UploadModal({ projectId, onClose, onUploaded }: {
   function pickFile(f: File) { setFile(f); setError(null); }
 
   async function upload() {
-    if (!file) return;
+    if (!file || !session?.accessToken) return;
     setError(null);
     setUploading(true);
+    setUploadProgress(0);
     try {
       const form = new FormData();
       form.append("file", file);
@@ -293,15 +297,38 @@ function UploadModal({ projectId, onClose, onUploaded }: {
         ...(description.trim() && { description: description.trim() }),
         ...(versionLabel.trim() && { version_label: versionLabel.trim() }),
       });
-      const res = await fetch(`/api/proxy/files/project/${projectId}?${params}`, { method: "POST", body: form });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        setError(typeof err.detail === "string" ? err.detail : "Error al subir el archivo");
-        return;
-      }
+
+      // Upload directly to Railway API to bypass Vercel's 4.5 MB proxy limit
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "";
+      await new Promise<void>((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", `${apiUrl}/api/v1/files/project/${projectId}?${params}`);
+        xhr.setRequestHeader("Authorization", `Bearer ${session.accessToken}`);
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) setUploadProgress(Math.round((e.loaded / e.total) * 100));
+        };
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve();
+          } else {
+            try {
+              const err = JSON.parse(xhr.responseText);
+              reject(new Error(typeof err.detail === "string" ? err.detail : "Error al subir el archivo"));
+            } catch {
+              reject(new Error(`Error ${xhr.status} al subir el archivo`));
+            }
+          }
+        };
+        xhr.onerror = () => reject(new Error("Error de red al subir el archivo"));
+        xhr.send(form);
+      });
+
       onUploaded();
+    } catch (e: any) {
+      setError(e.message ?? "Error al subir el archivo");
     } finally {
       setUploading(false);
+      setUploadProgress(0);
     }
   }
 
@@ -437,7 +464,7 @@ function UploadModal({ projectId, onClose, onUploaded }: {
               className="flex-1 py-2.5 text-white rounded-xl text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50 hover:opacity-90 transition-opacity"
               style={{ background: "linear-gradient(135deg, #0A7881, #68B2B7)" }}
             >
-              {uploading ? <><Loader2 className="w-4 h-4 animate-spin" /> Subiendo...</> : <><Upload className="w-4 h-4" /> Subir archivo</>}
+              {uploading ? <><Loader2 className="w-4 h-4 animate-spin" /> {uploadProgress > 0 ? `${uploadProgress}%` : "Subiendo..."}</> : <><Upload className="w-4 h-4" /> Subir archivo</>}
             </button>
           </div>
         </div>
