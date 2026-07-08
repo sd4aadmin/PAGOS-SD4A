@@ -40,29 +40,37 @@ export default function PaymentsAdminPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const res = await proxyFetch("/payments");
-    if (res.ok) setPayments(await res.json());
-    setLoading(false);
+    try {
+      const res = await proxyFetch("/payments");
+      if (res.ok) {
+        const data = await res.json();
+        setPayments(Array.isArray(data) ? data : (Array.isArray(data?.items) ? data.items : []));
+      }
+    } catch { /* network error */ } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => { load(); }, [load]);
 
   async function confirm(paymentId: string) {
     setConfirming(paymentId);
-    await fetch(`/api/proxy/payments/${paymentId}/confirm`, { method: "POST" });
-    await load();
-    setConfirming(null);
+    try {
+      await proxyFetch(`/payments/${paymentId}/confirm`, { method: "POST" });
+      await load();
+    } finally { setConfirming(null); }
   }
 
   async function changeStatus(paymentId: string, newStatus: string) {
     setChangingStatus(paymentId);
-    await fetch(`/api/proxy/payments/${paymentId}/status`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: newStatus }),
-    });
-    await load();
-    setChangingStatus(null);
+    try {
+      await proxyFetch(`/payments/${paymentId}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      await load();
+    } finally { setChangingStatus(null); }
   }
 
   const hasFilters = search.trim() !== "" || statusFilter !== "ALL";
