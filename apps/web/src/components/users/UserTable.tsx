@@ -12,30 +12,27 @@ import { Pagination } from "@/components/ui/Pagination";
 const PAGE_SIZE = 10;
 
 const ROLE_LABEL: Record<string, string> = {
-  ADMIN: "Administrador",
+  ADMIN: "Admin",
   ENGINEER: "Ingeniero",
   CLIENT: "Cliente",
 };
 
-const ROLE_COLOR: Record<string, string> = {
-  ADMIN: "bg-purple-100 text-purple-700",
-  ENGINEER: "bg-blue-100 text-blue-700",
-  CLIENT: "bg-muted text-foreground",
+const ROLE_STYLE: Record<string, { bg: string; color: string }> = {
+  ADMIN:    { bg: "#f5f3ff", color: "#7c3aed" },
+  ENGINEER: { bg: "#eff6ff", color: "#2563eb" },
+  CLIENT:   { bg: "#f0fdfa", color: "#0A7881" },
 };
 
-type Props = {
-  users: User[];
-  onRefresh: () => void;
-};
+type Props = { users: User[]; onRefresh: () => void };
 
 export function UserTable({ users, onRefresh }: Props) {
-  const [editUser, setEditUser] = useState<User | null>(null);
+  const [editUser, setEditUser]         = useState<User | null>(null);
   const [passwordUser, setPasswordUser] = useState<User | null>(null);
-  const [openMenu, setOpenMenu] = useState<string | null>(null);
-  const [page, setPage] = useState(1);
+  const [openMenu, setOpenMenu]         = useState<string | null>(null);
+  const [page, setPage]                 = useState(1);
 
   const totalPages = Math.ceil(users.length / PAGE_SIZE);
-  const paged = users.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const paged      = users.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   async function toggleActive(user: User) {
     const res = await fetch(`/api/proxy/users/${user.id}`, {
@@ -60,11 +57,9 @@ export function UserTable({ users, onRefresh }: Props) {
     if (!window.confirm(`¿Desasignar a ${user.name} de todos los proyectos?`)) return;
     const res = await fetch(`/api/proxy/users/${user.id}/memberships`, { method: "DELETE" });
     if (res.ok || res.status === 204) {
-      alert(`${user.name} fue desasignado de todos los proyectos. Ahora puedes eliminarlo.`);
+      alert(`${user.name} fue desasignado de todos los proyectos.`);
       onRefresh();
-    } else {
-      alert("Error al desasignar");
-    }
+    } else alert("Error al desasignar");
   }
 
   function UserMenu({ user }: { user: User }) {
@@ -95,41 +90,31 @@ export function UserTable({ users, onRefresh }: Props) {
         </button>
         {openMenu === user.id && menuPos && createPortal(
           <div
-            className="fixed z-[9999] bg-card border border-border rounded-xl shadow-lg w-44 py-1"
+            className="fixed z-[9999] bg-card border border-border rounded-xl shadow-xl w-44 py-1"
             style={{ top: menuPos.top, right: menuPos.right }}
             onMouseLeave={() => setOpenMenu(null)}
           >
-            <button
-              onClick={() => { setEditUser(user); setOpenMenu(null); }}
-              className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted/50 text-foreground"
-            >
+            <button onClick={() => { setEditUser(user); setOpenMenu(null); }}
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted/50 text-foreground">
               <Pencil className="w-3.5 h-3.5" /> Editar
             </button>
-            <button
-              onClick={() => { setPasswordUser(user); setOpenMenu(null); }}
-              className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted/50 text-foreground"
-            >
+            <button onClick={() => { setPasswordUser(user); setOpenMenu(null); }}
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted/50 text-foreground">
               <KeyRound className="w-3.5 h-3.5" /> Cambiar clave
             </button>
             <div className="border-t my-1" />
-            <button
-              onClick={() => { toggleActive(user); setOpenMenu(null); }}
-              className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted/50 ${user.is_active ? "text-amber-600" : "text-green-600"}`}
-            >
+            <button onClick={() => { toggleActive(user); setOpenMenu(null); }}
+              className={`w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted/50 ${user.is_active ? "text-amber-600" : "text-green-600"}`}>
               {user.is_active ? <><Ban className="w-3.5 h-3.5" /> Desactivar</> : <><CheckCircle className="w-3.5 h-3.5" /> Activar</>}
             </button>
             {user.role === "ENGINEER" && (
-              <button
-                onClick={() => { setOpenMenu(null); unassignUser(user); }}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-orange-50 text-orange-600"
-              >
+              <button onClick={() => { setOpenMenu(null); unassignUser(user); }}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-orange-50 text-orange-600">
                 <FolderMinus className="w-3.5 h-3.5" /> Desasignar proyectos
               </button>
             )}
-            <button
-              onClick={() => { setOpenMenu(null); deleteUser(user); }}
-              className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-red-50 text-red-600"
-            >
+            <button onClick={() => { setOpenMenu(null); deleteUser(user); }}
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-red-50 text-red-600">
               <Trash2 className="w-3.5 h-3.5" /> Eliminar
             </button>
           </div>,
@@ -142,106 +127,117 @@ export function UserTable({ users, onRefresh }: Props) {
   return (
     <>
       {/* ── Desktop table ── */}
-      <div className="hidden md:block bg-card rounded-xl border overflow-visible">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm min-w-[600px]">
-            <thead>
-              <tr className="border-b bg-muted/50 rounded-t-xl">
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Nombre</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Email</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Rol</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Empresa</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Estado</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Creado</th>
-                <th className="px-4 py-3" />
+      <div className="hidden md:block bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="bg-muted/40 border-b border-border">
+              {["Nombre", "Email", "Rol", "Empresa", "Estado", "Creado", ""].map((h) => (
+                <th key={h} className="px-5 py-3.5 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {paged.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="px-5 py-16 text-center text-sm text-muted-foreground">
+                  No hay usuarios registrados
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {paged.map((user) => (
-                <tr key={user.id} className="border-b last:border-0 hover:bg-muted/50 transition-colors">
-                  <td className="px-4 py-3 font-medium text-foreground">{user.name}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{user.email}</td>
-                  <td className="px-4 py-3">
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${ROLE_COLOR[user.role]}`}>
+            ) : paged.map((user) => {
+              const rs = ROLE_STYLE[user.role] ?? ROLE_STYLE.CLIENT;
+              return (
+                <tr key={user.id} className="hover:bg-muted/30 transition-colors">
+                  <td className="px-5 py-4">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-black shrink-0 text-white"
+                        style={{ background: "linear-gradient(135deg,#0A7881,#68B2B7)" }}
+                      >
+                        {user.name.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase()}
+                      </div>
+                      <span className="font-semibold text-foreground">{user.name}</span>
+                    </div>
+                  </td>
+                  <td className="px-5 py-4 text-muted-foreground">{user.email}</td>
+                  <td className="px-5 py-4">
+                    <span className="px-2.5 py-1 rounded-full text-xs font-semibold" style={{ background: rs.bg, color: rs.color }}>
                       {ROLE_LABEL[user.role]}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-muted-foreground">{user.company ?? "—"}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-5 py-4 text-muted-foreground">{user.company ?? "—"}</td>
+                  <td className="px-5 py-4">
                     {user.is_active ? (
-                      <span className="flex items-center gap-1 text-green-600 text-xs font-medium">
+                      <span className="flex items-center gap-1 text-emerald-600 text-xs font-semibold">
                         <CheckCircle className="w-3.5 h-3.5" /> Activo
                       </span>
                     ) : (
-                      <span className="flex items-center gap-1 text-red-500 text-xs font-medium">
+                      <span className="flex items-center gap-1 text-red-500 text-xs font-semibold">
                         <Ban className="w-3.5 h-3.5" /> Inactivo
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-muted-foreground">{formatDate(user.created_at)}</td>
-                  <td className="px-4 py-3">
-                    <UserMenu user={user} />
-                  </td>
+                  <td className="px-5 py-4 text-muted-foreground text-xs">{formatDate(user.created_at)}</td>
+                  <td className="px-5 py-4"><UserMenu user={user} /></td>
                 </tr>
-              ))}
-              {users.length === 0 && (
-                <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground text-sm">
-                    No hay usuarios registrados
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+              );
+            })}
+          </tbody>
+        </table>
         <Pagination page={page} totalPages={totalPages} totalItems={users.length} pageSize={PAGE_SIZE} onChange={setPage} />
       </div>
 
       {/* ── Mobile cards ── */}
-      <div className="md:hidden space-y-2">
+      <div className="md:hidden space-y-3">
         {paged.length === 0 && (
           <p className="text-sm text-muted-foreground text-center py-8">No hay usuarios registrados</p>
         )}
-        {paged.map((user) => (
-          <div key={user.id} className="bg-card border border-border rounded-xl p-4">
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0">
-                <p className="font-semibold text-foreground truncate">{user.name}</p>
-                <p className="text-xs text-muted-foreground truncate mt-0.5">{user.email}</p>
+        {paged.map((user) => {
+          const rs = ROLE_STYLE[user.role] ?? ROLE_STYLE.CLIENT;
+          return (
+            <div key={user.id} className="bg-card border border-border rounded-2xl p-4 shadow-sm">
+              <div className="flex items-start justify-between gap-2 mb-3">
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-black text-white shrink-0"
+                    style={{ background: "linear-gradient(135deg,#0A7881,#68B2B7)" }}
+                  >
+                    {user.name.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-bold text-foreground truncate">{user.name}</p>
+                    <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span className="px-2 py-0.5 rounded-full text-xs font-semibold" style={{ background: rs.bg, color: rs.color }}>
+                    {ROLE_LABEL[user.role]}
+                  </span>
+                  <UserMenu user={user} />
+                </div>
               </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${ROLE_COLOR[user.role]}`}>
-                  {ROLE_LABEL[user.role]}
-                </span>
-                <UserMenu user={user} />
+              <div className="flex items-center gap-3 pt-3 border-t border-border">
+                {user.is_active ? (
+                  <span className="flex items-center gap-1 text-emerald-600 text-xs font-semibold">
+                    <CheckCircle className="w-3.5 h-3.5" /> Activo
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1 text-red-500 text-xs font-semibold">
+                    <Ban className="w-3.5 h-3.5" /> Inactivo
+                  </span>
+                )}
+                {user.company && <span className="text-xs text-muted-foreground">· {user.company}</span>}
+                <span className="text-xs text-muted-foreground ml-auto">{formatDate(user.created_at)}</span>
               </div>
             </div>
-            <div className="flex items-center gap-3 mt-3 pt-3 border-t border-border">
-              {user.is_active ? (
-                <span className="flex items-center gap-1 text-green-600 text-xs font-medium">
-                  <CheckCircle className="w-3.5 h-3.5" /> Activo
-                </span>
-              ) : (
-                <span className="flex items-center gap-1 text-red-500 text-xs font-medium">
-                  <Ban className="w-3.5 h-3.5" /> Inactivo
-                </span>
-              )}
-              {user.company && (
-                <span className="text-xs text-muted-foreground">· {user.company}</span>
-              )}
-              <span className="text-xs text-muted-foreground ml-auto">{formatDate(user.created_at)}</span>
-            </div>
-          </div>
-        ))}
+          );
+        })}
         <Pagination page={page} totalPages={totalPages} totalItems={users.length} pageSize={PAGE_SIZE} onChange={setPage} />
       </div>
 
-      {editUser && (
-        <UserEditModal user={editUser} onClose={() => setEditUser(null)} onSaved={onRefresh} />
-      )}
-      {passwordUser && (
-        <UserPasswordModal user={passwordUser} onClose={() => setPasswordUser(null)} />
-      )}
+      {editUser && <UserEditModal user={editUser} onClose={() => setEditUser(null)} onSaved={onRefresh} />}
+      {passwordUser && <UserPasswordModal user={passwordUser} onClose={() => setPasswordUser(null)} />}
     </>
   );
 }

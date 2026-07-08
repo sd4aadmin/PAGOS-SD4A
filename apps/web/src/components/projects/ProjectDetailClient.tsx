@@ -1,12 +1,12 @@
 "use client";
 
 import { proxyFetch } from "@/lib/proxy-fetch";
-
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
-  ArrowLeft, RefreshCw, Pencil, Trash2, Users, CalendarDays,
-  TrendingUp, BadgeCheck, Loader2, Printer, UserPlus, X
+  ArrowLeft, RefreshCw, Pencil, Trash2, CalendarDays,
+  TrendingUp, BadgeCheck, Loader2, Printer, UserPlus, X,
+  Users, DollarSign, FolderKanban,
 } from "lucide-react";
 import { Project, ProjectStatus, STATUS_LABELS, STATUS_COLORS } from "@/types/project";
 import { PaymentsSection } from "@/components/payments/PaymentsSection";
@@ -83,7 +83,7 @@ export function ProjectDetailClient({ projectId, role }: { projectId: string; ro
   if (loading) {
     return (
       <div className="flex items-center justify-center py-32 text-muted-foreground">
-        <RefreshCw className="w-5 h-5 animate-spin mr-2" /> Cargando proyecto...
+        <RefreshCw className="w-5 h-5 animate-spin mr-2" /> Cargando proyecto…
       </div>
     );
   }
@@ -95,28 +95,20 @@ export function ProjectDetailClient({ projectId, role }: { projectId: string; ro
   const advanceAmount = (Number(project.total_value) * project.advance_percent) / 100;
 
   return (
-    <div className="p-3 md:p-6 space-y-4 md:space-y-6 max-w-5xl">
-      {/* Back + header */}
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex items-start gap-2 min-w-0">
-          <button onClick={() => router.push("/dashboard/projects")} className="mt-1 p-1.5 hover:bg-muted rounded-lg transition-colors shrink-0">
-            <ArrowLeft className="w-4 h-4 text-muted-foreground" />
-          </button>
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 mb-1 flex-wrap">
-              <span className="font-mono text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">{project.code}</span>
-              <span className={cn("px-2 py-0.5 rounded-full text-xs font-medium", STATUS_COLORS[project.status])}>
-                {STATUS_LABELS[project.status]}
-              </span>
-            </div>
-            <h1 className="text-lg md:text-xl font-semibold text-foreground leading-tight">{project.name}</h1>
-            {project.description && <p className="text-sm text-muted-foreground mt-1">{project.description}</p>}
-          </div>
-        </div>
-        <div className="flex items-center gap-1.5 shrink-0">
+    <div className="p-4 md:p-8 space-y-6 max-w-5xl mx-auto">
+
+      {/* ── Navegación ── */}
+      <div className="flex items-center justify-between gap-3">
+        <button
+          onClick={() => router.push("/dashboard/projects")}
+          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" /> Proyectos
+        </button>
+        <div className="flex items-center gap-2">
           <button
             onClick={() => window.print()}
-            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 text-sm text-muted-foreground border border-border rounded-lg hover:bg-muted transition-colors"
+            className="hidden sm:flex items-center gap-1.5 px-3 py-2 text-sm text-muted-foreground border border-border rounded-xl hover:bg-muted transition-colors"
           >
             <Printer className="w-3.5 h-3.5" /> Imprimir
           </button>
@@ -124,7 +116,7 @@ export function ProjectDetailClient({ projectId, role }: { projectId: string; ro
             <button
               onClick={() => setConfirmDelete(true)}
               disabled={deleting}
-              className="flex items-center gap-1 px-2 md:px-3 py-1.5 text-sm text-red-600 border border-red-200 rounded-lg hover:bg-red-50 disabled:opacity-50 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-2 text-sm text-red-600 border border-red-200 rounded-xl hover:bg-red-50 disabled:opacity-50 transition-colors"
             >
               {deleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
               <span className="hidden sm:inline">Eliminar</span>
@@ -133,109 +125,182 @@ export function ProjectDetailClient({ projectId, role }: { projectId: string; ro
         </div>
       </div>
 
-      {/* Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {role !== "ENGINEER" && (
-          <InfoCard icon={<BadgeCheck className="w-4 h-4 text-sd4a-dark" />} label="Valor total">
-            {COP.format(Number(project.total_value))}
-          </InfoCard>
-        )}
-        {role !== "ENGINEER" && (
-          <InfoCard icon={<BadgeCheck className="w-4 h-4 text-yellow-500" />} label={`Anticipo (${project.advance_percent}%)`}>
-            {COP.format(advanceAmount)}
-          </InfoCard>
-        )}
-        <InfoCard icon={<CalendarDays className="w-4 h-4 text-muted-foreground" />} label="Fecha inicio">
+      {/* ── Banner del proyecto ── */}
+      <div
+        className="relative overflow-hidden rounded-2xl p-6 md:p-8 text-white"
+        style={{ background: "linear-gradient(135deg,#0A7881 0%,#068a8a 50%,#9BE3BF 100%)" }}
+      >
+        <div className="absolute -right-8 -top-8 w-40 h-40 rounded-full opacity-20" style={{ background: "rgba(255,255,255,0.3)" }} />
+        <div className="relative z-10">
+          <div className="flex flex-wrap items-center gap-2 mb-3">
+            <span className="font-mono text-xs px-2.5 py-1 rounded-full font-bold" style={{ background: "rgba(255,255,255,0.15)" }}>
+              {project.code}
+            </span>
+            <span className={cn("px-2.5 py-1 rounded-full text-xs font-semibold", STATUS_COLORS[project.status])}>
+              {STATUS_LABELS[project.status]}
+            </span>
+          </div>
+          <h1 className="text-xl md:text-2xl font-black leading-tight mb-1">{project.name}</h1>
+          {project.description && <p className="text-white/70 text-sm">{project.description}</p>}
+
+          {role !== "ENGINEER" && (
+            <div className="flex flex-wrap gap-6 mt-4 pt-4 border-t border-white/20">
+              <div>
+                <p className="text-white/60 text-xs mb-0.5">Valor total</p>
+                <p className="text-lg font-black">{COP.format(Number(project.total_value))}</p>
+              </div>
+              <div>
+                <p className="text-white/60 text-xs mb-0.5">Anticipo ({project.advance_percent}%)</p>
+                <p className="text-lg font-black">{COP.format(advanceAmount)}</p>
+              </div>
+              <div>
+                <p className="text-white/60 text-xs mb-0.5">Avance</p>
+                <p className="text-lg font-black">{project.progress}%</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── Fechas y datos ── */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <InfoCard icon={<CalendarDays className="w-4 h-4" />} label="Fecha inicio" color="#3b82f6" bg="#eff6ff">
           {project.start_date ? new Date(project.start_date).toLocaleDateString("es-CO") : "—"}
         </InfoCard>
-        <InfoCard icon={<CalendarDays className="w-4 h-4 text-muted-foreground" />} label="Entrega estimada">
+        <InfoCard icon={<CalendarDays className="w-4 h-4" />} label="Entrega estimada" color="#f59e0b" bg="#fffbeb">
           {project.estimated_date ? new Date(project.estimated_date).toLocaleDateString("es-CO") : "—"}
+        </InfoCard>
+        <InfoCard icon={<Users className="w-4 h-4" />} label="Cliente" color="#8b5cf6" bg="#f5f3ff">
+          <span className="truncate block">{project.client_name}</span>
+        </InfoCard>
+        <InfoCard icon={<FolderKanban className="w-4 h-4" />} label="Ingeniero" color="#0A7881" bg="#f0fdfa">
+          {project.engineer_profile_name ?? "Sin asignar"}
         </InfoCard>
       </div>
 
-      {/* Status Pipeline (PASO 19) */}
-      <div className="bg-card border border-border rounded-xl p-4 space-y-3">
+      {/* ── Pipeline de estado ── */}
+      <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-            <BadgeCheck className="w-4 h-4 text-sd4a-dark" /> Estado del proyecto
-          </div>
+          <h3 className="font-bold text-foreground flex items-center gap-2">
+            <BadgeCheck className="w-4 h-4" style={{ color: "#0A7881" }} /> Estado del proyecto
+          </h3>
           {isAdmin && !editStatus && (
-            <button onClick={() => setEditStatus(true)} className="text-xs text-sd4a-dark hover:underline flex items-center gap-1">
+            <button
+              onClick={() => setEditStatus(true)}
+              className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-xl border border-border hover:bg-muted transition-colors text-muted-foreground"
+            >
               <Pencil className="w-3 h-3" /> Cambiar
             </button>
           )}
         </div>
         <StatusPipeline current={project.status} />
         {editStatus && (
-          <div className="space-y-2 pt-1">
+          <div className="space-y-3 pt-2 border-t border-border">
             <select
               value={newStatus}
               onChange={(e) => setNewStatus(e.target.value as ProjectStatus)}
-              className="w-full px-3 py-2 border border-border rounded-lg text-sm bg-background text-foreground"
+              className="w-full px-3 py-2.5 border border-border rounded-xl text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-[#0A7881]/30"
             >
               {STATUSES.map((s) => (
                 <option key={s} value={s}>{STATUS_LABELS[s]}</option>
               ))}
             </select>
             <div className="flex gap-2">
-              <button onClick={() => setEditStatus(false)} className="flex-1 py-1.5 text-sm border border-border rounded-lg hover:bg-muted text-foreground">Cancelar</button>
-              <button onClick={saveStatus} disabled={saving} className="flex-1 py-1.5 text-sm bg-sd4a-dark text-white rounded-lg flex items-center justify-center gap-1">
-                {saving && <Loader2 className="w-3 h-3 animate-spin" />} Guardar
+              <button onClick={() => setEditStatus(false)} className="flex-1 py-2.5 text-sm border border-border rounded-xl hover:bg-muted text-foreground transition-colors">
+                Cancelar
+              </button>
+              <button
+                onClick={saveStatus}
+                disabled={saving}
+                className="flex-1 py-2.5 text-sm text-white rounded-xl flex items-center justify-center gap-1.5 transition-opacity disabled:opacity-60"
+                style={{ background: "linear-gradient(135deg,#0A7881,#68B2B7)" }}
+              >
+                {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Guardar
               </button>
             </div>
           </div>
         )}
       </div>
 
-      {/* Progress */}
-      <div className="bg-card border border-border rounded-xl p-4 space-y-3">
+      {/* ── Avance ── */}
+      <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm font-medium text-foreground">
-            <TrendingUp className="w-4 h-4 text-sd4a-dark" /> Avance del proyecto
-          </div>
+          <h3 className="font-bold text-foreground flex items-center gap-2">
+            <TrendingUp className="w-4 h-4" style={{ color: "#0A7881" }} /> Avance del proyecto
+          </h3>
           {canEdit && !editProgress && (
-            <button onClick={() => setEditProgress(true)} className="text-xs text-sd4a-dark hover:underline flex items-center gap-1">
+            <button
+              onClick={() => setEditProgress(true)}
+              className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-xl border border-border hover:bg-muted transition-colors text-muted-foreground"
+            >
               <Pencil className="w-3 h-3" /> Editar
             </button>
           )}
         </div>
-        <div className="flex items-center gap-3">
-          <div className="flex-1 bg-muted rounded-full h-3">
-            <div className="bg-sd4a-dark h-3 rounded-full transition-all" style={{ width: `${editProgress ? progress : project.progress}%` }} />
+        <div className="flex items-center gap-4">
+          <div className="flex-1 bg-muted rounded-full h-3 overflow-hidden">
+            <div
+              className="h-3 rounded-full transition-all"
+              style={{
+                width: `${editProgress ? progress : project.progress}%`,
+                background: "linear-gradient(90deg,#0A7881,#9BE3BF)",
+              }}
+            />
           </div>
-          <span className="text-lg font-bold text-foreground w-12 text-right">{editProgress ? progress : project.progress}%</span>
+          <span className="text-2xl font-black text-foreground w-16 text-right">
+            {editProgress ? progress : project.progress}%
+          </span>
         </div>
         {editProgress && (
-          <div className="space-y-2">
-            <div className="flex items-center gap-3">
+          <div className="space-y-3 pt-2 border-t border-border">
+            <div className="flex items-center gap-4">
               <input
                 type="range" min={0} max={100} value={progress}
                 onChange={(e) => setProgress(Number(e.target.value))}
-                className="flex-1 accent-sd4a-dark"
+                className="flex-1"
+                style={{ accentColor: "#0A7881" }}
               />
-              <span className="text-lg font-bold text-foreground w-12 text-right">{progress}%</span>
+              <span className="text-xl font-black text-foreground w-12 text-right">{progress}%</span>
             </div>
             <div className="flex gap-2">
-              <button onClick={() => setEditProgress(false)} className="flex-1 py-1.5 text-sm border border-border rounded-lg hover:bg-muted text-foreground">Cancelar</button>
-              <button onClick={saveProgress} disabled={saving} className="flex-1 py-1.5 text-sm bg-sd4a-dark text-white rounded-lg flex items-center justify-center gap-1">
-                {saving && <Loader2 className="w-3 h-3 animate-spin" />} Guardar
+              <button onClick={() => setEditProgress(false)} className="flex-1 py-2.5 text-sm border border-border rounded-xl hover:bg-muted text-foreground transition-colors">
+                Cancelar
+              </button>
+              <button
+                onClick={saveProgress}
+                disabled={saving}
+                className="flex-1 py-2.5 text-sm text-white rounded-xl flex items-center justify-center gap-1.5 disabled:opacity-60"
+                style={{ background: "linear-gradient(135deg,#0A7881,#68B2B7)" }}
+              >
+                {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Guardar
               </button>
             </div>
           </div>
         )}
       </div>
 
-      {/* Files */}
+      {/* ── Ingeniero asignado (admin only) ── */}
+      {isAdmin && (
+        <EngineersPanel
+          projectId={project.id}
+          currentProfileId={project.engineer_profile_id}
+          currentProfileName={project.engineer_profile_name}
+          isAdmin={isAdmin}
+          onUpdated={load}
+        />
+      )}
+
+      {/* ── Archivos ── */}
       <FilesSection projectId={project.id} canUpload={canEdit} role={role} />
 
-      {/* Payments — oculto para ingenieros */}
+      {/* ── Pagos ── */}
       {role !== "ENGINEER" && <PaymentsSection project={project} role={role} />}
 
-      {/* Activity */}
+      {/* ── Actividad ── */}
       {(role === "ADMIN" || role === "ENGINEER") && (
-        <div className="bg-card border border-border rounded-xl p-5">
-          <h3 className="text-sm font-medium text-foreground mb-4 flex items-center gap-2">
-            <span className="w-4 h-4">📋</span> Historial de actividad
+        <div className="bg-card border border-border rounded-2xl p-5">
+          <h3 className="font-bold text-foreground mb-4 flex items-center gap-2">
+            <span className="text-base">📋</span> Historial de actividad
           </h3>
           <ActivityTimeline projectId={project.id} />
         </div>
@@ -250,58 +315,43 @@ export function ProjectDetailClient({ projectId, role }: { projectId: string; ro
         onConfirm={handleDelete}
         onCancel={() => setConfirmDelete(false)}
       />
-
-      {/* Client + Members */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-card border border-border rounded-xl p-4">
-          <h3 className="text-sm font-medium text-foreground mb-3 flex items-center gap-2">
-            <Users className="w-4 h-4 text-sd4a-dark" /> Cliente
-          </h3>
-          <div>
-            <p className="font-medium text-foreground">{project.client_name}</p>
-            <p className="text-sm text-muted-foreground">{project.client_email}</p>
-          </div>
-        </div>
-        <EngineersPanel
-          projectId={project.id}
-          currentProfileId={project.engineer_profile_id}
-          currentProfileName={project.engineer_profile_name}
-          isAdmin={isAdmin}
-          onUpdated={load}
-        />
-      </div>
     </div>
   );
 }
 
+/* ── Pipeline visual ── */
 function StatusPipeline({ current }: { current: ProjectStatus }) {
   const steps: ProjectStatus[] = ["PENDING_ADVANCE", "IN_PROGRESS", "IN_REVIEW", "FINISHED", "PENDING_FINAL", "PAID", "DELIVERED"];
   const idx = steps.indexOf(current);
+  const SHORT: Record<string, string> = {
+    PENDING_ADVANCE: "Anticipo", IN_PROGRESS: "En curso", IN_REVIEW: "Revisión",
+    FINISHED: "Terminado", PENDING_FINAL: "Saldo", PAID: "Pagado", DELIVERED: "Entregado",
+  };
   return (
-    <div className="flex items-center gap-0 overflow-x-auto pb-1">
+    <div className="flex items-start gap-0 overflow-x-auto pb-2 -mx-1 px-1">
       {steps.map((s, i) => {
-        const done = i < idx;
+        const done   = i < idx;
         const active = i === idx;
         return (
-          <div key={s} className="flex items-center gap-0 shrink-0">
-            <div className="flex flex-col items-center gap-1">
+          <div key={s} className="flex items-start gap-0 shrink-0">
+            <div className="flex flex-col items-center gap-1.5 min-w-[52px]">
               <div className={cn(
-                "w-7 h-7 rounded-full border-2 flex items-center justify-center text-xs font-bold transition-colors",
-                done ? "bg-sd4a-dark border-sd4a-dark text-white" :
-                active ? "bg-sd4a-mid border-sd4a-dark text-white" :
+                "w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-black transition-all",
+                done   ? "border-[#0A7881] text-white" :
+                active ? "border-[#0A7881] text-white shadow-lg" :
                 "bg-background border-border text-muted-foreground"
-              )}>
+              )} style={done ? { background: "#0A7881" } : active ? { background: "linear-gradient(135deg,#0A7881,#68B2B7)" } : {}}>
                 {done ? "✓" : i + 1}
               </div>
               <span className={cn(
-                "text-[10px] text-center leading-tight max-w-[60px]",
-                active ? "text-sd4a-dark font-semibold" : done ? "text-foreground" : "text-muted-foreground"
-              )}>
-                {STATUS_LABELS[s].split(" ").slice(0, 2).join(" ")}
+                "text-[10px] text-center leading-tight px-0.5",
+                active ? "font-bold" : "text-muted-foreground"
+              )} style={active ? { color: "#0A7881" } : {}}>
+                {SHORT[s]}
               </span>
             </div>
             {i < steps.length - 1 && (
-              <div className={cn("h-0.5 w-6 mx-0.5 mb-4", done ? "bg-sd4a-dark" : "bg-border")} />
+              <div className={cn("h-0.5 w-5 mt-4 shrink-0", done ? "bg-[#0A7881]" : "bg-border")} />
             )}
           </div>
         );
@@ -310,14 +360,12 @@ function StatusPipeline({ current }: { current: ProjectStatus }) {
   );
 }
 
+/* ── Panel ingeniero ── */
 type EngineerProfile = { id: string; name: string };
 
 function EngineersPanel({ projectId, currentProfileId, currentProfileName, isAdmin, onUpdated }: {
-  projectId: string;
-  currentProfileId?: string | null;
-  currentProfileName?: string | null;
-  isAdmin: boolean;
-  onUpdated: () => void;
+  projectId: string; currentProfileId?: string | null; currentProfileName?: string | null;
+  isAdmin: boolean; onUpdated: () => void;
 }) {
   const [profiles, setProfiles] = useState<EngineerProfile[]>([]);
   const [selectedId, setSelectedId] = useState(currentProfileId ?? "");
@@ -326,14 +374,10 @@ function EngineersPanel({ projectId, currentProfileId, currentProfileName, isAdm
 
   useEffect(() => {
     if (!isAdmin) return;
-    proxyFetch("/engineer-profiles")
-      .then(r => r.json())
-      .then(d => setProfiles(Array.isArray(d) ? d : []));
+    proxyFetch("/engineer-profiles").then(r => r.json()).then(d => setProfiles(Array.isArray(d) ? d : []));
   }, [isAdmin]);
 
-  useEffect(() => {
-    setSelectedId(currentProfileId ?? "");
-  }, [currentProfileId]);
+  useEffect(() => { setSelectedId(currentProfileId ?? ""); }, [currentProfileId]);
 
   async function saveProfile() {
     setSaving(true);
@@ -348,13 +392,16 @@ function EngineersPanel({ projectId, currentProfileId, currentProfileName, isAdm
   }
 
   return (
-    <div className="bg-card border border-border rounded-xl p-4">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-medium text-foreground flex items-center gap-2">
-          <Users className="w-4 h-4 text-sd4a-dark" /> Ingeniero responsable
+    <div className="bg-card border border-border rounded-2xl p-5">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="font-bold text-foreground flex items-center gap-2">
+          <Users className="w-4 h-4" style={{ color: "#0A7881" }} /> Ingeniero responsable
         </h3>
         {isAdmin && !editing && (
-          <button onClick={() => setEditing(true)} className="text-xs text-sd4a-dark hover:underline flex items-center gap-1">
+          <button
+            onClick={() => setEditing(true)}
+            className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-xl border border-border hover:bg-muted transition-colors text-muted-foreground"
+          >
             <UserPlus className="w-3 h-3" /> {currentProfileId ? "Cambiar" : "Asignar"}
           </button>
         )}
@@ -365,7 +412,7 @@ function EngineersPanel({ projectId, currentProfileId, currentProfileName, isAdm
           <select
             value={selectedId}
             onChange={e => setSelectedId(e.target.value)}
-            className="flex-1 px-2 py-1.5 border border-border rounded-lg text-sm bg-background text-foreground"
+            className="flex-1 px-3 py-2.5 border border-border rounded-xl text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-[#0A7881]/30"
           >
             <option value="">Sin asignar</option>
             {profiles.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -373,17 +420,24 @@ function EngineersPanel({ projectId, currentProfileId, currentProfileName, isAdm
           <button
             onClick={saveProfile}
             disabled={saving}
-            className="px-3 py-1.5 bg-sd4a-dark text-white text-sm rounded-lg disabled:opacity-50 flex items-center gap-1"
+            className="px-4 py-2.5 text-white text-sm rounded-xl flex items-center gap-1.5 disabled:opacity-60"
+            style={{ background: "linear-gradient(135deg,#0A7881,#68B2B7)" }}
           >
-            {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : "Guardar"}
+            {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : "Guardar"}
           </button>
-          <button onClick={() => setEditing(false)} className="px-2 py-1.5 border border-border rounded-lg text-sm text-muted-foreground hover:bg-muted">
+          <button onClick={() => setEditing(false)} className="px-3 py-2.5 border border-border rounded-xl text-muted-foreground hover:bg-muted">
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
       ) : currentProfileName ? (
-        <div>
-          <p className="text-sm font-medium text-foreground">{currentProfileName}</p>
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "#f0fdfa" }}>
+            <Users className="w-4 h-4" style={{ color: "#0A7881" }} />
+          </div>
+          <div>
+            <p className="font-semibold text-foreground text-sm">{currentProfileName}</p>
+            <p className="text-xs text-muted-foreground">Ingeniero asignado</p>
+          </div>
         </div>
       ) : (
         <p className="text-sm text-muted-foreground">Sin ingeniero asignado</p>
@@ -392,13 +446,19 @@ function EngineersPanel({ projectId, currentProfileId, currentProfileName, isAdm
   );
 }
 
-function InfoCard({ icon, label, children }: { icon: React.ReactNode; label: string; children: React.ReactNode }) {
+/* ── InfoCard ── */
+function InfoCard({ icon, label, children, color, bg }: {
+  icon: React.ReactNode; label: string; children: React.ReactNode; color: string; bg: string;
+}) {
   return (
-    <div className="bg-card border border-border rounded-xl p-4">
-      <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-2">
-        {icon} {label}
+    <div className="bg-card border border-border rounded-2xl p-4 shadow-sm">
+      <div className="flex items-center gap-2 mb-3">
+        <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: bg, color }}>
+          {icon}
+        </div>
+        <p className="text-xs text-muted-foreground font-medium">{label}</p>
       </div>
-      <p className="font-semibold text-foreground text-sm">{children}</p>
+      <p className="font-bold text-foreground text-sm truncate">{children}</p>
     </div>
   );
 }
