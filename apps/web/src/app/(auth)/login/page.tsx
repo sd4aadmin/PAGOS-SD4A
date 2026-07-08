@@ -32,12 +32,10 @@ export default function LoginPage() {
       password: data.password,
       redirect: false,
     });
-
     if (result?.error) {
       setError("Credenciales incorrectas. Verifica tu email y contraseña.");
       return;
     }
-
     router.push("/dashboard");
     router.refresh();
   }
@@ -45,42 +43,78 @@ export default function LoginPage() {
   return (
     <div className="w-full">
 
-      {/* Logo + saludo */}
-      <div className="mb-10">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo-light.png" alt="SD4A" height={48} style={{ height: 48, width: "auto", objectFit: "contain", marginBottom: 24 }} />
-        <h2 className="text-3xl font-black text-white mb-1">Bienvenido</h2>
-        <p className="text-sm" style={{ color: "rgba(255,255,255,0.45)" }}>
+      {/* Encabezado */}
+      <div className="mb-8">
+        <h2
+          className="text-3xl font-black mb-1 lg:text-[#0A7881]"
+          style={{ color: "var(--login-heading, #0A7881)" }}
+        >
+          Bienvenido
+        </h2>
+        <p
+          className="text-sm lg:text-slate-500"
+          style={{ color: "var(--login-sub, rgba(255,255,255,0.55))" }}
+        >
           Ingresa tus credenciales para acceder al portal
         </p>
       </div>
+
+      <style>{`
+        @media (min-width: 1024px) {
+          :root {
+            --login-heading: #0A7881;
+            --login-sub: #64748b;
+            --login-label: #475569;
+            --login-input-bg: #ffffff;
+            --login-input-border: #cbd5e1;
+            --login-input-border-focus: #0A7881;
+            --login-input-text: #0f172a;
+            --login-input-placeholder: #94a3b8;
+            --login-icon: #94a3b8;
+          }
+        }
+        @media (max-width: 1023px) {
+          :root {
+            --login-heading: #ffffff;
+            --login-sub: rgba(255,255,255,0.55);
+            --login-label: rgba(255,255,255,0.6);
+            --login-input-bg: rgba(255,255,255,0.08);
+            --login-input-border: rgba(255,255,255,0.12);
+            --login-input-border-focus: rgba(104,178,183,0.7);
+            --login-input-text: #ffffff;
+            --login-input-placeholder: rgba(255,255,255,0.25);
+            --login-icon: rgba(255,255,255,0.35);
+          }
+        }
+      `}</style>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
 
         {/* Email */}
         <div>
-          <label className="block text-xs font-semibold mb-2 uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.5)" }}>
+          <label
+            className="block text-xs font-semibold mb-2 uppercase tracking-widest"
+            style={{ color: "var(--login-label)" }}
+          >
             Correo electrónico
           </label>
           <div className="relative">
-            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "rgba(255,255,255,0.3)" }} />
+            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "var(--login-icon)" }} />
             <input
               {...register("email")}
               type="email"
               autoComplete="email"
               placeholder="correo@empresa.com"
-              className="w-full pl-11 pr-4 py-3.5 rounded-xl text-sm text-white placeholder-white/20 focus:outline-none transition"
+              className="w-full pl-11 pr-4 py-3.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0A7881]/40 transition"
               style={{
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.10)",
-                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)",
+                background: "var(--login-input-bg)",
+                border: "1px solid var(--login-input-border)",
+                color: "var(--login-input-text)",
               }}
-              onFocus={e => (e.currentTarget.style.border = "1px solid rgba(104,178,183,0.6)")}
-              onBlur={e => (e.currentTarget.style.border = "1px solid rgba(255,255,255,0.10)")}
             />
           </div>
           {errors.email && (
-            <p className="text-xs text-red-400 mt-1.5 flex items-center gap-1">
+            <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1">
               <AlertCircle className="w-3 h-3" /> {errors.email.message}
             </p>
           )}
@@ -88,28 +122,29 @@ export default function LoginPage() {
 
         {/* Password */}
         <div>
-          <label className="block text-xs font-semibold mb-2 uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.5)" }}>
+          <label
+            className="block text-xs font-semibold mb-2 uppercase tracking-widest"
+            style={{ color: "var(--login-label)" }}
+          >
             Contraseña
           </label>
           <div className="relative">
-            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "rgba(255,255,255,0.3)" }} />
+            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "var(--login-icon)" }} />
             <input
               {...register("password")}
               type="password"
               autoComplete="current-password"
               placeholder="••••••••"
-              className="w-full pl-11 pr-4 py-3.5 rounded-xl text-sm text-white placeholder-white/20 focus:outline-none transition"
+              className="w-full pl-11 pr-4 py-3.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0A7881]/40 transition"
               style={{
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.10)",
-                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)",
+                background: "var(--login-input-bg)",
+                border: "1px solid var(--login-input-border)",
+                color: "var(--login-input-text)",
               }}
-              onFocus={e => (e.currentTarget.style.border = "1px solid rgba(104,178,183,0.6)")}
-              onBlur={e => (e.currentTarget.style.border = "1px solid rgba(255,255,255,0.10)")}
             />
           </div>
           {errors.password && (
-            <p className="text-xs text-red-400 mt-1.5 flex items-center gap-1">
+            <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1">
               <AlertCircle className="w-3 h-3" /> {errors.password.message}
             </p>
           )}
@@ -118,8 +153,8 @@ export default function LoginPage() {
         {/* Error */}
         {error && (
           <div
-            className="flex items-start gap-2.5 px-4 py-3 rounded-xl text-sm text-red-300"
-            style={{ background: "rgba(239,68,68,0.10)", border: "1px solid rgba(239,68,68,0.20)" }}
+            className="flex items-start gap-2.5 px-4 py-3 rounded-xl text-sm text-red-600"
+            style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.20)" }}
           >
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
             {error}
@@ -130,12 +165,10 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full font-bold py-3.5 rounded-xl text-sm transition-all flex items-center justify-center gap-2 disabled:opacity-60 mt-2"
+          className="w-full font-bold py-3.5 rounded-xl text-sm text-white transition-all flex items-center justify-center gap-2 disabled:opacity-60 mt-2"
           style={{
             background: "linear-gradient(135deg, #0A7881 0%, #68B2B7 100%)",
-            color: "#fff",
-            boxShadow: "0 4px 24px rgba(10,120,129,0.45), 0 1px 0 rgba(255,255,255,0.1) inset",
-            letterSpacing: "0.02em",
+            boxShadow: "0 4px 20px rgba(10,120,129,0.35)",
           }}
         >
           {isSubmitting && <Loader2 className="w-4 h-4 animate-spin" />}
@@ -144,9 +177,10 @@ export default function LoginPage() {
 
       </form>
 
-      <p className="text-center text-xs mt-8" style={{ color: "rgba(255,255,255,0.2)" }}>
+      <p className="text-center text-xs mt-8 lg:text-slate-400" style={{ color: "var(--login-sub)" }}>
         © {new Date().getFullYear()} SD4A — Ingeniería Estructural
       </p>
+
     </div>
   );
 }
