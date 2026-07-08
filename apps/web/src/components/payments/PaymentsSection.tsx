@@ -4,7 +4,7 @@ import { proxyFetch } from "@/lib/proxy-fetch";
 import { useState, useEffect, useCallback } from "react";
 import {
   CreditCard, Plus, ExternalLink, CheckCircle2, Loader2,
-  RefreshCw, Pencil, Trash2, DollarSign,
+  RefreshCw, Pencil, Trash2,
 } from "lucide-react";
 import {
   Payment, PaymentWithCheckout, PaymentType,
@@ -23,9 +23,12 @@ export function PaymentsSection({ project, role }: { project: Project; role: str
 
   const load = useCallback(async () => {
     setLoading(true);
-    const res = await fetch(`/api/proxy/payments/project/${project.id}`);
-    if (res.ok) setPayments(await res.json());
-    setLoading(false);
+    try {
+      const res = await fetch(`/api/proxy/payments/project/${project.id}`);
+      if (res.ok) setPayments(await res.json());
+    } catch { /* network error — keep empty list */ } finally {
+      setLoading(false);
+    }
   }, [project.id]);
 
   useEffect(() => { load(); }, [load]);
@@ -65,9 +68,9 @@ export function PaymentsSection({ project, role }: { project: Project; role: str
       <div className="p-5 space-y-4">
         {/* Resumen financiero */}
         <div className="grid grid-cols-3 gap-3">
-          <SummaryCard label="Valor total"  value={COP.format(totalValue)} icon={<DollarSign className="w-4 h-4" />} color="#0A7881" bg="#f0fdfa" />
-          <SummaryCard label="Pagado"       value={COP.format(totalPaid)}  icon={<CheckCircle2 className="w-4 h-4" />} color="#059669" bg="#d1fae5" />
-          <SummaryCard label="Por pagar"    value={COP.format(remaining)}  icon={<CreditCard className="w-4 h-4" />} color="#d97706" bg="#fef3c7" />
+          <SummaryCard label="Valor total" value={COP.format(totalValue)} color="#0A7881" bg="#f0fdfa" />
+          <SummaryCard label="Pagado"     value={COP.format(totalPaid)}  color="#059669" bg="#d1fae5" />
+          <SummaryCard label="Por pagar"  value={COP.format(remaining)}  color="#d97706" bg="#fef3c7" />
         </div>
 
         {/* Barra de progreso de pagos */}
@@ -119,16 +122,11 @@ export function PaymentsSection({ project, role }: { project: Project; role: str
   );
 }
 
-function SummaryCard({ label, value, icon, color, bg }: { label: string; value: string; icon: React.ReactNode; color: string; bg: string }) {
+function SummaryCard({ label, value, color, bg }: { label: string; value: string; color: string; bg: string }) {
   return (
     <div className="rounded-xl p-3 border border-border">
-      <div className="flex items-center gap-1.5 mb-1.5">
-        <div className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0" style={{ background: bg, color }}>
-          <span className="scale-75">{icon}</span>
-        </div>
-        <p className="text-xs text-muted-foreground">{label}</p>
-      </div>
-      <p className="text-sm font-black text-foreground leading-tight">{value}</p>
+      <p className="text-xs text-muted-foreground mb-1">{label}</p>
+      <p className="text-sm font-black leading-tight" style={{ color }}>{value}</p>
     </div>
   );
 }
