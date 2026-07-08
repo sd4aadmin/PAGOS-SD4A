@@ -1,10 +1,9 @@
 "use client";
 
 import { proxyFetch } from "@/lib/proxy-fetch";
-
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FolderKanban, Users, TrendingUp, Clock, ArrowRight, RefreshCw, CalendarDays, HardHat } from "lucide-react";
+import { FolderKanban, Users, TrendingUp, Clock, ArrowRight, RefreshCw, CalendarDays, HardHat, DollarSign } from "lucide-react";
 import { Project, STATUS_LABELS, STATUS_COLORS } from "@/types/project";
 import { cn } from "@/lib/utils";
 
@@ -22,106 +21,165 @@ export function AdminDashboard({ userName }: { userName: string }) {
       .catch(() => setLoading(false));
   }, []);
 
-  const active = projects.filter((p) => p.status === "IN_PROGRESS" || p.status === "IN_REVIEW");
+  const active  = projects.filter((p) => p.status === "IN_PROGRESS" || p.status === "IN_REVIEW");
   const pending = projects.filter((p) => p.status === "PENDING_ADVANCE" || p.status === "PENDING_FINAL");
   const avgProgress = projects.length
     ? Math.round(projects.reduce((s, p) => s + p.progress, 0) / projects.length)
     : 0;
-
-  const recent = [...projects].sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()).slice(0, 5);
+  const totalValue = projects.reduce((s, p) => s + Number(p.total_value), 0);
+  const recent = [...projects]
+    .sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime())
+    .slice(0, 5);
 
   return (
-    <div className="p-3 md:p-6 space-y-4 md:space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold text-foreground">Bienvenido, {userName}</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Panel de administración</p>
+    <div className="p-4 md:p-8 space-y-6 max-w-6xl mx-auto">
+
+      {/* Header */}
+      <div className="flex items-end justify-between">
+        <div>
+          <p className="text-sm font-medium text-muted-foreground mb-0.5">Panel de administración</p>
+          <h1 className="text-2xl md:text-3xl font-black text-foreground">
+            Hola, <span style={{ color: "#0A7881" }}>{userName.split(" ")[0]}</span> 👋
+          </h1>
+        </div>
+        <span className="hidden sm:block text-xs text-muted-foreground bg-muted px-3 py-1.5 rounded-full">
+          {new Date().toLocaleDateString("es-CO", { weekday: "long", day: "numeric", month: "long" })}
+        </span>
+      </div>
+
+      {/* Banner valor total */}
+      <div
+        className="relative overflow-hidden rounded-2xl p-6 md:p-8 text-white"
+        style={{ background: "linear-gradient(135deg, #0A7881 0%, #068a8a 50%, #9BE3BF 100%)" }}
+      >
+        {/* Círculos decorativos */}
+        <div className="absolute -right-8 -top-8 w-40 h-40 rounded-full opacity-20" style={{ background: "rgba(255,255,255,0.3)" }} />
+        <div className="absolute -right-4 top-8 w-20 h-20 rounded-full opacity-10" style={{ background: "rgba(255,255,255,0.5)" }} />
+
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <p className="text-white/70 text-xs font-semibold uppercase tracking-widest mb-2">Valor total en cartera</p>
+            <p className="text-3xl md:text-4xl font-black">
+              {loading ? "Cargando…" : COP.format(totalValue)}
+            </p>
+          </div>
+          <div className="flex gap-6">
+            <div className="text-center">
+              <p className="text-2xl font-black">{loading ? "…" : projects.length}</p>
+              <p className="text-white/70 text-xs mt-0.5">Proyectos</p>
+            </div>
+            <div className="w-px bg-white/20" />
+            <div className="text-center">
+              <p className="text-2xl font-black">{loading ? "…" : active.length}</p>
+              <p className="text-white/70 text-xs mt-0.5">Activos</p>
+            </div>
+            <div className="w-px bg-white/20" />
+            <div className="text-center">
+              <p className="text-2xl font-black">{loading ? "…" : `${avgProgress}%`}</p>
+              <p className="text-white/70 text-xs mt-0.5">Avance</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* KPI cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard icon={<FolderKanban className="w-5 h-5 text-blue-500" />} label="Total proyectos" value={loading ? "…" : String(projects.length)} accent="text-blue-500" />
-        <KpiCard icon={<TrendingUp className="w-5 h-5 text-emerald-500" />} label="En ejecución" value={loading ? "…" : String(active.length)} accent="text-emerald-500" />
-        <KpiCard icon={<Clock className="w-5 h-5 text-yellow-500" />} label="Pendientes pago" value={loading ? "…" : String(pending.length)} accent="text-yellow-500" />
-        <KpiCard icon={<Users className="w-5 h-5 text-purple-500" />} label="Avance promedio" value={loading ? "…" : `${avgProgress}%`} accent="text-purple-500" />
+        <KpiCard
+          icon={<FolderKanban className="w-5 h-5" />}
+          label="Total proyectos"
+          value={loading ? "…" : String(projects.length)}
+          color="#3b82f6" bg="#eff6ff"
+        />
+        <KpiCard
+          icon={<TrendingUp className="w-5 h-5" />}
+          label="En ejecución"
+          value={loading ? "…" : String(active.length)}
+          color="#10b981" bg="#ecfdf5"
+        />
+        <KpiCard
+          icon={<Clock className="w-5 h-5" />}
+          label="Pendientes pago"
+          value={loading ? "…" : String(pending.length)}
+          color="#f59e0b" bg="#fffbeb"
+        />
+        <KpiCard
+          icon={<DollarSign className="w-5 h-5" />}
+          label="Avance promedio"
+          value={loading ? "…" : `${avgProgress}%`}
+          color="#0A7881" bg="#f0fdfa"
+        />
       </div>
 
-      {/* Revenue banner */}
-      {!loading && projects.length > 0 && (
-        <div className="rounded-xl p-4 md:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-white" style={{ background: "linear-gradient(135deg, #0A7881 0%, #68B2B7 60%, #9BE3BF 100%)" }}>
-          <div>
-            <p className="text-white/70 text-xs font-medium uppercase tracking-wide mb-1">Valor total en cartera</p>
-            <p className="text-white text-xl md:text-2xl font-bold">
-              {COP.format(projects.reduce((s, p) => s + Number(p.total_value), 0))}
-            </p>
-          </div>
-          <div className="sm:text-right">
-            <p className="text-white/70 text-xs mb-1">Proyectos activos</p>
-            <p className="text-white text-xl md:text-2xl font-bold">{active.length}</p>
-          </div>
-        </div>
-      )}
-
-      {/* Recent projects */}
-      <div className="bg-card rounded-xl border">
-        <div className="flex items-center justify-between px-5 py-4 border-b">
-          <h2 className="font-medium text-foreground text-sm">Proyectos recientes</h2>
-          <button onClick={() => router.push("/dashboard/projects")} className="text-xs text-sd4a-mid hover:underline flex items-center gap-1">
-            Ver todos <ArrowRight className="w-3 h-3" />
+      {/* Proyectos recientes */}
+      <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/30">
+          <h2 className="font-bold text-foreground">Proyectos recientes</h2>
+          <button
+            onClick={() => router.push("/dashboard/projects")}
+            className="text-xs font-semibold flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition hover:bg-muted"
+            style={{ color: "#0A7881" }}
+          >
+            Ver todos <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
+
         {loading ? (
-          <div className="flex items-center justify-center py-12 text-muted-foreground">
+          <div className="flex items-center justify-center py-16 text-muted-foreground">
             <RefreshCw className="w-4 h-4 animate-spin mr-2" /> Cargando...
           </div>
         ) : recent.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-10">No hay proyectos aún</p>
+          <div className="flex flex-col items-center py-16 text-muted-foreground gap-2">
+            <FolderKanban className="w-10 h-10 opacity-20" />
+            <p className="text-sm">No hay proyectos aún</p>
+          </div>
         ) : (
-          <div className="divide-y">
+          <div className="divide-y divide-border">
             {recent.map((p) => (
               <div
                 key={p.id}
                 onClick={() => router.push(`/dashboard/projects/${p.id}`)}
-                className="flex items-center gap-4 px-5 py-3.5 hover:bg-muted/50 cursor-pointer"
+                className="flex items-center gap-4 px-6 py-4 hover:bg-muted/40 cursor-pointer transition-colors group"
               >
+                {/* Icono proyecto */}
+                <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: "#f0fdfa" }}>
+                  <FolderKanban className="w-4 h-4" style={{ color: "#0A7881" }} />
+                </div>
+
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 mb-0.5">
                     <span className="font-mono text-xs text-muted-foreground">{p.code}</span>
-                    <span className={cn("px-2 py-0.5 rounded-full text-xs font-medium", STATUS_COLORS[p.status])}>
+                    <span className={cn("px-2 py-0.5 rounded-full text-xs font-semibold", STATUS_COLORS[p.status])}>
                       {STATUS_LABELS[p.status]}
                     </span>
                   </div>
-                  <p className="text-sm font-medium text-foreground truncate mt-0.5">{p.name}</p>
-                  <p className="text-xs text-muted-foreground">{p.client_name}</p>
-                  <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
-                    {p.start_date && (
-                      <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                        <CalendarDays className="w-3 h-3" />
-                        Inicio: {new Date(p.start_date).toLocaleDateString("es-CO")}
+                  <p className="text-sm font-semibold text-foreground truncate">{p.name}</p>
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5">
+                    <span className="text-xs text-muted-foreground">{p.client_name}</span>
+                    {p.engineer_profile_name && (
+                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <HardHat className="w-3 h-3" /> {p.engineer_profile_name}
                       </span>
                     )}
                     {p.estimated_date && (
-                      <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
                         <CalendarDays className="w-3 h-3" />
-                        Entrega: {new Date(p.estimated_date).toLocaleDateString("es-CO")}
-                      </span>
-                    )}
-                    {p.engineer_profile_name && (
-                      <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                        <HardHat className="w-3 h-3" />
-                        {p.engineer_profile_name}
+                        {new Date(p.estimated_date).toLocaleDateString("es-CO", { day: "numeric", month: "short" })}
                       </span>
                     )}
                   </div>
                 </div>
-                <div className="text-right shrink-0">
-                  <p className="text-sm font-medium text-foreground">{COP.format(Number(p.total_value))}</p>
-                  <div className="flex items-center gap-1.5 mt-1 justify-end">
-                    <div className="w-16 bg-muted rounded-full h-1.5">
-                      <div className="bg-sd4a-cyan h-1.5 rounded-full" style={{ width: `${p.progress}%` }} />
+
+                <div className="text-right shrink-0 space-y-1">
+                  <p className="text-sm font-bold text-foreground">{COP.format(Number(p.total_value))}</p>
+                  <div className="flex items-center gap-2 justify-end">
+                    <div className="w-20 bg-muted rounded-full h-1.5">
+                      <div className="h-1.5 rounded-full" style={{ width: `${p.progress}%`, background: "linear-gradient(90deg,#0A7881,#9BE3BF)" }} />
                     </div>
-                    <span className="text-xs text-muted-foreground">{p.progress}%</span>
+                    <span className="text-xs text-muted-foreground w-7 text-right">{p.progress}%</span>
                   </div>
                 </div>
+
+                <ArrowRight className="w-4 h-4 text-muted-foreground/40 shrink-0 group-hover:text-muted-foreground transition-colors" />
               </div>
             ))}
           </div>
@@ -131,11 +189,16 @@ export function AdminDashboard({ userName }: { userName: string }) {
   );
 }
 
-function KpiCard({ icon, label, value, accent }: { icon: React.ReactNode; label: string; value: string; accent: string }) {
+function KpiCard({ icon, label, value, color, bg }: { icon: React.ReactNode; label: string; value: string; color: string; bg: string }) {
   return (
-    <div className="bg-card rounded-xl p-4 border border-border card-shadow">
-      <div className="flex items-center gap-2 mb-2">{icon}<span className="text-xs text-muted-foreground font-medium">{label}</span></div>
-      <p className={cn("text-2xl font-bold", accent)}>{value}</p>
+    <div className="bg-card rounded-2xl p-5 border border-border shadow-sm hover:shadow-md transition-shadow">
+      <div className="flex items-center justify-between mb-4">
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: bg, color }}>
+          {icon}
+        </div>
+      </div>
+      <p className="text-2xl md:text-3xl font-black text-foreground mb-1">{value}</p>
+      <p className="text-xs text-muted-foreground font-medium">{label}</p>
     </div>
   );
 }
