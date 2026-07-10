@@ -60,7 +60,7 @@ export function TopBar({ user }: { user: TopBarUser }) {
           <MaintenanceToggle enabled={maintenance} onToggle={toggleMaintenance} />
         )}
 
-        <NotificationBell />
+        {user.role !== "CLIENT" && <NotificationBell />}
 
         <button
           onClick={toggle}

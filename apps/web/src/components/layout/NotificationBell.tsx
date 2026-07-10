@@ -26,6 +26,7 @@ export function NotificationBell() {
   const [open, setOpen] = useState(false);
   const [seen, setSeen] = useState<Set<string>>(new Set());
   const ref = useRef<HTMLDivElement>(null);
+  const stopped = useRef(false);
 
   useEffect(() => {
     const stored = JSON.parse(localStorage.getItem(SEEN_KEY) ?? "[]");
@@ -33,8 +34,18 @@ export function NotificationBell() {
   }, []);
 
   async function load() {
-    const res = await proxyFetch("/activity?limit=20");
-    if (res.ok) setItems(await res.json());
+    if (stopped.current) return;
+    try {
+      const res = await proxyFetch("/activity?limit=20");
+      if (res.ok) {
+        setItems(await res.json());
+      } else if (res.status === 403 || res.status === 401) {
+        // Sin permiso para ver actividad — dejar de consultar
+        stopped.current = true;
+      }
+    } catch {
+      /* red caída: reintenta en el próximo intervalo */
+    }
   }
 
   useEffect(() => {
