@@ -12,6 +12,8 @@ export interface Payment {
   wompi_id: string | null;
   confirmed_at: string | null;
   notes: string | null;
+  billing_company: string | null;
+  billing_nit: string | null;
   created_at: string;
   updated_at: string;
 }

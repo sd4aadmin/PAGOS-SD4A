@@ -182,6 +182,19 @@ function PaymentRow({ payment, isAdmin, onConfirmed, onEdit, onDeleted }: {
           </p>
         )}
         {payment.notes && <p className="text-xs text-muted-foreground italic mt-0.5">{payment.notes}</p>}
+        {/* Facturación electrónica — solo visible para admin */}
+        {isAdmin && payment.billing_company && (
+          <div className="mt-1.5 flex items-start gap-1.5 px-2.5 py-1.5 rounded-lg" style={{ background: "#f0fdfa", border: "1px solid #99d4d8" }}>
+            <span className="text-xs font-bold shrink-0" style={{ color: "#0A7881" }}>FE</span>
+            <div className="text-xs" style={{ color: "#0A7881" }}>
+              <span className="font-semibold">{payment.billing_company}</span>
+              {payment.billing_nit && <span className="text-muted-foreground ml-1.5">NIT {payment.billing_nit}</span>}
+            </div>
+          </div>
+        )}
+        {isAdmin && !payment.billing_company && (
+          <p className="text-xs text-muted-foreground mt-0.5 italic">Sin factura electrónica</p>
+        )}
       </div>
       {isAdmin && payment.status === "PENDING" && (
         <div className="flex items-center gap-1.5 shrink-0">
@@ -297,8 +310,11 @@ function BillingModal({ paymentId, amount, type, onClose }: {
                 Para empresas o personas que necesiten factura con NIT
               </p>
             </div>
-            <div className={`w-11 h-6 rounded-full transition-all shrink-0 ml-3 ${wantsBilling ? "bg-[#0A7881]" : "bg-muted"}`}>
-              <div className={`w-5 h-5 bg-white rounded-full shadow-sm mt-0.5 transition-all ${wantsBilling ? "translate-x-5.5 ml-0.5" : "ml-0.5"}`} />
+            <div className={`relative w-11 h-6 rounded-full transition-colors duration-200 shrink-0 ml-3 ${wantsBilling ? "bg-[#0A7881]" : "bg-muted"}`}>
+              <div
+                className="absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-all duration-200"
+                style={{ left: wantsBilling ? "calc(100% - 1.375rem)" : "0.125rem" }}
+              />
             </div>
           </button>
 
