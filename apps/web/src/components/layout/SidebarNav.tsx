@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { SD4ALogo } from "@/components/layout/SD4ALogo";
 import {
   LayoutDashboard, FolderKanban, Users, CreditCard,
   HardHat, Activity, UserCircle,
@@ -46,7 +46,14 @@ export function SidebarNav({ role }: { role: string }) {
             background: "linear-gradient(135deg, #0c8a94 0%, #0A7881 60%, #075f68 100%)",
           }}
         >
-          <SD4ALogo variant="light" height={46} />
+          <Image
+            src="/portal-logo.png"
+            alt="SD4A Ingeniería Estructural"
+            width={160}
+            height={60}
+            style={{ objectFit: "contain", maxHeight: 60 }}
+            priority
+          />
         </div>
 
         {/* Nav */}
