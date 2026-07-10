@@ -42,9 +42,7 @@ export function SidebarNav({ role }: { role: string }) {
         {/* Logo */}
         <div
           className="h-20 flex items-center justify-center px-5 border-b border-white/10"
-          style={{
-            background: "linear-gradient(135deg, #0c8a94 0%, #0A7881 60%, #075f68 100%)",
-          }}
+          style={{ background: "#FFFFFF" }}
         >
           <Image
             src="/portal-logo.png"
