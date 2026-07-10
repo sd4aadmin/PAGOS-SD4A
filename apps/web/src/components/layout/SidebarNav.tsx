@@ -40,8 +40,11 @@ export function SidebarNav({ role }: { role: string }) {
       {/* ── Desktop sidebar ── */}
       <aside className="hidden md:flex w-60 bg-sidebar-bg flex-col shrink-0">
         {/* Logo */}
-        <div className="h-20 flex items-center justify-center px-4 border-b border-white/10">
-          <SD4ALogo variant="light" height={42} />
+        <div
+          className="h-20 flex items-center justify-center px-5 border-b border-white/10"
+          style={{ background: "rgba(0,0,0,0.25)" }}
+        >
+          <SD4ALogo variant="light" height={44} />
         </div>
 
         {/* Nav */}
