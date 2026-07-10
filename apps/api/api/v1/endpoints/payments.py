@@ -171,6 +171,8 @@ async def list_project_payments(
 @router.get("/{payment_id}/checkout", response_model=PaymentWithCheckout)
 async def get_checkout(
     payment_id: str,
+    billing_company: str | None = None,
+    billing_nit: str | None = None,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -182,6 +184,16 @@ async def get_checkout(
     if current_user.role == Role.CLIENT and payment.user_id != current_user.id:
         raise HTTPException(403, "Sin acceso")
 
+    # Persist billing data if provided
+    if billing_company:
+        payment.billing_company = billing_company.strip()
+    if billing_nit:
+        payment.billing_nit = billing_nit.strip()
+    if billing_company or billing_nit:
+        payment.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
+        await db.commit()
+        await db.refresh(payment)
+
     proj = (await db.execute(select(Project).where(Project.id == payment.project_id))).scalar_one_or_none()
     redirect_url = f"{settings.APP_URL}/dashboard/projects/{payment.project_id}?payment=done"
     checkout_url = build_checkout_url(
@@ -189,6 +201,8 @@ async def get_checkout(
         amount=payment.amount,
         description=f"{proj.code} — {payment.type}" if proj else payment.wompi_ref,
         redirect_url=redirect_url,
+        billing_company=payment.billing_company,
+        billing_nit=payment.billing_nit,
     )
     return PaymentWithCheckout(**PaymentOut.model_validate(payment).model_dump(), checkout_url=checkout_url)
 

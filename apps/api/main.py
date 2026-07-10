@@ -52,6 +52,13 @@ async def lifespan(app: FastAPI):
             ADD COLUMN IF NOT EXISTS assigned_engineer_id VARCHAR
             REFERENCES users(id) ON DELETE SET NULL
         """))
+        # Datos de facturación electrónica del cliente
+        await conn.execute(text(
+            "ALTER TABLE payments ADD COLUMN IF NOT EXISTS billing_company VARCHAR(255)"
+        ))
+        await conn.execute(text(
+            "ALTER TABLE payments ADD COLUMN IF NOT EXISTS billing_nit VARCHAR(50)"
+        ))
     yield
 
 

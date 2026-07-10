@@ -23,6 +23,8 @@ class PaymentOut(BaseModel):
     wompi_id: Optional[str]
     confirmed_at: Optional[datetime]
     notes: Optional[str]
+    billing_company: Optional[str] = None
+    billing_nit: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 

@@ -206,28 +206,156 @@ function PaymentRow({ payment, isAdmin, onConfirmed, onEdit, onDeleted }: {
 }
 
 function ClientPayButton({ paymentId, amount, type }: { paymentId: string; amount: number; type: PaymentType }) {
-  const [loading, setLoading] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
-  async function pay() {
+  return (
+    <>
+      <button
+        onClick={() => setShowModal(true)}
+        className="w-full flex items-center justify-center gap-2 py-3.5 text-white rounded-xl font-bold hover:opacity-90 transition-opacity"
+        style={{ background: "linear-gradient(135deg,#0A7881,#9BE3BF)", boxShadow: "0 4px 14px rgba(10,120,129,0.3)" }}
+      >
+        <ExternalLink className="w-4 h-4" />
+        Pagar {PAYMENT_TYPE_LABELS[type]} — {COP.format(amount)}
+      </button>
+      {showModal && (
+        <BillingModal
+          paymentId={paymentId}
+          amount={amount}
+          type={type}
+          onClose={() => setShowModal(false)}
+        />
+      )}
+    </>
+  );
+}
+
+function BillingModal({ paymentId, amount, type, onClose }: {
+  paymentId: string; amount: number; type: PaymentType; onClose: () => void;
+}) {
+  const [wantsBilling, setWantsBilling] = useState(false);
+  const [company, setCompany]           = useState("");
+  const [nit, setNit]                   = useState("");
+  const [loading, setLoading]           = useState(false);
+  const [error, setError]               = useState<string | null>(null);
+
+  async function proceed() {
+    if (wantsBilling && (!company.trim() || !nit.trim())) {
+      setError("Completa el nombre de la empresa y el NIT para solicitar la factura.");
+      return;
+    }
     setLoading(true);
-    const res = await fetch(`/api/proxy/payments/${paymentId}/checkout`);
-    if (res.ok) {
+    setError(null);
+    try {
+      const params = new URLSearchParams();
+      if (wantsBilling) {
+        params.set("billing_company", company.trim());
+        params.set("billing_nit", nit.trim());
+      }
+      const url = `/api/proxy/payments/${paymentId}/checkout${params.size ? `?${params}` : ""}`;
+      const res = await fetch(url);
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        setError(err.detail ?? "Error al generar el enlace de pago.");
+        return;
+      }
       const data: PaymentWithCheckout = await res.json();
       window.location.href = data.checkout_url;
+    } catch {
+      setError("Error de red. Intenta de nuevo.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   return (
-    <button
-      onClick={pay}
-      disabled={loading}
-      className="w-full flex items-center justify-center gap-2 py-3.5 text-white rounded-xl font-bold hover:opacity-90 disabled:opacity-70 transition-opacity"
-      style={{ background: "linear-gradient(135deg,#0A7881,#9BE3BF)", boxShadow: "0 4px 14px rgba(10,120,129,0.3)" }}
-    >
-      {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ExternalLink className="w-4 h-4" />}
-      Pagar {PAYMENT_TYPE_LABELS[type]} — {COP.format(amount)}
-    </button>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div className="bg-card border border-border rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+        {/* Header */}
+        <div className="px-5 py-4 border-b border-border" style={{ background: "linear-gradient(135deg,#0A7881,#68B2B7)" }}>
+          <p className="text-xs text-white/70 font-medium uppercase tracking-widest mb-0.5">
+            {PAYMENT_TYPE_LABELS[type]}
+          </p>
+          <p className="text-xl font-black text-white">{COP.format(amount)}</p>
+        </div>
+
+        <div className="p-5 space-y-4">
+          {/* Toggle factura */}
+          <button
+            onClick={() => { setWantsBilling(!wantsBilling); setError(null); }}
+            className={`w-full flex items-center justify-between px-4 py-3.5 rounded-xl border-2 transition-all ${
+              wantsBilling
+                ? "border-[#0A7881] bg-[#f0fdfa]"
+                : "border-border bg-muted/30 hover:bg-muted/60"
+            }`}
+          >
+            <div className="text-left">
+              <p className={`text-sm font-bold ${wantsBilling ? "text-[#0A7881]" : "text-foreground"}`}>
+                Solicitar factura electrónica
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Para empresas o personas que necesiten factura con NIT
+              </p>
+            </div>
+            <div className={`w-11 h-6 rounded-full transition-all shrink-0 ml-3 ${wantsBilling ? "bg-[#0A7881]" : "bg-muted"}`}>
+              <div className={`w-5 h-5 bg-white rounded-full shadow-sm mt-0.5 transition-all ${wantsBilling ? "translate-x-5.5 ml-0.5" : "ml-0.5"}`} />
+            </div>
+          </button>
+
+          {/* Campos de facturación */}
+          {wantsBilling && (
+            <div className="space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
+              <div>
+                <label className="block text-xs font-bold mb-1.5 uppercase tracking-widest text-muted-foreground">
+                  Nombre de la empresa
+                </label>
+                <input
+                  value={company}
+                  onChange={(e) => setCompany(e.target.value)}
+                  placeholder="Constructora El Nogal S.A.S."
+                  className="w-full px-3.5 py-2.5 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0A7881]/30 focus:border-[#0A7881] bg-background text-foreground transition"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold mb-1.5 uppercase tracking-widest text-muted-foreground">
+                  NIT
+                </label>
+                <input
+                  value={nit}
+                  onChange={(e) => setNit(e.target.value.replace(/[^0-9\-]/g, ""))}
+                  placeholder="900.123.456-7"
+                  inputMode="numeric"
+                  className="w-full px-3.5 py-2.5 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0A7881]/30 focus:border-[#0A7881] bg-background text-foreground transition"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                El monto a facturar es <span className="font-bold text-foreground">{COP.format(amount)}</span>, correspondiente al {PAYMENT_TYPE_LABELS[type].toLowerCase()} del proyecto.
+              </p>
+            </div>
+          )}
+
+          {error && <p className="text-sm text-red-500">{error}</p>}
+
+          <div className="flex gap-2 pt-1">
+            <button
+              onClick={onClose}
+              className="flex-1 py-2.5 border border-border rounded-xl text-sm text-muted-foreground hover:bg-muted transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={proceed}
+              disabled={loading}
+              className="flex-1 py-2.5 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-70 transition-opacity"
+              style={{ background: "linear-gradient(135deg,#0A7881,#9BE3BF)" }}
+            >
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ExternalLink className="w-4 h-4" />}
+              {wantsBilling ? "Ir a pagar con factura" : "Continuar al pago"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 

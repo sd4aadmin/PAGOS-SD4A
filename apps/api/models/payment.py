@@ -36,5 +36,7 @@ class Payment(Base):
     wompi_id: Mapped[str | None] = mapped_column("wompi_id", String, nullable=True)
     confirmed_at: Mapped[datetime | None] = mapped_column("confirmed_at", DateTime, nullable=True)
     notes: Mapped[str | None] = mapped_column(String, nullable=True)
+    billing_company: Mapped[str | None] = mapped_column("billing_company", String, nullable=True)
+    billing_nit: Mapped[str | None] = mapped_column("billing_nit", String, nullable=True)
     created_at: Mapped[datetime] = mapped_column("created_at", DateTime, server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column("updated_at", DateTime, default=_now, onupdate=_now)
