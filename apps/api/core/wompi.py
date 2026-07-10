@@ -3,6 +3,7 @@ Wompi Colombia — helpers para checkout y verificación de webhooks.
 Docs: https://docs.wompi.co
 """
 import hashlib
+import hmac
 from decimal import Decimal
 from core.config import settings
 
@@ -61,4 +62,5 @@ def verify_webhook_signature(
     """Verifica el checksum del evento de Wompi."""
     raw = f"{transaction_id}{status}{amount_cents}{occurred_at}{settings.WOMPI_EVENTS_SECRET}"
     expected = hashlib.sha256(raw.encode()).hexdigest()
-    return expected == checksum
+    # Comparación en tiempo constante para evitar timing attacks
+    return hmac.compare_digest(expected, checksum or "")

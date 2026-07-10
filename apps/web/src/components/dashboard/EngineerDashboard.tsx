@@ -1,23 +1,33 @@
 "use client";
 
 import { proxyFetch } from "@/lib/proxy-fetch";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { FolderKanban, TrendingUp, RefreshCw, ArrowRight, HardHat } from "lucide-react";
+import { FolderKanban, TrendingUp, ArrowRight, HardHat } from "lucide-react";
 import { Project, STATUS_LABELS, STATUS_COLORS } from "@/types/project";
 import { cn } from "@/lib/utils";
+import { SkeletonDashboard } from "@/components/ui/Skeleton";
+import { ErrorState } from "@/components/ui/ErrorState";
 
 export function EngineerDashboard({ userName }: { userName: string }) {
   const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-  useEffect(() => {
+  const load = useCallback(() => {
+    setLoading(true);
+    setError(false);
     proxyFetch("/projects")
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(String(r.status));
+        return r.json();
+      })
       .then((data) => { setProjects(Array.isArray(data) ? data : []); setLoading(false); })
-      .catch(() => setLoading(false));
+      .catch(() => { setError(true); setLoading(false); });
   }, []);
+
+  useEffect(() => { load(); }, [load]);
 
   const inProgress = projects.filter((p) => p.status === "IN_PROGRESS" || p.status === "IN_REVIEW");
   const avgProgress = projects.length
@@ -40,6 +50,13 @@ export function EngineerDashboard({ userName }: { userName: string }) {
         </span>
       </div>
 
+      {loading ? (
+        <SkeletonDashboard />
+      ) : error ? (
+        <ErrorState onRetry={load} />
+      ) : (
+      <>
+
       {/* Banner */}
       <div
         className="relative overflow-hidden rounded-2xl p-6 md:p-8 text-white"
@@ -49,16 +66,16 @@ export function EngineerDashboard({ userName }: { userName: string }) {
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <p className="text-white/70 text-xs font-semibold uppercase tracking-widest mb-2">Resumen de proyectos</p>
-            <p className="text-3xl md:text-4xl font-black">{loading ? "…" : projects.length} proyectos</p>
+            <p className="text-3xl md:text-4xl font-black">{projects.length} proyectos</p>
           </div>
           <div className="flex gap-6">
             <div className="text-center">
-              <p className="text-2xl font-black">{loading ? "…" : inProgress.length}</p>
+              <p className="text-2xl font-black">{inProgress.length}</p>
               <p className="text-white/70 text-xs mt-0.5">En ejecución</p>
             </div>
             <div className="w-px bg-white/20" />
             <div className="text-center">
-              <p className="text-2xl font-black">{loading ? "…" : `${avgProgress}%`}</p>
+              <p className="text-2xl font-black">{`${avgProgress}%`}</p>
               <p className="text-white/70 text-xs mt-0.5">Avance prom.</p>
             </div>
           </div>
@@ -71,14 +88,14 @@ export function EngineerDashboard({ userName }: { userName: string }) {
           <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4" style={{ background: "rgba(59,130,246,0.12)" }}>
             <FolderKanban className="w-5 h-5 text-blue-500" />
           </div>
-          <p className="text-3xl font-black text-foreground mb-1">{loading ? "…" : projects.length}</p>
+          <p className="text-3xl font-black text-foreground mb-1">{projects.length}</p>
           <p className="text-xs text-muted-foreground font-medium">Proyectos asignados</p>
         </div>
         <div className="bg-card rounded-2xl p-5 border border-border shadow-sm">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4" style={{ background: "rgba(16,185,129,0.12)" }}>
             <TrendingUp className="w-5 h-5 text-emerald-500" />
           </div>
-          <p className="text-3xl font-black text-foreground mb-1">{loading ? "…" : inProgress.length}</p>
+          <p className="text-3xl font-black text-foreground mb-1">{inProgress.length}</p>
           <p className="text-xs text-muted-foreground font-medium">En ejecución</p>
         </div>
       </div>
@@ -96,11 +113,7 @@ export function EngineerDashboard({ userName }: { userName: string }) {
           </button>
         </div>
 
-        {loading ? (
-          <div className="flex items-center justify-center py-16 text-muted-foreground">
-            <RefreshCw className="w-4 h-4 animate-spin mr-2" /> Cargando...
-          </div>
-        ) : projects.length === 0 ? (
+        {projects.length === 0 ? (
           <div className="flex flex-col items-center py-16 text-muted-foreground gap-2">
             <HardHat className="w-10 h-10 opacity-20" />
             <p className="text-sm">No tienes proyectos asignados</p>
@@ -138,6 +151,8 @@ export function EngineerDashboard({ userName }: { userName: string }) {
           </div>
         )}
       </div>
+      </>
+      )}
     </div>
   );
 }

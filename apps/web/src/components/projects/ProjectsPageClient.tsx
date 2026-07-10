@@ -11,6 +11,8 @@ import {
 import { Project, ProjectStatus, STATUS_LABELS, STATUS_COLORS } from "@/types/project";
 import { CreateProjectModal } from "./CreateProjectModal";
 import { cn } from "@/lib/utils";
+import { SkeletonTable } from "@/components/ui/Skeleton";
+import { ErrorState } from "@/components/ui/ErrorState";
 
 const COP = new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 });
 type SortField = "name" | "status" | "total_value" | "progress" | "estimated_date" | "client_name";
@@ -28,10 +30,18 @@ export function ProjectsPageClient({ role }: { role: string }) {
   const [engineerFilter, setEngineerFilter]   = useState<string>("ALL");
   const [engineerProfiles, setEngineerProfiles] = useState<{ id: string; name: string }[]>([]);
 
+  const [loadError, setLoadError] = useState(false);
+
   const load = useCallback(async () => {
     setLoading(true);
-    const res = await proxyFetch("/projects");
-    if (res.ok) setProjects(await res.json());
+    setLoadError(false);
+    try {
+      const res = await proxyFetch("/projects");
+      if (!res.ok) throw new Error(String(res.status));
+      setProjects(await res.json());
+    } catch {
+      setLoadError(true);
+    }
     setLoading(false);
   }, []);
 
@@ -204,9 +214,9 @@ export function ProjectsPageClient({ role }: { role: string }) {
 
       {/* Contenido */}
       {loading ? (
-        <div className="flex items-center justify-center py-24 text-muted-foreground">
-          <RefreshCw className="w-5 h-5 animate-spin mr-2" /> Cargando proyectos…
-        </div>
+        <SkeletonTable rows={6} cols={5} />
+      ) : loadError ? (
+        <ErrorState onRetry={load} />
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 text-muted-foreground gap-3">
           <FolderKanban className="w-12 h-12 opacity-20" />

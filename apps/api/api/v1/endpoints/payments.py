@@ -259,13 +259,25 @@ async def wompi_webhook(event: WompiWebhookEvent, db: AsyncSession = Depends(get
     occurred_at = event.sent_at
     checksum = event.signature.get("checksum", "")
 
-    # Verify signature only if secret is configured
-    if settings.WOMPI_EVENTS_SECRET and not verify_webhook_signature(tx_id, tx_status, amount_cents, occurred_at, checksum):
+    # La firma es obligatoria: sin secreto configurado no se aceptan webhooks
+    # (evita confirmaciones falsas de pago con un POST manual).
+    if not settings.WOMPI_EVENTS_SECRET:
+        raise HTTPException(503, "Webhook no configurado")
+    if not verify_webhook_signature(tx_id, tx_status, amount_cents, occurred_at, checksum):
         raise HTTPException(400, "Firma inválida")
 
     reference = tx.get("reference", "")
     payment = (await db.execute(select(Payment).where(Payment.wompi_ref == reference))).scalar_one_or_none()
     if not payment:
+        return {"received": True}
+
+    # El monto de la transacción debe coincidir con el pago registrado
+    if int(amount_cents) != amount_to_cents(payment.amount):
+        await log_action(db, "PAYMENT_AMOUNT_MISMATCH",
+                         f"Webhook con monto distinto para {reference}: esperado {amount_to_cents(payment.amount)}, recibido {amount_cents}",
+                         project_id=payment.project_id,
+                         metadata={"reference": reference, "expected_cents": amount_to_cents(payment.amount), "received_cents": amount_cents})
+        await db.commit()
         return {"received": True}
 
     if tx_status == "APPROVED":

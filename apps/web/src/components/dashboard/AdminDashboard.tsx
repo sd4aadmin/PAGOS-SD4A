@@ -1,11 +1,13 @@
 "use client";
 
 import { proxyFetch } from "@/lib/proxy-fetch";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { FolderKanban, Users, TrendingUp, Clock, ArrowRight, RefreshCw, CalendarDays, HardHat, DollarSign } from "lucide-react";
+import { FolderKanban, TrendingUp, Clock, ArrowRight, CalendarDays, HardHat, DollarSign } from "lucide-react";
 import { Project, STATUS_LABELS, STATUS_COLORS } from "@/types/project";
 import { cn } from "@/lib/utils";
+import { SkeletonDashboard } from "@/components/ui/Skeleton";
+import { ErrorState } from "@/components/ui/ErrorState";
 
 const COP = new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 });
 
@@ -13,13 +15,21 @@ export function AdminDashboard({ userName }: { userName: string }) {
   const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
-  useEffect(() => {
+  const load = useCallback(() => {
+    setLoading(true);
+    setError(false);
     proxyFetch("/projects")
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(String(r.status));
+        return r.json();
+      })
       .then((data) => { setProjects(Array.isArray(data) ? data : []); setLoading(false); })
-      .catch(() => setLoading(false));
+      .catch(() => { setError(true); setLoading(false); });
   }, []);
+
+  useEffect(() => { load(); }, [load]);
 
   const active  = projects.filter((p) => p.status === "IN_PROGRESS" || p.status === "IN_REVIEW");
   const pending = projects.filter((p) => p.status === "PENDING_ADVANCE" || p.status === "PENDING_FINAL");
@@ -47,6 +57,13 @@ export function AdminDashboard({ userName }: { userName: string }) {
         </span>
       </div>
 
+      {loading ? (
+        <SkeletonDashboard />
+      ) : error ? (
+        <ErrorState onRetry={load} />
+      ) : (
+      <>
+
       {/* Banner valor total */}
       <div
         className="relative overflow-hidden rounded-2xl p-6 md:p-8 text-white"
@@ -62,23 +79,21 @@ export function AdminDashboard({ userName }: { userName: string }) {
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <p className="text-white/70 text-xs font-semibold uppercase tracking-widest mb-2">Valor total en cartera</p>
-            <p className="text-3xl md:text-4xl font-black">
-              {loading ? "Cargando…" : COP.format(totalValue)}
-            </p>
+            <p className="text-3xl md:text-4xl font-black">{COP.format(totalValue)}</p>
           </div>
           <div className="flex gap-6">
             <div className="text-center">
-              <p className="text-2xl font-black">{loading ? "…" : projects.length}</p>
+              <p className="text-2xl font-black">{projects.length}</p>
               <p className="text-white/70 text-xs mt-0.5">Proyectos</p>
             </div>
             <div className="w-px bg-white/20" />
             <div className="text-center">
-              <p className="text-2xl font-black">{loading ? "…" : active.length}</p>
+              <p className="text-2xl font-black">{active.length}</p>
               <p className="text-white/70 text-xs mt-0.5">Activos</p>
             </div>
             <div className="w-px bg-white/20" />
             <div className="text-center">
-              <p className="text-2xl font-black">{loading ? "…" : `${avgProgress}%`}</p>
+              <p className="text-2xl font-black">{`${avgProgress}%`}</p>
               <p className="text-white/70 text-xs mt-0.5">Avance</p>
             </div>
           </div>
@@ -90,25 +105,25 @@ export function AdminDashboard({ userName }: { userName: string }) {
         <KpiCard
           icon={<FolderKanban className="w-5 h-5" />}
           label="Total proyectos"
-          value={loading ? "…" : String(projects.length)}
+          value={String(projects.length)}
           color="#3b82f6" bg="#eff6ff"
         />
         <KpiCard
           icon={<TrendingUp className="w-5 h-5" />}
           label="En ejecución"
-          value={loading ? "…" : String(active.length)}
+          value={String(active.length)}
           color="#10b981" bg="#ecfdf5"
         />
         <KpiCard
           icon={<Clock className="w-5 h-5" />}
           label="Pendientes pago"
-          value={loading ? "…" : String(pending.length)}
+          value={String(pending.length)}
           color="#f59e0b" bg="#fffbeb"
         />
         <KpiCard
           icon={<DollarSign className="w-5 h-5" />}
           label="Avance promedio"
-          value={loading ? "…" : `${avgProgress}%`}
+          value={`${avgProgress}%`}
           color="#0A7881" bg="#f0fdfa"
         />
       </div>
@@ -126,11 +141,7 @@ export function AdminDashboard({ userName }: { userName: string }) {
           </button>
         </div>
 
-        {loading ? (
-          <div className="flex items-center justify-center py-16 text-muted-foreground">
-            <RefreshCw className="w-4 h-4 animate-spin mr-2" /> Cargando...
-          </div>
-        ) : recent.length === 0 ? (
+        {recent.length === 0 ? (
           <div className="flex flex-col items-center py-16 text-muted-foreground gap-2">
             <FolderKanban className="w-10 h-10 opacity-20" />
             <p className="text-sm">No hay proyectos aún</p>
@@ -188,6 +199,8 @@ export function AdminDashboard({ userName }: { userName: string }) {
           </div>
         )}
       </div>
+      </>
+      )}
     </div>
   );
 }

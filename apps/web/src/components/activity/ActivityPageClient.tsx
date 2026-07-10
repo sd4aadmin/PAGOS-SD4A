@@ -4,6 +4,8 @@ import { proxyFetch } from "@/lib/proxy-fetch";
 import { useState, useEffect, useCallback } from "react";
 import { RefreshCw, Activity, Search, X } from "lucide-react";
 import { Pagination } from "@/components/ui/Pagination";
+import { SkeletonTable } from "@/components/ui/Skeleton";
+import { ErrorState } from "@/components/ui/ErrorState";
 
 const PAGE_SIZE = 25;
 
@@ -73,10 +75,20 @@ export function ActivityPageClient() {
   const [actionFilter, setActionFilter] = useState("ALL");
   const [page, setPage]               = useState(1);
 
+  const [loadError, setLoadError] = useState(false);
+
   const load = useCallback(async () => {
     setLoading(true);
-    const res = await proxyFetch("/activity?limit=200");
-    if (res.ok) { const data = await res.json(); setLogs(data); setFiltered(data); }
+    setLoadError(false);
+    try {
+      const res = await proxyFetch("/activity?limit=200");
+      if (!res.ok) throw new Error(String(res.status));
+      const data = await res.json();
+      setLogs(data);
+      setFiltered(data);
+    } catch {
+      setLoadError(true);
+    }
     setLoading(false);
   }, []);
 
@@ -157,9 +169,9 @@ export function ActivityPageClient() {
 
       {/* Content */}
       {loading ? (
-        <div className="flex items-center justify-center py-24 text-muted-foreground">
-          <RefreshCw className="w-5 h-5 animate-spin mr-2" /> Cargando actividad…
-        </div>
+        <SkeletonTable rows={8} cols={3} />
+      ) : loadError ? (
+        <ErrorState onRetry={load} />
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 text-muted-foreground gap-3">
           <Activity className="w-12 h-12 opacity-20" />
