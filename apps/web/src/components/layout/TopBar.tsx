@@ -1,8 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
 import { logout } from "@/app/actions/auth";
+import { SD4ALogo } from "@/components/layout/SD4ALogo";
 import { LogOut, Sun, Moon, User } from "lucide-react";
 import { useTheme } from "@/components/providers/ThemeProvider";
 import { NotificationBell } from "@/components/layout/NotificationBell";
@@ -42,8 +42,8 @@ export function TopBar({ user }: { user: TopBarUser }) {
     <header className="h-14 bg-card border-b border-border flex items-center justify-between px-3 md:px-5 shrink-0">
       {/* Logo solo en móvil */}
       <div className="md:hidden flex items-center">
-        <Image src="/logo-light.png" alt="SD4A" width={115} height={36} className="object-contain dark:hidden" priority />
-        <Image src="/logo-dark.png" alt="SD4A" width={115} height={36} className="object-contain hidden dark:block" priority />
+        <SD4ALogo variant="dark" height={34} className="dark:hidden" />
+        <SD4ALogo variant="light" height={34} className="hidden dark:block" />
       </div>
       <div className="hidden md:block" />
       <div className="flex items-center gap-2">
