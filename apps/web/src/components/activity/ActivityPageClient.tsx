@@ -3,6 +3,9 @@
 import { proxyFetch } from "@/lib/proxy-fetch";
 import { useState, useEffect, useCallback } from "react";
 import { RefreshCw, Activity, Search, X } from "lucide-react";
+import { Pagination } from "@/components/ui/Pagination";
+
+const PAGE_SIZE = 25;
 
 interface LogEntry {
   id: string;
@@ -68,6 +71,7 @@ export function ActivityPageClient() {
   const [loading, setLoading]         = useState(true);
   const [search, setSearch]           = useState("");
   const [actionFilter, setActionFilter] = useState("ALL");
+  const [page, setPage]               = useState(1);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -86,10 +90,13 @@ export function ActivityPageClient() {
       result = result.filter((l) => l.description.toLowerCase().includes(q));
     }
     setFiltered(result);
+    setPage(1);
   }, [search, actionFilter, logs]);
 
   const uniqueActions = [...new Set(logs.map((l) => l.action))];
   const hasFilters    = search.trim() !== "" || actionFilter !== "ALL";
+  const totalPages    = Math.ceil(filtered.length / PAGE_SIZE);
+  const paged         = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
     <div className="p-4 md:p-8 space-y-6 max-w-5xl mx-auto">
@@ -176,7 +183,7 @@ export function ActivityPageClient() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {filtered.map((log) => {
+                {paged.map((log) => {
                   const st = ACTION_STYLE[log.action] ?? { bg: "#f1f5f9", color: "#64748b" };
                   return (
                     <tr key={log.id} className="hover:bg-muted/30 transition-colors">
@@ -196,14 +203,15 @@ export function ActivityPageClient() {
                 })}
               </tbody>
             </table>
+            <Pagination page={page} totalPages={totalPages} totalItems={filtered.length} pageSize={PAGE_SIZE} onChange={setPage} />
           </div>
 
           {/* Mobile timeline */}
           <div className="md:hidden space-y-0">
-            {filtered.map((log, i) => {
+            {paged.map((log, i) => {
               const st   = ACTION_STYLE[log.action] ?? { bg: "#f1f5f9", color: "#64748b" };
               const dot  = ACTION_DOTS[log.action] ?? "#94a3b8";
-              const last = i === filtered.length - 1;
+              const last = i === paged.length - 1;
               return (
                 <div key={log.id} className="flex gap-3">
                   {/* timeline line */}
@@ -226,6 +234,9 @@ export function ActivityPageClient() {
                 </div>
               );
             })}
+            <div className="bg-card border border-border rounded-2xl mt-3">
+              <Pagination page={page} totalPages={totalPages} totalItems={filtered.length} pageSize={PAGE_SIZE} onChange={setPage} />
+            </div>
           </div>
         </>
       )}
