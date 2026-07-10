@@ -162,7 +162,7 @@ function PaymentRow({ payment, isAdmin, onConfirmed, onEdit, onDeleted }: {
 
   return (
     <div className="flex items-center gap-3 p-3.5 border border-border rounded-xl hover:bg-muted/20 transition-colors">
-      <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: "#f0fdfa" }}>
+      <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(10,120,129,0.10)" }}>
         <CreditCard className="w-4 h-4" style={{ color: "#0A7881" }} />
       </div>
       <div className="flex-1 min-w-0">
@@ -184,7 +184,7 @@ function PaymentRow({ payment, isAdmin, onConfirmed, onEdit, onDeleted }: {
         {payment.notes && <p className="text-xs text-muted-foreground italic mt-0.5">{payment.notes}</p>}
         {/* Facturación electrónica — solo visible para admin */}
         {isAdmin && payment.billing_company && (
-          <div className="mt-1.5 flex items-start gap-1.5 px-2.5 py-1.5 rounded-lg" style={{ background: "#f0fdfa", border: "1px solid #99d4d8" }}>
+          <div className="mt-1.5 flex items-start gap-1.5 px-2.5 py-1.5 rounded-lg" style={{ background: "rgba(10,120,129,0.10)", border: "1px solid #99d4d8" }}>
             <span className="text-xs font-bold shrink-0" style={{ color: "#0A7881" }}>FE</span>
             <div className="text-xs" style={{ color: "#0A7881" }}>
               <span className="font-semibold">{payment.billing_company}</span>

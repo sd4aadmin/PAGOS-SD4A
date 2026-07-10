@@ -431,7 +431,7 @@ function EngineersPanel({ projectId, currentProfileId, currentProfileName, isAdm
         </div>
       ) : currentProfileName ? (
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "#f0fdfa" }}>
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "rgba(10,120,129,0.10)" }}>
             <Users className="w-4 h-4" style={{ color: "#0A7881" }} />
           </div>
           <div>

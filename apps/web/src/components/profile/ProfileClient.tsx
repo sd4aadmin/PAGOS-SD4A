@@ -114,7 +114,7 @@ export function ProfileClient({ user }: { user: SessionUser }) {
       {/* Cambiar contraseña */}
       <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
         <div className="flex items-center gap-2 mb-5">
-          <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: "#f0fdfa" }}>
+          <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: "rgba(10,120,129,0.10)" }}>
             <Lock className="w-4 h-4" style={{ color: "#0A7881" }} />
           </div>
           <h2 className="font-bold text-foreground">Cambiar contraseña</h2>

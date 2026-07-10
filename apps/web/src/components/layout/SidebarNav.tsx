@@ -94,13 +94,28 @@ function NavLink({ item, pathname }: { item: NavItem; pathname: string }) {
     <Link
       href={item.href}
       className={cn(
-        "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+        "relative flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200",
         active
-          ? "bg-sidebar-active text-white"
-          : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-white"
+          ? "text-white"
+          : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-white hover:translate-x-0.5"
       )}
+      style={
+        active
+          ? {
+              background: "linear-gradient(90deg, rgba(155,227,191,0.22) 0%, rgba(10,120,129,0.55) 100%)",
+              boxShadow: "inset 0 1px 0 rgba(255,255,255,0.08), 0 2px 8px -2px rgba(0,0,0,0.3)",
+            }
+          : undefined
+      }
     >
-      <Icon className="w-4 h-4 shrink-0" />
+      {/* Indicador lateral */}
+      {active && (
+        <span
+          className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full"
+          style={{ background: "#9BE3BF" }}
+        />
+      )}
+      <Icon className={cn("w-4 h-4 shrink-0", active && "text-[#9BE3BF]")} />
       {item.label}
     </Link>
   );

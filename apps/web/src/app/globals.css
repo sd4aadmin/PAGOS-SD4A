@@ -64,6 +64,43 @@
 
   body {
     @apply bg-background text-foreground;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: rgba(10, 120, 129, 0.22);
+  }
+
+  /* Scrollbar refinado */
+  ::-webkit-scrollbar {
+    width: 9px;
+    height: 9px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(184 20% 75%);
+    border-radius: 99px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(184 30% 60%);
+    background-clip: content-box;
+    border: 2px solid transparent;
+  }
+  .dark ::-webkit-scrollbar-thumb {
+    background: hsl(195 15% 28%);
+    background-clip: content-box;
+    border: 2px solid transparent;
+  }
+  .dark ::-webkit-scrollbar-thumb:hover {
+    background: hsl(184 25% 40%);
+    background-clip: content-box;
+    border: 2px solid transparent;
   }
 }
 
@@ -73,6 +110,25 @@
   }
   .card-shadow-md {
     box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.08);
+  }
+  /* Sombra premium con tinte teal de marca */
+  .card-premium {
+    box-shadow:
+      0 1px 2px rgb(10 120 129 / 0.04),
+      0 4px 12px -2px rgb(10 120 129 / 0.08);
+    transition: box-shadow 250ms ease, transform 250ms ease, border-color 250ms ease;
+  }
+  .card-premium:hover {
+    box-shadow:
+      0 2px 4px rgb(10 120 129 / 0.06),
+      0 12px 28px -6px rgb(10 120 129 / 0.16);
+    transform: translateY(-2px);
+  }
+  .dark .card-premium {
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 4px 12px -2px rgb(0 0 0 / 0.35);
+  }
+  .dark .card-premium:hover {
+    box-shadow: 0 2px 4px rgb(0 0 0 / 0.35), 0 12px 28px -6px rgb(0 0 0 / 0.5);
   }
 }
 

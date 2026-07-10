@@ -39,7 +39,10 @@ export function TopBar({ user }: { user: TopBarUser }) {
   }
 
   return (
-    <header className="h-14 bg-card border-b border-border flex items-center justify-between px-3 md:px-5 shrink-0">
+    <header
+      className="h-14 bg-card border-b border-border flex items-center justify-between px-3 md:px-5 shrink-0 relative z-10"
+      style={{ boxShadow: "0 1px 8px rgba(10,120,129,0.06)" }}
+    >
       {/* Logo solo en móvil */}
       <div className="md:hidden flex items-center">
         <Image

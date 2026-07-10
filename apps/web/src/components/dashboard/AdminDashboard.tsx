@@ -50,7 +50,10 @@ export function AdminDashboard({ userName }: { userName: string }) {
       {/* Banner valor total */}
       <div
         className="relative overflow-hidden rounded-2xl p-6 md:p-8 text-white"
-        style={{ background: "linear-gradient(135deg, #0A7881 0%, #068a8a 50%, #9BE3BF 100%)" }}
+        style={{
+          background: "linear-gradient(135deg, #075f68 0%, #0A7881 45%, #16938f 78%, #3db39c 100%)",
+          boxShadow: "0 8px 32px -8px rgba(10,120,129,0.45)",
+        }}
       >
         {/* Círculos decorativos */}
         <div className="absolute -right-8 -top-8 w-40 h-40 rounded-full opacity-20" style={{ background: "rgba(255,255,255,0.3)" }} />
@@ -141,7 +144,7 @@ export function AdminDashboard({ userName }: { userName: string }) {
                 className="flex items-center gap-4 px-6 py-4 hover:bg-muted/40 cursor-pointer transition-colors group"
               >
                 {/* Icono proyecto */}
-                <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: "#f0fdfa" }}>
+                <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: "rgba(10,120,129,0.10)" }}>
                   <FolderKanban className="w-4 h-4" style={{ color: "#0A7881" }} />
                 </div>
 
@@ -189,11 +192,16 @@ export function AdminDashboard({ userName }: { userName: string }) {
   );
 }
 
-function KpiCard({ icon, label, value, color, bg }: { icon: React.ReactNode; label: string; value: string; color: string; bg: string }) {
+function KpiCard({ icon, label, value, color }: { icon: React.ReactNode; label: string; value: string; color: string; bg?: string }) {
   return (
-    <div className="bg-card rounded-2xl p-5 border border-border shadow-sm hover:shadow-md transition-shadow">
+    <div className="bg-card rounded-2xl p-5 border border-border card-premium relative overflow-hidden">
+      {/* Acento superior de color */}
+      <div className="absolute top-0 left-0 right-0 h-[3px] opacity-80" style={{ background: color }} />
       <div className="flex items-center justify-between mb-4">
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: bg, color }}>
+        <div
+          className="w-10 h-10 rounded-xl flex items-center justify-center"
+          style={{ background: `${color}18`, color }}
+        >
           {icon}
         </div>
       </div>

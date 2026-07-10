@@ -68,14 +68,14 @@ export function EngineerDashboard({ userName }: { userName: string }) {
       {/* KPI cards */}
       <div className="grid grid-cols-2 gap-4">
         <div className="bg-card rounded-2xl p-5 border border-border shadow-sm">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4" style={{ background: "#eff6ff" }}>
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4" style={{ background: "rgba(59,130,246,0.12)" }}>
             <FolderKanban className="w-5 h-5 text-blue-500" />
           </div>
           <p className="text-3xl font-black text-foreground mb-1">{loading ? "…" : projects.length}</p>
           <p className="text-xs text-muted-foreground font-medium">Proyectos asignados</p>
         </div>
         <div className="bg-card rounded-2xl p-5 border border-border shadow-sm">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4" style={{ background: "#ecfdf5" }}>
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4" style={{ background: "rgba(16,185,129,0.12)" }}>
             <TrendingUp className="w-5 h-5 text-emerald-500" />
           </div>
           <p className="text-3xl font-black text-foreground mb-1">{loading ? "…" : inProgress.length}</p>
@@ -113,7 +113,7 @@ export function EngineerDashboard({ userName }: { userName: string }) {
                 onClick={() => router.push(`/dashboard/projects/${p.id}`)}
                 className="flex items-center gap-4 px-6 py-4 hover:bg-muted/40 cursor-pointer transition-colors group"
               >
-                <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: "#f0fdfa" }}>
+                <div className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0" style={{ background: "rgba(10,120,129,0.10)" }}>
                   <FolderKanban className="w-4 h-4" style={{ color: "#0A7881" }} />
                 </div>
                 <div className="flex-1 min-w-0">

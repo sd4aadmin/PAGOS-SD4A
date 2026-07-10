@@ -242,7 +242,7 @@ export function ProjectsPageClient({ role }: { role: string }) {
                     {/* Proyecto */}
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: "#f0fdfa" }}>
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: "rgba(10,120,129,0.10)" }}>
                           <FolderKanban className="w-4 h-4" style={{ color: "#0A7881" }} />
                         </div>
                         <div>
@@ -339,7 +339,7 @@ export function ProjectsPageClient({ role }: { role: string }) {
               >
                 <div className="flex items-start justify-between gap-2 mb-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: "#f0fdfa" }}>
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(10,120,129,0.10)" }}>
                       <FolderKanban className="w-4 h-4" style={{ color: "#0A7881" }} />
                     </div>
                     <div>
