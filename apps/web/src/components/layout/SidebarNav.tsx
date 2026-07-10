@@ -39,17 +39,17 @@ export function SidebarNav({ role }: { role: string }) {
     <>
       {/* ── Desktop sidebar ── */}
       <aside className="hidden md:flex w-60 bg-sidebar-bg flex-col shrink-0">
-        {/* Logo */}
+        {/* Logo — misma altura que el TopBar (h-14 = 56px) */}
         <div
-          className="h-20 flex items-center justify-center px-5 border-b border-white/10"
+          className="h-14 flex items-center px-4 border-b border-r border-border shrink-0"
           style={{ background: "#FFFFFF" }}
         >
           <Image
             src="/portal-logo.png"
             alt="SD4A Ingeniería Estructural"
-            width={160}
-            height={60}
-            style={{ objectFit: "contain", maxHeight: 60 }}
+            width={148}
+            height={44}
+            style={{ objectFit: "contain", maxHeight: 44 }}
             priority
           />
         </div>
