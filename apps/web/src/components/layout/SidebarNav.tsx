@@ -42,9 +42,11 @@ export function SidebarNav({ role }: { role: string }) {
         {/* Logo */}
         <div
           className="h-20 flex items-center justify-center px-5 border-b border-white/10"
-          style={{ background: "rgba(0,0,0,0.25)" }}
+          style={{
+            background: "linear-gradient(135deg, #0c8a94 0%, #0A7881 60%, #075f68 100%)",
+          }}
         >
-          <SD4ALogo variant="light" height={44} />
+          <SD4ALogo variant="light" height={46} />
         </div>
 
         {/* Nav */}

@@ -7,21 +7,25 @@ export function SD4ALogo({
   height?: number;
   className?: string;
 }) {
-  const w = Math.round(height * 3.46);
+  const w = Math.round(height * 3.6);
 
-  // Paleta según fondo
-  const iconFill   = variant === "dark" ? "#0A7881" : "#9BE3BF";
-  const iconShade  = variant === "dark" ? "#068089" : "#6ecfb0";
-  const textMain   = variant === "dark" ? "#0A7881" : "#FFFFFF";
-  const text4      = variant === "dark" ? "#068089" : "#9BE3BF";
-  const subText    = variant === "dark" ? "#68B2B7" : "rgba(255,255,255,0.50)";
-  const divider    = variant === "dark" ? "#68B2B7" : "rgba(255,255,255,0.18)";
+  const isDark = variant === "light"; // "light" = sobre fondo oscuro
+
+  // Sobre fondo oscuro (sidebar): texto blanco, acento mint
+  // Sobre fondo claro (topbar):   texto teal, acento teal oscuro
+  const iconColor  = isDark ? "#9BE3BF" : "#0A7881";
+  const iconShade  = isDark ? "#6ecfb0" : "#068089";
+  const textMain   = isDark ? "#FFFFFF" : "#0A7881";
+  const text4      = isDark ? "#9BE3BF" : "#068089";
+  const subText    = isDark ? "rgba(255,255,255,0.55)" : "#68B2B7";
+
+  const gId = `g-${variant}`;
 
   return (
     <svg
       width={w}
       height={height}
-      viewBox="0 0 180 52"
+      viewBox="0 0 190 54"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={className}
@@ -29,36 +33,40 @@ export function SD4ALogo({
       style={{ display: "block" }}
     >
       <defs>
-        <linearGradient id={`ico-${variant}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={iconFill} />
+        <linearGradient id={gId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={iconColor} />
           <stop offset="100%" stopColor={iconShade} />
         </linearGradient>
       </defs>
 
-      {/* ── Icono: pórtico estructural ── */}
-      {/* Viga superior */}
-      <rect x="2" y="10" width="38" height="7" rx="2" fill={`url(#ico-${variant})`} />
+      {/* ── Ícono: pórtico estructural ──────────────────── */}
+      {/* Viga horizontal superior */}
+      <rect x="3"  y="9"  width="40" height="8" rx="2.5" fill={`url(#${gId})`} />
       {/* Columna izquierda */}
-      <rect x="2" y="10" width="7" height="30" rx="2" fill={`url(#ico-${variant})`} />
+      <rect x="3"  y="9"  width="8"  height="32" rx="2.5" fill={`url(#${gId})`} />
       {/* Columna derecha */}
-      <rect x="33" y="10" width="7" height="30" rx="2" fill={`url(#ico-${variant})`} />
+      <rect x="35" y="9"  width="8"  height="32" rx="2.5" fill={`url(#${gId})`} />
       {/* Placa base izquierda */}
-      <rect x="0" y="38" width="11" height="4" rx="1.5" fill={iconFill} opacity="0.7" />
+      <rect x="0"  y="39" width="14" height="4.5" rx="2"  fill={iconColor} opacity="0.65" />
       {/* Placa base derecha */}
-      <rect x="31" y="38" width="11" height="4" rx="1.5" fill={iconFill} opacity="0.7" />
-      {/* Línea de suelo */}
-      <rect x="0" y="43" width="42" height="2" rx="1" fill={iconFill} opacity="0.3" />
+      <rect x="32" y="39" width="14" height="4.5" rx="2"  fill={iconColor} opacity="0.65" />
+      {/* Línea suelo */}
+      <rect x="0"  y="45" width="46" height="2"   rx="1"  fill={iconColor} opacity="0.25" />
 
-      {/* ── Separador vertical ── */}
-      <rect x="52" y="8" width="1.5" height="36" rx="1" fill={divider} />
+      {/* ── Separador ──────────────────────────────────── */}
+      <rect
+        x="56" y="7" width="1.5" height="40" rx="1"
+        fill={isDark ? "rgba(255,255,255,0.18)" : "#68B2B7"}
+        opacity="0.6"
+      />
 
-      {/* ── Texto principal SD4A ── */}
+      {/* ── Texto SD4A ─────────────────────────────────── */}
       <text
-        x="62"
-        y="33"
+        x="66"
+        y="36"
         fontFamily="'Arial Black', 'Arial Bold', Arial, sans-serif"
         fontWeight="900"
-        fontSize="26"
+        fontSize="28"
         fill={textMain}
         letterSpacing="-0.5"
       >
@@ -67,15 +75,15 @@ export function SD4ALogo({
         A
       </text>
 
-      {/* ── Subtítulo ── */}
+      {/* ── Subtítulo ──────────────────────────────────── */}
       <text
-        x="62"
-        y="45"
+        x="66"
+        y="47"
         fontFamily="Arial, Helvetica, sans-serif"
         fontWeight="500"
-        fontSize="6.8"
+        fontSize="6.5"
         fill={subText}
-        letterSpacing="1.8"
+        letterSpacing="1.9"
       >
         INGENIERÍA ESTRUCTURAL
       </text>
