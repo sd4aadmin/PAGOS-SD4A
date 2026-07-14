@@ -6,7 +6,7 @@ from sqlalchemy import select, func
 
 from db.session import get_db
 from models.user import User, Role
-from schemas.user import UserCreate, UserUpdate, PasswordReset, UserPublic, UserList
+from schemas.user import UserCreate, UserUpdate, PasswordReset, PasswordChange, UserPublic, UserList
 from core.security import hash_password
 from core.config import settings
 import core.email as mailer
@@ -93,18 +93,14 @@ async def get_me(current_user: User = Depends(get_current_user)):
 
 @router.patch("/me/password", status_code=status.HTTP_204_NO_CONTENT)
 async def change_my_password(
-    body: dict,
+    body: PasswordChange,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     from core.security import verify_password
-    current_pw = body.get("current_password", "")
-    new_pw = body.get("new_password", "")
-    if not verify_password(current_pw, current_user.password_hash):
+    if not verify_password(body.current_password, current_user.password_hash):
         raise HTTPException(status_code=400, detail="La contraseña actual es incorrecta")
-    if len(new_pw) < 8:
-        raise HTTPException(status_code=400, detail="La nueva contraseña debe tener al menos 8 caracteres")
-    current_user.password_hash = hash_password(new_pw)
+    current_user.password_hash = hash_password(body.new_password)
     # Invalidar cualquier otra sesión abierta con la contraseña anterior
     current_user.session_version = (current_user.session_version or 0) + 1
     await db.commit()

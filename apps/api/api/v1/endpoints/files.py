@@ -35,6 +35,13 @@ ALLOWED_MIME_TYPES = {
 MAX_SIZE_MB = 100
 
 
+def _safe_filename(name: str) -> str:
+    """Elimina caracteres que permiten inyección de cabeceras HTTP o rutas."""
+    import re
+    clean = re.sub(r'[\r\n"\\/\x00-\x1f]', "", name or "archivo").strip()
+    return clean[:200] or "archivo"
+
+
 async def _get_project_or_403(project_id: str, user: User, db: AsyncSession) -> Project:
     proj = (await db.execute(select(Project).where(Project.id == project_id))).scalar_one_or_none()
     if not proj:
@@ -150,7 +157,7 @@ async def upload_project_file(
     target_folder = subfolders.get(category, proj.drive_folder_id)
 
     # Calcular versión: cuántos archivos con el mismo nombre base existen
-    base_name = file.filename or "archivo"
+    base_name = _safe_filename(file.filename or "archivo")
     existing = (await db.execute(
         select(sqlfunc.count()).where(
             ProjectFile.project_id == project_id,
@@ -234,7 +241,7 @@ async def download_project_file(
     return Response(
         content=content,
         media_type=pf.mime_type or "application/octet-stream",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        headers={"Content-Disposition": f'attachment; filename="{_safe_filename(filename)}"'},
     )
 
 

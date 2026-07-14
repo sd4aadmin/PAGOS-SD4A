@@ -10,7 +10,10 @@ from deps import get_current_user, require_roles
 from models.user import User, Role
 from models.payment import Payment, PaymentStatus, PaymentType
 from models.project import Project, ProjectStatus
-from schemas.payment import PaymentCreate, PaymentOut, PaymentWithCheckout, WompiWebhookEvent
+from schemas.payment import (
+    PaymentCreate, PaymentOut, PaymentWithCheckout, WompiWebhookEvent,
+    PaymentStatusUpdate, PaymentPatch,
+)
 from core.wompi import build_checkout_url, verify_webhook_signature, amount_to_cents
 from core.config import settings
 from core.audit import log_action
@@ -212,7 +215,7 @@ async def get_checkout(
 @router.patch("/{payment_id}/status")
 async def update_payment_status(
     payment_id: str,
-    body: dict,
+    body: PaymentStatusUpdate,
     current_user: User = Depends(require_roles(Role.ADMIN)),
     db: AsyncSession = Depends(get_db),
 ):
@@ -220,11 +223,7 @@ async def update_payment_status(
     if not payment:
         raise HTTPException(404, "Pago no encontrado")
 
-    new_status_str = body.get("status")
-    try:
-        new_status = PaymentStatus(new_status_str)
-    except ValueError:
-        raise HTTPException(400, "Estado inválido")
+    new_status = body.status
 
     old_status = payment.status
     payment.status = new_status
@@ -307,7 +306,7 @@ async def wompi_webhook(event: WompiWebhookEvent, db: AsyncSession = Depends(get
 @router.patch("/{payment_id}", response_model=PaymentOut)
 async def update_payment(
     payment_id: str,
-    body: dict,
+    body: PaymentPatch,
     current_user: User = Depends(require_roles(Role.ADMIN)),
     db: AsyncSession = Depends(get_db),
 ):
@@ -317,15 +316,12 @@ async def update_payment(
     if payment.status == PaymentStatus.CONFIRMED:
         raise HTTPException(400, "No se puede editar un pago confirmado")
 
-    if "amount" in body:
-        payment.amount = body["amount"]
-    if "type" in body:
-        try:
-            payment.type = PaymentType(body["type"])
-        except ValueError:
-            raise HTTPException(400, "Tipo de pago inválido")
-    if "notes" in body:
-        payment.notes = body["notes"] or None
+    if body.amount is not None:
+        payment.amount = body.amount
+    if body.type is not None:
+        payment.type = body.type
+    if body.notes is not None:
+        payment.notes = body.notes or None
 
     payment.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
     await log_action(db, "PAYMENT_UPDATED",

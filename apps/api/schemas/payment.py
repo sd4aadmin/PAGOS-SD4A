@@ -1,15 +1,28 @@
 from datetime import datetime
 from decimal import Decimal
 from typing import Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from models.payment import PaymentType, PaymentStatus
+
+# Tope de sanidad para montos: 100.000 millones COP
+MAX_AMOUNT = Decimal("100000000000")
 
 
 class PaymentCreate(BaseModel):
     project_id: str
     type: PaymentType
-    amount: Decimal
-    notes: Optional[str] = None
+    amount: Decimal = Field(gt=0, le=MAX_AMOUNT)
+    notes: Optional[str] = Field(None, max_length=500)
+
+
+class PaymentStatusUpdate(BaseModel):
+    status: PaymentStatus
+
+
+class PaymentPatch(BaseModel):
+    amount: Optional[Decimal] = Field(None, gt=0, le=MAX_AMOUNT)
+    type: Optional[PaymentType] = None
+    notes: Optional[str] = Field(None, max_length=500)
 
 
 class PaymentOut(BaseModel):

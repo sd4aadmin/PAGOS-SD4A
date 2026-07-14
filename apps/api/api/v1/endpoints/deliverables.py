@@ -18,6 +18,13 @@ import core.email as mailer
 
 router = APIRouter(prefix="/deliverables", tags=["deliverables"])
 
+
+def _safe_filename(name: str) -> str:
+    """Elimina caracteres que permiten inyección de cabeceras HTTP."""
+    import re
+    clean = re.sub(r'[\r\n"\\/\x00-\x1f]', "", name or "archivo").strip()
+    return clean[:200] or "archivo"
+
 DELIVERABLES_FOLDER_SUFFIX = "_entregables"
 MAX_FILE_SIZE = 50 * 1024 * 1024  # 50 MB
 ALLOWED_MIME_TYPES = {
@@ -206,7 +213,7 @@ async def download_deliverable(
     return Response(
         content=content,
         media_type=d.mime_type or "application/octet-stream",
-        headers={"Content-Disposition": f'attachment; filename="{d.name}"'},
+        headers={"Content-Disposition": f'attachment; filename="{_safe_filename(d.name)}"'},
     )
 
 

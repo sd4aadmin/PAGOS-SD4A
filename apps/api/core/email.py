@@ -146,32 +146,44 @@ def _base(title: str, body: str) -> str:
 </html>"""
 
 
+def _esc(text: str) -> str:
+    """Escapa HTML en valores dinámicos (nombres, notas, etc.) para evitar
+    inyección de HTML/enlaces falsos en los correos."""
+    import html
+    return html.escape(str(text), quote=True)
+
+
 def _btn(label: str, url: str) -> str:
     return f"""
 <p style="margin:28px 0 0;">
-  <a href="{url}" style="display:inline-block;background:linear-gradient(135deg,#0A7881,#68B2B7);
+  <a href="{_esc(url)}" style="display:inline-block;background:linear-gradient(135deg,#0A7881,#68B2B7);
      color:#ffffff;padding:13px 32px;border-radius:8px;text-decoration:none;
-     font-weight:700;font-size:14px;letter-spacing:.3px;">{label}</a>
+     font-weight:700;font-size:14px;letter-spacing:.3px;">{_esc(label)}</a>
 </p>"""
 
 
 def _h1(text: str) -> str:
-    return f'<h1 style="margin:0 0 8px;color:#0A7881;font-size:22px;font-weight:700;">{text}</h1>'
+    return f'<h1 style="margin:0 0 8px;color:#0A7881;font-size:22px;font-weight:700;">{_esc(text)}</h1>'
 
 
 def _p(text: str) -> str:
-    return f'<p style="margin:12px 0;color:#475569;font-size:15px;line-height:1.6;">{text}</p>'
+    return f'<p style="margin:12px 0;color:#475569;font-size:15px;line-height:1.6;">{_esc(text)}</p>'
+
+
+def _p_raw(html_text: str) -> str:
+    """Como _p pero SIN escapar — el llamador debe escapar las variables con _esc()."""
+    return f'<p style="margin:12px 0;color:#475569;font-size:15px;line-height:1.6;">{html_text}</p>'
 
 
 def _badge(text: str, color: str = "#e0f2fe", text_color: str = "#0369a1") -> str:
-    return f'<span style="display:inline-block;background:{color};color:{text_color};padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;">{text}</span>'
+    return f'<span style="display:inline-block;background:{color};color:{text_color};padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600;">{_esc(text)}</span>'
 
 
 def _info_row(label: str, value: str) -> str:
     return f"""
 <tr>
-  <td style="padding:8px 0;color:#64748b;font-size:13px;width:160px;">{label}</td>
-  <td style="padding:8px 0;color:#0f172a;font-size:13px;font-weight:600;">{value}</td>
+  <td style="padding:8px 0;color:#64748b;font-size:13px;width:160px;">{_esc(label)}</td>
+  <td style="padding:8px 0;color:#0f172a;font-size:13px;font-weight:600;">{_esc(value)}</td>
 </tr>"""
 
 
@@ -215,7 +227,7 @@ async def send_status_changed(
     old_label = status_map.get(old_status, old_status)
     body = (
         _h1(f"Actualización de estado: {project_code}")
-        + _p(f"Hola {client_name}, el estado de tu proyecto <strong>{project_name}</strong> ha cambiado.")
+        + _p_raw(f"Hola {_esc(client_name)}, el estado de tu proyecto <strong>{_esc(project_name)}</strong> ha cambiado.")
         + _table(_info_row("Antes", old_label), _info_row("Ahora", _badge(new_label)))
         + _btn("Ver proyecto", f"{app_url}/dashboard/projects/{project_id}")
     )
@@ -253,7 +265,7 @@ async def send_project_updated(
         rows += _info_row(label, str(val))
     body = (
         _h1(f"Actualización en tu proyecto: {project_code}")
-        + _p(f"Hola {client_name}, tu proyecto <strong>{project_name}</strong> ha sido actualizado.")
+        + _p_raw(f"Hola {_esc(client_name)}, tu proyecto <strong>{_esc(project_name)}</strong> ha sido actualizado.")
         + _table(rows)
         + _btn("Ver proyecto", f"{app_url}/dashboard/projects/{project_id}")
     )
@@ -268,7 +280,7 @@ async def send_payment_confirmed(
     type_label = type_map.get(payment_type, payment_type)
     body = (
         _h1("Pago confirmado")
-        + _p(f"Hola {client_name}, hemos confirmado tu pago para el proyecto <strong>{project_name}</strong>.")
+        + _p_raw(f"Hola {_esc(client_name)}, hemos confirmado tu pago para el proyecto <strong>{_esc(project_name)}</strong>.")
         + _table(
             _info_row("Proyecto", f"{project_code} — {project_name}"),
             _info_row("Tipo de pago", type_label),
@@ -303,7 +315,7 @@ async def send_deliverable_uploaded(
 ) -> None:
     body = (
         _h1("Nuevo entregable disponible")
-        + _p(f"Hola {client_name}, hay un nuevo archivo disponible en tu proyecto <strong>{project_name}</strong>.")
+        + _p_raw(f"Hola {_esc(client_name)}, hay un nuevo archivo disponible en tu proyecto <strong>{_esc(project_name)}</strong>.")
         + _table(
             _info_row("Proyecto", f"{project_code} — {project_name}"),
             _info_row("Archivo", file_name),
@@ -322,7 +334,7 @@ async def send_payment_link(
     type_label = type_map.get(payment_type, payment_type)
     body = (
         _h1("Enlace de pago disponible")
-        + _p(f"Hola {client_name}, tienes un pago pendiente para el proyecto <strong>{project_name}</strong>.")
+        + _p_raw(f"Hola {_esc(client_name)}, tienes un pago pendiente para el proyecto <strong>{_esc(project_name)}</strong>.")
         + _table(
             _info_row("Proyecto", f"{project_code} — {project_name}"),
             _info_row("Tipo", type_label),

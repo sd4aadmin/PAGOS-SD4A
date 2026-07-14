@@ -24,6 +24,11 @@ class PasswordReset(BaseModel):
     new_password: str = Field(min_length=8, max_length=128)
 
 
+class PasswordChange(BaseModel):
+    current_password: str
+    new_password: str = Field(min_length=8, max_length=128)
+
+
 class UserPublic(BaseModel):
     id: str
     email: str
