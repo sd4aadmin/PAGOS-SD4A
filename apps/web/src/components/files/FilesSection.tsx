@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
-import { Upload, X, FileText, Image, Archive, FileSpreadsheet, FileType, FolderOpen, Download, Trash2, Loader2, Tag, AlignLeft, Calendar } from "lucide-react";
+import { Upload, X, FileText, Image, Archive, FileSpreadsheet, FileType, FolderOpen, Download, Trash2, Loader2, Tag, AlignLeft, Calendar, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ProjectFile {
@@ -54,12 +54,17 @@ function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("es-CO", { day: "2-digit", month: "short", year: "numeric" });
 }
 
+function isPreviewable(mime: string) {
+  return mime.startsWith("image/") || mime.includes("pdf");
+}
+
 export default function FilesSection({ projectId, canUpload, role }: Props) {
   const [files, setFiles] = useState<ProjectFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [showUpload, setShowUpload] = useState(false);
+  const [preview, setPreview] = useState<ProjectFile | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -224,6 +229,15 @@ export default function FilesSection({ projectId, canUpload, role }: Props) {
 
                 {/* Actions */}
                 <div className="flex items-center gap-1.5 shrink-0">
+                  {f.can_download && isPreviewable(f.mime_type) && (
+                    <button
+                      onClick={() => setPreview(f)}
+                      className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                      title="Previsualizar"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </button>
+                  )}
                   {f.can_download ? (
                     <button
                       onClick={() => handleDownload(f.id)}
@@ -260,6 +274,92 @@ export default function FilesSection({ projectId, canUpload, role }: Props) {
           onUploaded={() => { setShowUpload(false); load(); }}
         />
       )}
+
+      {/* Preview modal */}
+      {preview && (
+        <PreviewModal file={preview} onClose={() => setPreview(null)} onDownload={() => handleDownload(preview.id)} />
+      )}
+    </div>
+  );
+}
+
+// ─── PREVIEW MODAL ────────────────────────────────────────────────────────────
+
+function PreviewModal({ file, onClose, onDownload }: {
+  file: ProjectFile; onClose: () => void; onDownload: () => void;
+}) {
+  const [url, setUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let objectUrl: string | null = null;
+    (async () => {
+      try {
+        const res = await fetch(`/api/proxy/files/download/${file.id}`);
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          setError(typeof err.detail === "string" ? err.detail : "No se pudo cargar la previsualización");
+          return;
+        }
+        const blob = await res.blob();
+        // Forzar el MIME correcto para que el visor del navegador lo entienda
+        const typed = new Blob([blob], { type: file.mime_type || "application/octet-stream" });
+        objectUrl = URL.createObjectURL(typed);
+        setUrl(objectUrl);
+      } catch {
+        setError("Error de red al cargar la previsualización");
+      }
+    })();
+    return () => { if (objectUrl) URL.revokeObjectURL(objectUrl); };
+  }, [file.id, file.mime_type]);
+
+  const isImage = file.mime_type.startsWith("image/");
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-3 sm:p-6" onClick={onClose}>
+      <div
+        className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3.5 border-b border-border shrink-0">
+          <div className="flex items-center gap-2.5 min-w-0">
+            {fileIcon(file.mime_type)}
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-foreground truncate">{file.filename}</p>
+              <p className="text-xs text-muted-foreground">{formatSize(file.size_bytes)}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              onClick={onDownload}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white rounded-lg hover:opacity-90 transition-opacity"
+              style={{ background: "linear-gradient(135deg,#0A7881,#68B2B7)" }}
+            >
+              <Download className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Descargar</span>
+            </button>
+            <button onClick={onClose} className="p-2 rounded-lg hover:bg-muted text-muted-foreground transition-colors">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* Contenido */}
+        <div className="flex-1 min-h-0 bg-muted/30 flex items-center justify-center overflow-auto">
+          {error ? (
+            <p className="text-sm text-muted-foreground p-10 text-center">{error}</p>
+          ) : !url ? (
+            <div className="flex items-center gap-2 text-muted-foreground py-20 text-sm">
+              <Loader2 className="w-5 h-5 animate-spin" /> Cargando previsualización…
+            </div>
+          ) : isImage ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={url} alt={file.filename} className="max-w-full max-h-[75vh] object-contain p-2" />
+          ) : (
+            <iframe src={url} title={file.filename} className="w-full h-[75vh] border-0" />
+          )}
+        </div>
+      </div>
     </div>
   );
 }

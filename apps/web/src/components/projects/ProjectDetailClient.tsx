@@ -32,6 +32,7 @@ export function ProjectDetailClient({ projectId, role }: { projectId: string; ro
   const [newStatus, setNewStatus] = useState<ProjectStatus>("IN_PROGRESS");
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [showIva, setShowIva] = useState(false);
 
   const isAdmin = role === "ADMIN";
   const canEdit = role === "ADMIN" || role === "ENGINEER";
@@ -144,10 +145,15 @@ export function ProjectDetailClient({ projectId, role }: { projectId: string; ro
           {project.description && <p className="text-white/70 text-sm">{project.description}</p>}
 
           {role !== "ENGINEER" && (
+            <>
             <div className="flex flex-wrap gap-6 mt-4 pt-4 border-t border-white/20">
               <div>
-                <p className="text-white/60 text-xs mb-0.5">Valor total</p>
-                <p className="text-lg font-black">{COP.format(Number(project.total_value))}</p>
+                <p className="text-white/60 text-xs mb-0.5">
+                  Valor total {showIva ? "(con IVA 19%)" : "(sin IVA)"}
+                </p>
+                <p className="text-lg font-black">
+                  {COP.format(Number(project.total_value) * (showIva ? 1.19 : 1))}
+                </p>
               </div>
               <div>
                 <p className="text-white/60 text-xs mb-0.5">Anticipo ({project.advance_percent}%)</p>
@@ -158,6 +164,18 @@ export function ProjectDetailClient({ projectId, role }: { projectId: string; ro
                 <p className="text-lg font-black">{project.progress}%</p>
               </div>
             </div>
+
+            {/* Toggle IVA */}
+            <label className="inline-flex items-center gap-2 mt-3 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={showIva}
+                onChange={(e) => setShowIva(e.target.checked)}
+                className="w-4 h-4 rounded accent-[#9BE3BF] cursor-pointer"
+              />
+              <span className="text-xs text-white/80">Ver valor con IVA (19%)</span>
+            </label>
+            </>
           )}
         </div>
       </div>
