@@ -1,15 +1,15 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from datetime import datetime
 from models.user import Role
 
 
 class UserCreate(BaseModel):
     email: EmailStr
-    name: str
-    password: str
+    name: str = Field(min_length=1, max_length=200)
+    password: str = Field(min_length=8, max_length=128)
     role: Role = Role.CLIENT
-    phone: str | None = None
-    company: str | None = None
+    phone: str | None = Field(None, max_length=30)
+    company: str | None = Field(None, max_length=200)
 
 
 class UserUpdate(BaseModel):
@@ -21,7 +21,7 @@ class UserUpdate(BaseModel):
 
 
 class PasswordReset(BaseModel):
-    new_password: str
+    new_password: str = Field(min_length=8, max_length=128)
 
 
 class UserPublic(BaseModel):

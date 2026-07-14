@@ -137,6 +137,10 @@ async def upload_project_file(
     proj = await _get_project_or_403(project_id, current_user, db)
     await _ensure_drive_folders(proj, db)
 
+    mime_check = file.content_type or "application/octet-stream"
+    if mime_check not in ALLOWED_MIME_TYPES:
+        raise HTTPException(400, f"Tipo de archivo no permitido: {mime_check}")
+
     content = await file.read()
     size_bytes = len(content)
     if size_bytes > MAX_SIZE_MB * 1024 * 1024:

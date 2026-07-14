@@ -184,11 +184,11 @@ async def get_checkout(
     if current_user.role == Role.CLIENT and payment.user_id != current_user.id:
         raise HTTPException(403, "Sin acceso")
 
-    # Persist billing data if provided
+    # Persist billing data if provided (truncado a los límites de la BD)
     if billing_company:
-        payment.billing_company = billing_company.strip()
+        payment.billing_company = billing_company.strip()[:255]
     if billing_nit:
-        payment.billing_nit = billing_nit.strip()
+        payment.billing_nit = billing_nit.strip()[:50]
     if billing_company or billing_nit:
         payment.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
         await db.commit()

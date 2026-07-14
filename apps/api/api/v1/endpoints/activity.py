@@ -52,6 +52,15 @@ async def project_activity(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
+    # Los clientes solo pueden ver la actividad de sus propios proyectos
+    from models.project import Project
+    from fastapi import HTTPException
+    proj = (await db.execute(select(Project).where(Project.id == project_id))).scalar_one_or_none()
+    if not proj:
+        raise HTTPException(404, "Proyecto no encontrado")
+    if current_user.role == Role.CLIENT and proj.client_id != current_user.id:
+        raise HTTPException(403, "Sin acceso a este proyecto")
+
     q = (
         select(ActivityLog)
         .where(ActivityLog.project_id == project_id)

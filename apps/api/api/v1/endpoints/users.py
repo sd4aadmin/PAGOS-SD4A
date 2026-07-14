@@ -105,6 +105,8 @@ async def change_my_password(
     if len(new_pw) < 8:
         raise HTTPException(status_code=400, detail="La nueva contraseña debe tener al menos 8 caracteres")
     current_user.password_hash = hash_password(new_pw)
+    # Invalidar cualquier otra sesión abierta con la contraseña anterior
+    current_user.session_version = (current_user.session_version or 0) + 1
     await db.commit()
 
 
@@ -156,6 +158,8 @@ async def reset_password(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Usuario no encontrado")
 
     user.password_hash = hash_password(body.new_password)
+    # Cerrar las sesiones activas del usuario al resetear su contraseña
+    user.session_version = (user.session_version or 0) + 1
     await db.commit()
 
 
