@@ -14,7 +14,7 @@ async function handler(req: NextRequest, { params }: { params: Promise<{ path: s
 
   const contentType = req.headers.get("content-type") ?? "";
   const isMultipart = contentType.includes("multipart/form-data");
-  const isDownload = apiPath.startsWith("files/download/");
+  const isDownload = apiPath.startsWith("files/download/") || apiPath.startsWith("files/preview/") || apiPath.includes("/download");
 
   let body: BodyInit | undefined;
   const headers: Record<string, string> = {
@@ -34,17 +34,17 @@ async function handler(req: NextRequest, { params }: { params: Promise<{ path: s
 
   const res = await fetch(url, { method: req.method, headers, body });
 
-  // For file downloads return raw binary
+  // For file downloads/previews return raw binary
   if (isDownload && res.ok) {
     const blob = await res.blob();
     const disposition = res.headers.get("content-disposition") ?? "";
-    return new NextResponse(blob, {
-      status: res.status,
-      headers: {
-        "Content-Type": res.headers.get("content-type") ?? "application/octet-stream",
-        "Content-Disposition": disposition,
-      },
-    });
+    const headers: Record<string, string> = {
+      "Content-Type": res.headers.get("content-type") ?? "application/octet-stream",
+      "Content-Disposition": disposition,
+    };
+    const limited = res.headers.get("x-preview-limited");
+    if (limited !== null) headers["X-Preview-Limited"] = limited;
+    return new NextResponse(blob, { status: res.status, headers });
   }
 
   const text = await res.text();

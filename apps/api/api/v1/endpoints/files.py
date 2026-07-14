@@ -245,6 +245,93 @@ async def download_project_file(
     )
 
 
+# ─── PREVIEW FILE ─────────────────────────────────────────────────────────────
+
+PREVIEW_PDF_PAGES = 1        # páginas visibles sin pagar
+PREVIEW_IMG_MAX = 480        # lado máximo en px sin pagar
+
+
+def _pdf_first_pages(content: bytes, pages: int) -> bytes:
+    """Devuelve un PDF nuevo con solo las primeras `pages` páginas."""
+    import io
+    from pypdf import PdfReader, PdfWriter
+    reader = PdfReader(io.BytesIO(content))
+    writer = PdfWriter()
+    for i in range(min(pages, len(reader.pages))):
+        writer.add_page(reader.pages[i])
+    out = io.BytesIO()
+    writer.write(out)
+    return out.getvalue()
+
+
+def _image_thumbnail(content: bytes, max_side: int) -> tuple[bytes, str]:
+    """Reduce la imagen a un tamaño de muestra (baja resolución)."""
+    import io
+    from PIL import Image as PILImage
+    img = PILImage.open(io.BytesIO(content))
+    img.thumbnail((max_side, max_side))
+    out = io.BytesIO()
+    if img.mode in ("RGBA", "P"):
+        img.save(out, format="PNG")
+        return out.getvalue(), "image/png"
+    img.convert("RGB").save(out, format="JPEG", quality=70)
+    return out.getvalue(), "image/jpeg"
+
+
+@router.get("/preview/{file_id}")
+async def preview_project_file(
+    file_id: str,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Vista previa: si el cliente tiene saldo pendiente, solo ve una parte
+    (primera página del PDF o imagen en baja resolución)."""
+    pf = (await db.execute(
+        select(ProjectFile).where(ProjectFile.id == file_id, ProjectFile.deleted_at.is_(None))
+    )).scalar_one_or_none()
+    if not pf:
+        raise HTTPException(404, "Archivo no encontrado")
+
+    await _get_project_or_403(pf.project_id, current_user, db)
+
+    mime = pf.mime_type or "application/octet-stream"
+    is_pdf = "pdf" in mime
+    is_image = mime.startswith("image/")
+    if not (is_pdf or is_image):
+        raise HTTPException(400, "Este tipo de archivo no tiene vista previa")
+
+    # ¿Acceso completo o solo muestra?
+    full_access = current_user.role != Role.CLIENT or (await _pending_balance(pf.project_id, db)) <= 0
+
+    try:
+        content, filename = download_file(pf.drive_file_id)
+    except Exception:
+        raise HTTPException(404, "Archivo no disponible en Drive")
+
+    limited = False
+    out_mime = mime
+    if not full_access:
+        limited = True
+        try:
+            if is_pdf:
+                content = _pdf_first_pages(content, PREVIEW_PDF_PAGES)
+            else:
+                content, out_mime = _image_thumbnail(content, PREVIEW_IMG_MAX)
+        except Exception as exc:
+            logger.error("Preview generation failed: %s", exc, exc_info=True)
+            raise HTTPException(500, "No se pudo generar la vista previa")
+
+    return Response(
+        content=content,
+        media_type=out_mime,
+        headers={
+            "Content-Disposition": f'inline; filename="{_safe_filename(filename)}"',
+            "X-Preview-Limited": "1" if limited else "0",
+            "Access-Control-Expose-Headers": "X-Preview-Limited",
+        },
+    )
+
+
 # ─── DELETE FILE ──────────────────────────────────────────────────────────────
 
 @router.delete("/{file_id}", status_code=status.HTTP_204_NO_CONTENT)

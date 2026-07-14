@@ -229,11 +229,11 @@ export default function FilesSection({ projectId, canUpload, role }: Props) {
 
                 {/* Actions */}
                 <div className="flex items-center gap-1.5 shrink-0">
-                  {f.can_download && isPreviewable(f.mime_type) && (
+                  {isPreviewable(f.mime_type) && (
                     <button
                       onClick={() => setPreview(f)}
                       className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                      title="Previsualizar"
+                      title={f.can_download ? "Previsualizar" : "Vista previa parcial"}
                     >
                       <Eye className="w-4 h-4" />
                     </button>
@@ -277,7 +277,12 @@ export default function FilesSection({ projectId, canUpload, role }: Props) {
 
       {/* Preview modal */}
       {preview && (
-        <PreviewModal file={preview} onClose={() => setPreview(null)} onDownload={() => handleDownload(preview.id)} />
+        <PreviewModal
+          file={preview}
+          canDownload={preview.can_download}
+          onClose={() => setPreview(null)}
+          onDownload={() => handleDownload(preview.id)}
+        />
       )}
     </div>
   );
@@ -285,25 +290,29 @@ export default function FilesSection({ projectId, canUpload, role }: Props) {
 
 // ─── PREVIEW MODAL ────────────────────────────────────────────────────────────
 
-function PreviewModal({ file, onClose, onDownload }: {
-  file: ProjectFile; onClose: () => void; onDownload: () => void;
+function PreviewModal({ file, canDownload, onClose, onDownload }: {
+  file: ProjectFile; canDownload: boolean; onClose: () => void; onDownload: () => void;
 }) {
   const [url, setUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [limited, setLimited] = useState(false);
+  const [mime, setMime] = useState(file.mime_type);
 
   useEffect(() => {
     let objectUrl: string | null = null;
     (async () => {
       try {
-        const res = await fetch(`/api/proxy/files/download/${file.id}`);
+        const res = await fetch(`/api/proxy/files/preview/${file.id}`);
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
           setError(typeof err.detail === "string" ? err.detail : "No se pudo cargar la previsualización");
           return;
         }
+        setLimited(res.headers.get("X-Preview-Limited") === "1");
+        const serverMime = res.headers.get("Content-Type") || file.mime_type;
+        setMime(serverMime);
         const blob = await res.blob();
-        // Forzar el MIME correcto para que el visor del navegador lo entienda
-        const typed = new Blob([blob], { type: file.mime_type || "application/octet-stream" });
+        const typed = new Blob([blob], { type: serverMime });
         objectUrl = URL.createObjectURL(typed);
         setUrl(objectUrl);
       } catch {
@@ -313,7 +322,7 @@ function PreviewModal({ file, onClose, onDownload }: {
     return () => { if (objectUrl) URL.revokeObjectURL(objectUrl); };
   }, [file.id, file.mime_type]);
 
-  const isImage = file.mime_type.startsWith("image/");
+  const isImage = mime.startsWith("image/");
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-3 sm:p-6" onClick={onClose}>
@@ -331,18 +340,29 @@ function PreviewModal({ file, onClose, onDownload }: {
             </div>
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
-            <button
-              onClick={onDownload}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white rounded-lg hover:opacity-90 transition-opacity"
-              style={{ background: "linear-gradient(135deg,#0A7881,#68B2B7)" }}
-            >
-              <Download className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Descargar</span>
-            </button>
+            {canDownload && (
+              <button
+                onClick={onDownload}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white rounded-lg hover:opacity-90 transition-opacity"
+                style={{ background: "linear-gradient(135deg,#0A7881,#68B2B7)" }}
+              >
+                <Download className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Descargar</span>
+              </button>
+            )}
             <button onClick={onClose} className="p-2 rounded-lg hover:bg-muted text-muted-foreground transition-colors">
               <X className="w-4 h-4" />
             </button>
           </div>
         </div>
+
+        {/* Aviso de vista parcial */}
+        {limited && (
+          <div className="px-4 sm:px-5 py-2.5 border-b border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-800 shrink-0">
+            <p className="text-xs font-semibold text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
+              🔒 Vista previa parcial — paga el saldo pendiente para ver el documento completo y descargarlo.
+            </p>
+          </div>
+        )}
 
         {/* Contenido */}
         <div className="flex-1 min-h-0 bg-muted/30 flex items-center justify-center overflow-auto">
