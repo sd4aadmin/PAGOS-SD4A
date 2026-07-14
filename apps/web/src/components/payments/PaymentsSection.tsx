@@ -4,7 +4,7 @@ import { proxyFetch } from "@/lib/proxy-fetch";
 import { useState, useEffect, useCallback } from "react";
 import {
   CreditCard, Plus, ExternalLink, CheckCircle2, Loader2,
-  RefreshCw, Pencil, Trash2,
+  RefreshCw, Pencil, Trash2, FileText,
 } from "lucide-react";
 import {
   Payment, PaymentWithCheckout, PaymentType,
@@ -43,6 +43,7 @@ export function PaymentsSection({ project, role }: { project: Project; role: str
   const pendingPay   = payments.filter(p => p.status === "PENDING");
 
   return (
+    <>
     <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
       {/* Header */}
       <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-muted/30">
@@ -119,6 +120,69 @@ export function PaymentsSection({ project, role }: { project: Project; role: str
         <EditPaymentModal payment={editPayment} onClose={() => setEditPayment(null)} onSaved={load} />
       )}
     </div>
+
+    {/* ── Datos de facturación electrónica (solo admin) ── */}
+    {isAdmin && !loading && <BillingSection payments={payments} />}
+    </>
+  );
+}
+
+function BillingSection({ payments }: { payments: Payment[] }) {
+  const withBilling = payments.filter((p) => p.billing_company || p.billing_nit);
+
+  return (
+    <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-border bg-muted/30">
+        <h3 className="font-bold text-foreground flex items-center gap-2">
+          <FileText className="w-4 h-4" style={{ color: "#0A7881" }} /> Datos de facturación electrónica
+        </h3>
+        {withBilling.length > 0 && (
+          <span
+            className="text-xs font-bold px-2.5 py-1 rounded-full"
+            style={{ background: "rgba(10,120,129,0.10)", color: "#0A7881" }}
+          >
+            {withBilling.length} solicitud{withBilling.length !== 1 ? "es" : ""}
+          </span>
+        )}
+      </div>
+
+      {withBilling.length === 0 ? (
+        <p className="text-sm text-muted-foreground text-center py-8 px-5">
+          Ningún pago tiene solicitud de factura electrónica.
+        </p>
+      ) : (
+        <div className="divide-y divide-border">
+          {withBilling.map((p) => (
+            <div key={p.id} className="px-5 py-4">
+              <div className="flex items-center justify-between gap-3 mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold text-foreground">{PAYMENT_TYPE_LABELS[p.type]}</span>
+                  <span className={cn("px-2 py-0.5 rounded-full text-xs font-semibold", PAYMENT_STATUS_COLORS[p.status])}>
+                    {PAYMENT_STATUS_LABELS[p.status]}
+                  </span>
+                </div>
+                <span className="text-sm font-black" style={{ color: "#0A7881" }}>{COP.format(Number(p.amount))}</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
+                <BillingField label="Razón social" value={p.billing_company} />
+                <BillingField label="NIT" value={p.billing_nit} />
+                <BillingField label="Correo" value={p.billing_email} />
+                <BillingField label="Teléfono" value={p.billing_phone} />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function BillingField({ label, value }: { label: string; value: string | null }) {
+  return (
+    <div>
+      <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-0.5">{label}</p>
+      <p className="text-sm text-foreground">{value || <span className="text-muted-foreground/50 italic">No suministrado</span>}</p>
+    </div>
   );
 }
 
@@ -182,25 +246,14 @@ function PaymentRow({ payment, isAdmin, onConfirmed, onEdit, onDeleted }: {
           </p>
         )}
         {payment.notes && <p className="text-xs text-muted-foreground italic mt-0.5">{payment.notes}</p>}
-        {/* Facturación electrónica — solo visible para admin */}
+        {/* Indicador de factura electrónica — el detalle está en la sección de facturación */}
         {isAdmin && payment.billing_company && (
-          <div className="mt-1.5 flex items-start gap-1.5 px-2.5 py-1.5 rounded-lg" style={{ background: "rgba(10,120,129,0.10)", border: "1px solid #99d4d8" }}>
-            <span className="text-xs font-bold shrink-0" style={{ color: "#0A7881" }}>FE</span>
-            <div className="text-xs" style={{ color: "#0A7881" }}>
-              <span className="font-semibold">{payment.billing_company}</span>
-              {payment.billing_nit && <span className="text-muted-foreground ml-1.5">NIT {payment.billing_nit}</span>}
-              {(payment.billing_email || payment.billing_phone) && (
-                <div className="text-muted-foreground mt-0.5">
-                  {payment.billing_email && <span>{payment.billing_email}</span>}
-                  {payment.billing_email && payment.billing_phone && <span> · </span>}
-                  {payment.billing_phone && <span>{payment.billing_phone}</span>}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-        {isAdmin && !payment.billing_company && (
-          <p className="text-xs text-muted-foreground mt-0.5 italic">Sin factura electrónica</p>
+          <span
+            className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 rounded-full text-[11px] font-bold"
+            style={{ background: "rgba(10,120,129,0.10)", color: "#0A7881" }}
+          >
+            <FileText className="w-3 h-3" /> Solicita factura electrónica
+          </span>
         )}
       </div>
       {isAdmin && payment.status === "PENDING" && (
