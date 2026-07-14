@@ -14,6 +14,8 @@ export interface Payment {
   notes: string | null;
   billing_company: string | null;
   billing_nit: string | null;
+  billing_email: string | null;
+  billing_phone: string | null;
   created_at: string;
   updated_at: string;
 }

@@ -38,6 +38,8 @@ class PaymentOut(BaseModel):
     notes: Optional[str]
     billing_company: Optional[str] = None
     billing_nit: Optional[str] = None
+    billing_email: Optional[str] = None
+    billing_phone: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 

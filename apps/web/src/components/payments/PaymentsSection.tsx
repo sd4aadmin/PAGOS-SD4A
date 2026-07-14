@@ -189,6 +189,13 @@ function PaymentRow({ payment, isAdmin, onConfirmed, onEdit, onDeleted }: {
             <div className="text-xs" style={{ color: "#0A7881" }}>
               <span className="font-semibold">{payment.billing_company}</span>
               {payment.billing_nit && <span className="text-muted-foreground ml-1.5">NIT {payment.billing_nit}</span>}
+              {(payment.billing_email || payment.billing_phone) && (
+                <div className="text-muted-foreground mt-0.5">
+                  {payment.billing_email && <span>{payment.billing_email}</span>}
+                  {payment.billing_email && payment.billing_phone && <span> · </span>}
+                  {payment.billing_phone && <span>{payment.billing_phone}</span>}
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -249,12 +256,29 @@ function BillingModal({ paymentId, amount, type, onClose }: {
   const [wantsBilling, setWantsBilling] = useState(false);
   const [company, setCompany]           = useState("");
   const [nit, setNit]                   = useState("");
+  const [email, setEmail]               = useState("");
+  const [phone, setPhone]               = useState("");
+  const [account, setAccount]           = useState<{ email: string; phone: string | null } | null>(null);
   const [loading, setLoading]           = useState(false);
   const [error, setError]               = useState<string | null>(null);
 
+  // Datos de la cuenta para autocompletar
+  useEffect(() => {
+    fetch("/api/proxy/users/me")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (d?.email) setAccount({ email: d.email, phone: d.phone ?? null }); })
+      .catch(() => {});
+  }, []);
+
+  function useAccountData() {
+    if (!account) return;
+    setEmail(account.email);
+    if (account.phone) setPhone(account.phone);
+  }
+
   async function proceed() {
-    if (wantsBilling && (!company.trim() || !nit.trim())) {
-      setError("Completa el nombre de la empresa y el NIT para solicitar la factura.");
+    if (wantsBilling && (!company.trim() || !nit.trim() || !email.trim())) {
+      setError("Completa el nombre de la empresa, el NIT y el correo para solicitar la factura.");
       return;
     }
     setLoading(true);
@@ -264,6 +288,8 @@ function BillingModal({ paymentId, amount, type, onClose }: {
       if (wantsBilling) {
         params.set("billing_company", company.trim());
         params.set("billing_nit", nit.trim());
+        params.set("billing_email", email.trim());
+        if (phone.trim()) params.set("billing_phone", phone.trim());
       }
       const url = `/api/proxy/payments/${paymentId}/checkout${params.size ? `?${params}` : ""}`;
       const res = await fetch(url);
@@ -341,6 +367,46 @@ function BillingModal({ paymentId, amount, type, onClose }: {
                   onChange={(e) => setNit(e.target.value.replace(/[^0-9\-]/g, ""))}
                   placeholder="900.123.456-7"
                   inputMode="numeric"
+                  className="w-full px-3.5 py-2.5 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0A7881]/30 focus:border-[#0A7881] bg-background text-foreground transition"
+                />
+              </div>
+
+              {/* Correo y teléfono */}
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Datos de contacto</p>
+                {account && (
+                  <button
+                    type="button"
+                    onClick={useAccountData}
+                    className="text-xs font-semibold px-2.5 py-1 rounded-lg transition hover:bg-muted"
+                    style={{ color: "#0A7881" }}
+                  >
+                    Usar los de mi cuenta
+                  </button>
+                )}
+              </div>
+              <div>
+                <label className="block text-xs font-bold mb-1.5 uppercase tracking-widest text-muted-foreground">
+                  Correo electrónico
+                </label>
+                <input
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  type="email"
+                  placeholder="facturacion@empresa.com"
+                  className="w-full px-3.5 py-2.5 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0A7881]/30 focus:border-[#0A7881] bg-background text-foreground transition"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold mb-1.5 uppercase tracking-widest text-muted-foreground">
+                  Teléfono <span className="normal-case font-normal">(opcional)</span>
+                </label>
+                <input
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value.replace(/[^0-9+\s\-]/g, ""))}
+                  type="tel"
+                  inputMode="tel"
+                  placeholder="+57 300 123 4567"
                   className="w-full px-3.5 py-2.5 border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0A7881]/30 focus:border-[#0A7881] bg-background text-foreground transition"
                 />
               </div>

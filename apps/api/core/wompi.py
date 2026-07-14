@@ -29,7 +29,10 @@ def build_checkout_url(
     currency: str = "COP",
     billing_company: str | None = None,
     billing_nit: str | None = None,
+    billing_email: str | None = None,
+    billing_phone: str | None = None,
 ) -> str:
+    from urllib.parse import quote
     cents = amount_to_cents(amount)
     sig = integrity_hash(reference, cents, currency)
     params = (
@@ -41,7 +44,6 @@ def build_checkout_url(
         f"&redirect-url={redirect_url}"
     )
     if billing_nit and billing_company:
-        from urllib.parse import quote
         params += (
             f"&customer-data:user-legal-id-type=NIT"
             f"&customer-data:user-legal-id={quote(billing_nit)}"
@@ -49,6 +51,10 @@ def build_checkout_url(
         )
     else:
         params += "&customer-data:user-legal-id-type=CC"
+    if billing_email:
+        params += f"&customer-data:email={quote(billing_email)}"
+    if billing_phone:
+        params += f"&customer-data:phone-number={quote(billing_phone)}"
     return CHECKOUT_BASE + params
 
 

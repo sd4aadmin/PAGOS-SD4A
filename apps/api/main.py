@@ -59,6 +59,12 @@ async def lifespan(app: FastAPI):
         await conn.execute(text(
             "ALTER TABLE payments ADD COLUMN IF NOT EXISTS billing_nit VARCHAR(50)"
         ))
+        await conn.execute(text(
+            "ALTER TABLE payments ADD COLUMN IF NOT EXISTS billing_email VARCHAR(255)"
+        ))
+        await conn.execute(text(
+            "ALTER TABLE payments ADD COLUMN IF NOT EXISTS billing_phone VARCHAR(30)"
+        ))
     yield
 
 

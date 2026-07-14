@@ -176,6 +176,8 @@ async def get_checkout(
     payment_id: str,
     billing_company: str | None = None,
     billing_nit: str | None = None,
+    billing_email: str | None = None,
+    billing_phone: str | None = None,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -192,7 +194,11 @@ async def get_checkout(
         payment.billing_company = billing_company.strip()[:255]
     if billing_nit:
         payment.billing_nit = billing_nit.strip()[:50]
-    if billing_company or billing_nit:
+    if billing_email:
+        payment.billing_email = billing_email.strip()[:255]
+    if billing_phone:
+        payment.billing_phone = billing_phone.strip()[:30]
+    if billing_company or billing_nit or billing_email or billing_phone:
         payment.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
         await db.commit()
         await db.refresh(payment)
@@ -206,6 +212,8 @@ async def get_checkout(
         redirect_url=redirect_url,
         billing_company=payment.billing_company,
         billing_nit=payment.billing_nit,
+        billing_email=payment.billing_email,
+        billing_phone=payment.billing_phone,
     )
     return PaymentWithCheckout(**PaymentOut.model_validate(payment).model_dump(), checkout_url=checkout_url)
 
