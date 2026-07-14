@@ -247,17 +247,19 @@ async def download_project_file(
 
 # ─── PREVIEW FILE ─────────────────────────────────────────────────────────────
 
-PREVIEW_PDF_PAGES = 1        # páginas visibles sin pagar
 PREVIEW_IMG_MAX = 480        # lado máximo en px sin pagar
 
 
-def _pdf_first_pages(content: bytes, pages: int) -> bytes:
-    """Devuelve un PDF nuevo con solo las primeras `pages` páginas."""
+def _pdf_half_document(content: bytes) -> bytes:
+    """Devuelve un PDF nuevo con hasta la mitad de las páginas del original
+    (mínimo 1). Ej: 10 págs → 5, 7 págs → 3, 1 pág → 1."""
     import io
     from pypdf import PdfReader, PdfWriter
     reader = PdfReader(io.BytesIO(content))
+    total = len(reader.pages)
+    pages_to_show = max(1, total // 2)
     writer = PdfWriter()
-    for i in range(min(pages, len(reader.pages))):
+    for i in range(pages_to_show):
         writer.add_page(reader.pages[i])
     out = io.BytesIO()
     writer.write(out)
@@ -314,7 +316,7 @@ async def preview_project_file(
         limited = True
         try:
             if is_pdf:
-                content = _pdf_first_pages(content, PREVIEW_PDF_PAGES)
+                content = _pdf_half_document(content)
             else:
                 content, out_mime = _image_thumbnail(content, PREVIEW_IMG_MAX)
         except Exception as exc:
