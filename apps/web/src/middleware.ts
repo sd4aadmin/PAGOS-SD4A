@@ -18,10 +18,6 @@ export default auth((req) => {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
-  if (req.auth && pathname === "/login") {
-    return NextResponse.redirect(new URL("/dashboard", req.url));
-  }
-
   if (req.auth) {
     const role = req.auth.user?.role;
     // Find the most specific matching prefix (longest first)
