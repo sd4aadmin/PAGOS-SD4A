@@ -57,6 +57,27 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <div className="absolute inset-0 hidden lg:block" style={{ background: "#eef4f5" }} />
 
         <div className="relative z-10 w-full max-w-sm">
+          {/* Volver a la página principal — mint sobre fondo oscuro (móvil), teal sobre claro (desktop) */}
+          <a
+            href="https://sd4a-web.vercel.app"
+            className="lg:hidden inline-flex items-center gap-1.5 mb-4 text-sm font-semibold transition-opacity hover:opacity-80"
+            style={{ color: "#9BE3BF" }}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+              <path d="m12 19-7-7 7-7" /><path d="M19 12H5" />
+            </svg>
+            Volver a la página principal
+          </a>
+          <a
+            href="https://sd4a-web.vercel.app"
+            className="hidden lg:inline-flex items-center gap-1.5 mb-4 text-sm font-semibold transition-opacity hover:opacity-80"
+            style={{ color: "#0A7881" }}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+              <path d="m12 19-7-7 7-7" /><path d="M19 12H5" />
+            </svg>
+            Volver a la página principal
+          </a>
           {children}
         </div>
       </div>
