@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 
 const PUBLIC_ROUTES = ["/login"];
 
+const isRoot = (pathname: string) => pathname === "/";
+
 const ROLE_ROUTES: Record<string, string[]> = {
   "/admin/activity":  ["ADMIN", "ENGINEER"],
   "/admin":           ["ADMIN"],
@@ -12,7 +14,7 @@ const ROLE_ROUTES: Record<string, string[]> = {
 
 export default auth((req) => {
   const { pathname } = req.nextUrl;
-  const isPublic = PUBLIC_ROUTES.some((r) => pathname.startsWith(r));
+  const isPublic = isRoot(pathname) || PUBLIC_ROUTES.some((r) => pathname.startsWith(r));
 
   if (!req.auth && !isPublic) {
     return NextResponse.redirect(new URL("/login", req.url));
