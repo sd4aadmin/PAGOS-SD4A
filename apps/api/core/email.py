@@ -187,6 +187,16 @@ def _info_row(label: str, value: str) -> str:
 </tr>"""
 
 
+def _info_row_raw(label: str, value_html: str) -> str:
+    """Como _info_row pero el valor NO se escapa — úsalo cuando el valor
+    ya es HTML de confianza construido por helpers como _badge()."""
+    return f"""
+<tr>
+  <td style="padding:8px 0;color:#64748b;font-size:13px;width:160px;">{_esc(label)}</td>
+  <td style="padding:8px 0;color:#0f172a;font-size:13px;font-weight:600;">{value_html}</td>
+</tr>"""
+
+
 def _table(*rows: str) -> str:
     inner = "".join(rows)
     return f'<table cellpadding="0" cellspacing="0" style="margin:20px 0;width:100%;">{inner}</table>'
@@ -228,7 +238,7 @@ async def send_status_changed(
     body = (
         _h1(f"Actualización de estado: {project_code}")
         + _p_raw(f"Hola {_esc(client_name)}, el estado de tu proyecto <strong>{_esc(project_name)}</strong> ha cambiado.")
-        + _table(_info_row("Antes", old_label), _info_row("Ahora", _badge(new_label)))
+        + _table(_info_row("Antes", old_label), _info_row_raw("Ahora", _badge(new_label)))
         + _btn("Ver proyecto", f"{app_url}/dashboard/projects/{project_id}")
     )
     await send_email(to, f"SD4A — {project_code} ahora está: {new_label}", _base("Estado del proyecto", body))
@@ -257,7 +267,8 @@ async def send_project_updated(
             continue
         label = field_labels.get(key, key)
         if key == "status":
-            val = _badge(status_map.get(str(val), str(val)))
+            rows += _info_row_raw(label, _badge(status_map.get(str(val), str(val))))
+            continue
         elif key == "progress":
             val = f"{val}%"
         elif key == "total_value":
@@ -285,7 +296,7 @@ async def send_payment_confirmed(
             _info_row("Proyecto", f"{project_code} — {project_name}"),
             _info_row("Tipo de pago", type_label),
             _info_row("Monto", amount),
-            _info_row("Estado", _badge("Confirmado", "#d1fae5", "#065f46")),
+            _info_row_raw("Estado", _badge("Confirmado", "#d1fae5", "#065f46")),
         )
         + _btn("Ver proyecto", f"{app_url}/dashboard/projects/{project_id}")
     )
@@ -300,11 +311,11 @@ async def send_welcome_client(
         + _p("Tu cuenta ha sido creada. Usa las siguientes credenciales para ingresar al portal y consultar el estado de tus proyectos.")
         + _table(
             _info_row("Correo electrónico", email),
-            _info_row("Contraseña", f'<code style="background:#f1f5f9;padding:2px 8px;border-radius:4px;font-size:13px;">{password}</code>'),
+            _info_row_raw("Contraseña", f'<code style="background:#f1f5f9;padding:2px 8px;border-radius:4px;font-size:13px;">{_esc(password)}</code>'),
         )
         + _p("Te recomendamos cambiar tu contraseña después de ingresar por primera vez.")
         + _btn("Ingresar al portal", f"{app_url}/login")
-        + _p('<small style="color:#94a3b8;">Si no solicitaste esta cuenta, ignora este mensaje.</small>')
+        + _p_raw('<small style="color:#94a3b8;">Si no solicitaste esta cuenta, ignora este mensaje.</small>')
     )
     await send_email(to, "SD4A — Bienvenido a tu portal de proyectos", _base("Bienvenido a SD4A", body))
 
@@ -342,7 +353,7 @@ async def send_payment_link(
         )
         + _p("Haz clic en el botón para completar el pago de forma segura a través de Wompi.")
         + _btn(f"Pagar {type_label} — {amount}", checkout_url)
-        + _p('<small style="color:#94a3b8;">El enlace es de un solo uso y está asociado a tu proyecto.</small>')
+        + _p_raw('<small style="color:#94a3b8;">El enlace es de un solo uso y está asociado a tu proyecto.</small>')
     )
     await send_email(to, f"SD4A — Pago pendiente: {project_code} ({type_label})", _base("Enlace de pago", body))
 
