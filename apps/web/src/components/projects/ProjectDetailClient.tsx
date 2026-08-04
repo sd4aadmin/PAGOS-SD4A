@@ -269,10 +269,10 @@ export function ProjectDetailClient({ projectId, role }: { projectId: string; ro
         ) : (
           <>
             <InfoCard icon={<CalendarDays className="w-4 h-4" />} label="Fecha inicio" color="#3b82f6" bg="#eff6ff">
-              {project.start_date ? new Date(project.start_date).toLocaleDateString("es-CO") : "—"}
+              {project.start_date ? new Date(project.start_date).toLocaleDateString("es-CO", { timeZone: "UTC" }) : "—"}
             </InfoCard>
             <InfoCard icon={<CalendarDays className="w-4 h-4" />} label="Entrega estimada" color="#f59e0b" bg="#fffbeb">
-              {project.estimated_date ? new Date(project.estimated_date).toLocaleDateString("es-CO") : "—"}
+              {project.estimated_date ? new Date(project.estimated_date).toLocaleDateString("es-CO", { timeZone: "UTC" }) : "—"}
             </InfoCard>
           </>
         )}

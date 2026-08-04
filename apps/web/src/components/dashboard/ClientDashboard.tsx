@@ -164,7 +164,7 @@ function ProjectRow({ project: p, onClick, muted = false }: { project: Project; 
           {p.estimated_date && (
             <span className="flex items-center gap-1 text-xs text-muted-foreground">
               <CalendarDays className="w-3 h-3" />
-              {new Date(p.estimated_date).toLocaleDateString("es-CO", { day: "numeric", month: "short" })}
+              {new Date(p.estimated_date).toLocaleDateString("es-CO", { day: "numeric", month: "short", timeZone: "UTC" })}
             </span>
           )}
         </div>

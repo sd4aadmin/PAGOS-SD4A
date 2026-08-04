@@ -298,11 +298,11 @@ export function ProjectsPageClient({ role }: { role: string }) {
                       <div className="space-y-0.5">
                         <div className="flex items-center gap-1 text-xs text-muted-foreground">
                           <CalendarDays className="w-3 h-3" />
-                          {p.start_date ? new Date(p.start_date).toLocaleDateString("es-CO") : "—"}
+                          {p.start_date ? new Date(p.start_date).toLocaleDateString("es-CO", { timeZone: "UTC" }) : "—"}
                         </div>
                         <div className="flex items-center gap-1 text-xs text-muted-foreground/60">
                           <CalendarDays className="w-3 h-3" />
-                          {p.estimated_date ? new Date(p.estimated_date).toLocaleDateString("es-CO") : "—"}
+                          {p.estimated_date ? new Date(p.estimated_date).toLocaleDateString("es-CO", { timeZone: "UTC" }) : "—"}
                         </div>
                       </div>
                     </td>
