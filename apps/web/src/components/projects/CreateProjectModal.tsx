@@ -88,8 +88,16 @@ export function CreateProjectModal({
       body: JSON.stringify(payload),
     });
     if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      setError(err.detail ?? "Error al crear proyecto");
+      const text = await res.text();
+      let message = "Error al crear proyecto";
+      try {
+        const err = JSON.parse(text);
+        if (typeof err.detail === "string") message = err.detail;
+        else if (Array.isArray(err.detail)) message = err.detail.map((d: any) => d.msg).join(" · ");
+      } catch {
+        if (text) message = text.slice(0, 200);
+      }
+      setError(message);
       return;
     }
     onCreated();

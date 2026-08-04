@@ -1,7 +1,7 @@
 ﻿from datetime import datetime
 from decimal import Decimal
 from typing import Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from models.project import ProjectStatus
 
@@ -14,6 +14,14 @@ class ProjectMemberOut(BaseModel):
     model_config = {"from_attributes": True}
 
 
+def _blank_to_none(v):
+    """Los <select> del frontend envían "" para 'sin seleccionar' — no un
+    id válido. Sin esto, "" se intenta guardar como llave foránea y falla."""
+    if isinstance(v, str) and v.strip() == "":
+        return None
+    return v
+
+
 class ProjectCreate(BaseModel):
     name: str = Field(..., min_length=3, max_length=200)
     description: Optional[str] = None
@@ -24,6 +32,9 @@ class ProjectCreate(BaseModel):
     estimated_date: Optional[datetime] = None
     engineer_profile_id: Optional[str] = None
     assigned_engineer_id: Optional[str] = None
+
+    _blank_engineer_profile = field_validator("engineer_profile_id", mode="before")(_blank_to_none)
+    _blank_assigned_engineer = field_validator("assigned_engineer_id", mode="before")(_blank_to_none)
 
 
 class ProjectUpdate(BaseModel):
@@ -38,6 +49,9 @@ class ProjectUpdate(BaseModel):
     drive_folder_id: Optional[str] = None
     engineer_profile_id: Optional[str] = None
     assigned_engineer_id: Optional[str] = None
+
+    _blank_engineer_profile = field_validator("engineer_profile_id", mode="before")(_blank_to_none)
+    _blank_assigned_engineer = field_validator("assigned_engineer_id", mode="before")(_blank_to_none)
 
 
 class ProjectOut(BaseModel):
