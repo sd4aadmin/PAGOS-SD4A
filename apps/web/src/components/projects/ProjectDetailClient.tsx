@@ -21,6 +21,10 @@ const STATUSES: ProjectStatus[] = [
   "PENDING_ADVANCE", "IN_PROGRESS", "IN_REVIEW", "FINISHED", "PENDING_FINAL", "PAID", "DELIVERED"
 ];
 
+function toDateInput(iso: string | null | undefined): string {
+  return iso ? iso.slice(0, 10) : "";
+}
+
 export function ProjectDetailClient({ projectId, role }: { projectId: string; role: string }) {
   const router = useRouter();
   const [project, setProject] = useState<Project | null>(null);
@@ -33,6 +37,9 @@ export function ProjectDetailClient({ projectId, role }: { projectId: string; ro
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [showIva, setShowIva] = useState(false);
+  const [editDates, setEditDates] = useState(false);
+  const [startDate, setStartDate] = useState("");
+  const [estimatedDate, setEstimatedDate] = useState("");
 
   const isAdmin = role === "ADMIN";
   const canEdit = role === "ADMIN" || role === "ENGINEER";
@@ -45,6 +52,8 @@ export function ProjectDetailClient({ projectId, role }: { projectId: string; ro
       setProject(data);
       setProgress(data.progress);
       setNewStatus(data.status);
+      setStartDate(toDateInput(data.start_date));
+      setEstimatedDate(toDateInput(data.estimated_date));
     }
     setLoading(false);
   }, [projectId]);
@@ -71,6 +80,21 @@ export function ProjectDetailClient({ projectId, role }: { projectId: string; ro
       body: JSON.stringify({ status: newStatus }),
     });
     setEditStatus(false);
+    await load();
+    setSaving(false);
+  }
+
+  async function saveDates() {
+    setSaving(true);
+    await fetch(`/api/proxy/projects/${projectId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        start_date: startDate ? new Date(startDate).toISOString() : null,
+        estimated_date: estimatedDate ? new Date(estimatedDate).toISOString() : null,
+      }),
+    });
+    setEditDates(false);
     await load();
     setSaving(false);
   }
@@ -181,13 +205,77 @@ export function ProjectDetailClient({ projectId, role }: { projectId: string; ro
       </div>
 
       {/* ── Fechas y datos ── */}
+      {isAdmin && (
+        <div className="flex justify-end -mb-1">
+          {!editDates ? (
+            <button
+              onClick={() => setEditDates(true)}
+              className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-xl border border-border hover:bg-muted transition-colors text-muted-foreground"
+            >
+              <Pencil className="w-3 h-3" /> Editar fechas
+            </button>
+          ) : (
+            <div className="flex gap-2">
+              <button
+                onClick={() => { setEditDates(false); setStartDate(toDateInput(project.start_date)); setEstimatedDate(toDateInput(project.estimated_date)); }}
+                className="px-3 py-1.5 text-xs border border-border rounded-xl hover:bg-muted text-foreground transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={saveDates}
+                disabled={saving}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-white rounded-xl transition-opacity disabled:opacity-60"
+                style={{ background: "linear-gradient(135deg,#0A7881,#68B2B7)" }}
+              >
+                {saving && <Loader2 className="w-3 h-3 animate-spin" />} Guardar
+              </button>
+            </div>
+          )}
+        </div>
+      )}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <InfoCard icon={<CalendarDays className="w-4 h-4" />} label="Fecha inicio" color="#3b82f6" bg="#eff6ff">
-          {project.start_date ? new Date(project.start_date).toLocaleDateString("es-CO") : "—"}
-        </InfoCard>
-        <InfoCard icon={<CalendarDays className="w-4 h-4" />} label="Entrega estimada" color="#f59e0b" bg="#fffbeb">
-          {project.estimated_date ? new Date(project.estimated_date).toLocaleDateString("es-CO") : "—"}
-        </InfoCard>
+        {editDates ? (
+          <>
+            <div className="bg-card border border-border rounded-2xl p-4 shadow-sm">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: "#eff6ff", color: "#3b82f6" }}>
+                  <CalendarDays className="w-4 h-4" />
+                </div>
+                <p className="text-xs text-muted-foreground font-medium">Fecha inicio</p>
+              </div>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full text-sm font-bold text-foreground bg-transparent border-b border-border focus:outline-none focus:border-[#0A7881] pb-1"
+              />
+            </div>
+            <div className="bg-card border border-border rounded-2xl p-4 shadow-sm">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: "#fffbeb", color: "#f59e0b" }}>
+                  <CalendarDays className="w-4 h-4" />
+                </div>
+                <p className="text-xs text-muted-foreground font-medium">Entrega estimada</p>
+              </div>
+              <input
+                type="date"
+                value={estimatedDate}
+                onChange={(e) => setEstimatedDate(e.target.value)}
+                className="w-full text-sm font-bold text-foreground bg-transparent border-b border-border focus:outline-none focus:border-[#0A7881] pb-1"
+              />
+            </div>
+          </>
+        ) : (
+          <>
+            <InfoCard icon={<CalendarDays className="w-4 h-4" />} label="Fecha inicio" color="#3b82f6" bg="#eff6ff">
+              {project.start_date ? new Date(project.start_date).toLocaleDateString("es-CO") : "—"}
+            </InfoCard>
+            <InfoCard icon={<CalendarDays className="w-4 h-4" />} label="Entrega estimada" color="#f59e0b" bg="#fffbeb">
+              {project.estimated_date ? new Date(project.estimated_date).toLocaleDateString("es-CO") : "—"}
+            </InfoCard>
+          </>
+        )}
         <InfoCard icon={<Users className="w-4 h-4" />} label="Cliente" color="#8b5cf6" bg="#f5f3ff">
           <span className="truncate block">{project.client_name}</span>
         </InfoCard>
