@@ -38,5 +38,9 @@ export default auth((req) => {
 });
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  // icon/apple-icon/opengraph-image son rutas de metadata de Next.js que
+  // deben servirse sin sesión — si no, el middleware las redirige a /login
+  // y el navegador no puede renderizar la redirección como imagen,
+  // mostrando el favicon genérico del sistema en su lugar.
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|icon|apple-icon|opengraph-image).*)"],
 };
