@@ -130,6 +130,14 @@
   .dark .card-premium:hover {
     box-shadow: 0 2px 4px rgb(0 0 0 / 0.35), 0 12px 28px -6px rgb(0 0 0 / 0.5);
   }
+  /* Misma sombra elevada que card-premium pero sin el efecto de "levantarse" —
+     para contenedores grandes (tablas, secciones) donde el hover-lift se ve raro. */
+  .card-elevated {
+    box-shadow: 0 1px 2px rgb(10 120 129 / 0.04), 0 4px 12px -2px rgb(10 120 129 / 0.08);
+  }
+  .dark .card-elevated {
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 4px 12px -2px rgb(0 0 0 / 0.35);
+  }
 }
 
 @media print {

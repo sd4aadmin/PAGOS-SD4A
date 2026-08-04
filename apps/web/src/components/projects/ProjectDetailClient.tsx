@@ -205,83 +205,89 @@ export function ProjectDetailClient({ projectId, role }: { projectId: string; ro
       </div>
 
       {/* ── Fechas y datos ── */}
-      {isAdmin && (
-        <div className="flex justify-end -mb-1">
-          {!editDates ? (
-            <button
-              onClick={() => setEditDates(true)}
-              className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-xl border border-border hover:bg-muted transition-colors text-muted-foreground"
-            >
-              <Pencil className="w-3 h-3" /> Editar fechas
-            </button>
-          ) : (
-            <div className="flex gap-2">
+      <div className="bg-card border border-border rounded-2xl p-5 card-elevated">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-bold text-foreground flex items-center gap-2">
+            <CalendarDays className="w-4 h-4" style={{ color: "#0A7881" }} /> Fechas y datos
+          </h3>
+          {isAdmin && (
+            !editDates ? (
               <button
-                onClick={() => { setEditDates(false); setStartDate(toDateInput(project.start_date)); setEstimatedDate(toDateInput(project.estimated_date)); }}
-                className="px-3 py-1.5 text-xs border border-border rounded-xl hover:bg-muted text-foreground transition-colors"
+                onClick={() => setEditDates(true)}
+                className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-xl border border-border hover:bg-muted transition-colors text-muted-foreground"
               >
-                Cancelar
+                <Pencil className="w-3 h-3" /> Editar fechas
               </button>
-              <button
-                onClick={saveDates}
-                disabled={saving}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-white rounded-xl transition-opacity disabled:opacity-60"
-                style={{ background: "linear-gradient(135deg,#0A7881,#68B2B7)" }}
-              >
-                {saving && <Loader2 className="w-3 h-3 animate-spin" />} Guardar
-              </button>
-            </div>
+            ) : (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => { setEditDates(false); setStartDate(toDateInput(project.start_date)); setEstimatedDate(toDateInput(project.estimated_date)); }}
+                  className="px-3 py-1.5 text-xs border border-border rounded-xl hover:bg-muted text-foreground transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={saveDates}
+                  disabled={saving}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-white rounded-xl transition-opacity disabled:opacity-60"
+                  style={{ background: "linear-gradient(135deg,#0A7881,#68B2B7)" }}
+                >
+                  {saving && <Loader2 className="w-3 h-3 animate-spin" />} Guardar
+                </button>
+              </div>
+            )
           )}
         </div>
-      )}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {editDates ? (
-          <>
-            <div className="bg-card border border-border rounded-2xl p-4 shadow-sm">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: "#eff6ff", color: "#3b82f6" }}>
-                  <CalendarDays className="w-4 h-4" />
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {editDates ? (
+            <>
+              <div className="bg-muted/40 border border-border rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: "#3b82f618", color: "#3b82f6" }}>
+                    <CalendarDays className="w-4 h-4" />
+                  </div>
+                  <p className="text-xs text-muted-foreground font-medium">Fecha inicio</p>
                 </div>
-                <p className="text-xs text-muted-foreground font-medium">Fecha inicio</p>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="w-full text-sm font-bold text-foreground bg-transparent border-b border-border focus:outline-none focus:border-[#0A7881] pb-1"
+                />
               </div>
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-full text-sm font-bold text-foreground bg-transparent border-b border-border focus:outline-none focus:border-[#0A7881] pb-1"
-              />
-            </div>
-            <div className="bg-card border border-border rounded-2xl p-4 shadow-sm">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: "#fffbeb", color: "#f59e0b" }}>
-                  <CalendarDays className="w-4 h-4" />
+              <div className="bg-muted/40 border border-border rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: "#f59e0b18", color: "#f59e0b" }}>
+                    <CalendarDays className="w-4 h-4" />
+                  </div>
+                  <p className="text-xs text-muted-foreground font-medium">Entrega estimada</p>
                 </div>
-                <p className="text-xs text-muted-foreground font-medium">Entrega estimada</p>
+                <input
+                  type="date"
+                  value={estimatedDate}
+                  onChange={(e) => setEstimatedDate(e.target.value)}
+                  className="w-full text-sm font-bold text-foreground bg-transparent border-b border-border focus:outline-none focus:border-[#0A7881] pb-1"
+                />
               </div>
-              <input
-                type="date"
-                value={estimatedDate}
-                onChange={(e) => setEstimatedDate(e.target.value)}
-                className="w-full text-sm font-bold text-foreground bg-transparent border-b border-border focus:outline-none focus:border-[#0A7881] pb-1"
-              />
-            </div>
-          </>
-        ) : (
-          <>
-            <InfoCard icon={<CalendarDays className="w-4 h-4" />} label="Fecha inicio" color="#3b82f6" bg="#eff6ff">
-              {project.start_date ? new Date(project.start_date).toLocaleDateString("es-CO", { timeZone: "UTC" }) : "—"}
-            </InfoCard>
-            <InfoCard icon={<CalendarDays className="w-4 h-4" />} label="Entrega estimada" color="#f59e0b" bg="#fffbeb">
-              {project.estimated_date ? new Date(project.estimated_date).toLocaleDateString("es-CO", { timeZone: "UTC" }) : "—"}
-            </InfoCard>
-          </>
-        )}
-        <InfoCard icon={<Users className="w-4 h-4" />} label="Cliente" color="#8b5cf6" bg="#f5f3ff">
-          <span className="truncate block">{project.client_name}</span>
-        </InfoCard>
-        <InfoCard icon={<FolderKanban className="w-4 h-4" />} label="Ingeniero" color="#0A7881" bg="#f0fdfa">
-          {project.engineer_profile_name ?? "Sin asignar"}
-        </InfoCard>
+            </>
+          ) : (
+            <>
+              <InfoCard icon={<CalendarDays className="w-4 h-4" />} label="Fecha inicio" color="#3b82f6">
+                {project.start_date ? new Date(project.start_date).toLocaleDateString("es-CO", { timeZone: "UTC" }) : "—"}
+              </InfoCard>
+              <InfoCard icon={<CalendarDays className="w-4 h-4" />} label="Entrega estimada" color="#f59e0b">
+                {project.estimated_date ? new Date(project.estimated_date).toLocaleDateString("es-CO", { timeZone: "UTC" }) : "—"}
+              </InfoCard>
+            </>
+          )}
+          <InfoCard icon={<Users className="w-4 h-4" />} label="Cliente" color="#8b5cf6">
+            <span className="truncate block">{project.client_name}</span>
+          </InfoCard>
+          <InfoCard icon={<FolderKanban className="w-4 h-4" />} label="Ingeniero" color="#0A7881">
+            {project.engineer_profile_name ?? "Sin asignar"}
+          </InfoCard>
+        </div>
       </div>
 
       {/* ── Pipeline de estado ── */}
@@ -553,13 +559,13 @@ function EngineersPanel({ projectId, currentProfileId, currentProfileName, isAdm
 }
 
 /* ── InfoCard ── */
-function InfoCard({ icon, label, children, color, bg }: {
-  icon: React.ReactNode; label: string; children: React.ReactNode; color: string; bg: string;
+function InfoCard({ icon, label, children, color }: {
+  icon: React.ReactNode; label: string; children: React.ReactNode; color: string;
 }) {
   return (
-    <div className="bg-card border border-border rounded-2xl p-4 shadow-sm">
+    <div className="bg-muted/40 border border-border rounded-xl p-4">
       <div className="flex items-center gap-2 mb-3">
-        <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: bg, color }}>
+        <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: `${color}18`, color }}>
           {icon}
         </div>
         <p className="text-xs text-muted-foreground font-medium">{label}</p>

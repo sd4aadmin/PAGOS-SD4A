@@ -64,12 +64,12 @@ export function UsersPageClient({ initialUsers, role, title, description }: Prop
       {/* KPI strip */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: "Total",    val: users.length, color: "#0A7881", bg: "#f0fdfa" },
-          { label: "Activos",  val: active,       color: "#10b981", bg: "#ecfdf5" },
-          { label: "Inactivos",val: inactive,     color: "#f59e0b", bg: "#fffbeb" },
-        ].map(({ label, val, color, bg }) => (
-          <div key={label} className="bg-card border border-border rounded-2xl p-4 shadow-sm flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: bg }}>
+          { label: "Total",    val: users.length, color: "#0A7881" },
+          { label: "Activos",  val: active,       color: "#10b981" },
+          { label: "Inactivos",val: inactive,     color: "#f59e0b" },
+        ].map(({ label, val, color }) => (
+          <div key={label} className="bg-card border border-border rounded-2xl p-4 card-premium flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${color}18` }}>
               <Users className="w-4 h-4" style={{ color }} />
             </div>
             <div>

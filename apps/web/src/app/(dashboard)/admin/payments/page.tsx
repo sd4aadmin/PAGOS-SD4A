@@ -156,19 +156,19 @@ export default function PaymentsAdminPage() {
 
       {/* KPIs */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="bg-card border border-border rounded-xl p-4 card-shadow">
+        <div className="bg-card border border-border rounded-xl p-4 card-premium">
           <div className="flex items-center gap-2 mb-2"><Banknote className="w-4 h-4 text-muted-foreground" /><p className="text-xs text-muted-foreground">Total pagos</p></div>
           <p className="text-2xl font-bold text-foreground">{payments.length}</p>
         </div>
-        <div className="bg-card border border-border rounded-xl p-4 card-shadow">
+        <div className="bg-card border border-border rounded-xl p-4 card-premium">
           <div className="flex items-center gap-2 mb-2"><TrendingUp className="w-4 h-4 text-emerald-500" /><p className="text-xs text-emerald-600 dark:text-emerald-400">Confirmados</p></div>
           <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">{payments.filter(p => p.status === "CONFIRMED").length}</p>
         </div>
-        <div className="bg-card border border-border rounded-xl p-4 card-shadow">
+        <div className="bg-card border border-border rounded-xl p-4 card-premium">
           <div className="flex items-center gap-2 mb-2"><Clock className="w-4 h-4 text-amber-500" /><p className="text-xs text-amber-600 dark:text-amber-400">Pendientes</p></div>
           <p className="text-2xl font-bold text-amber-700 dark:text-amber-400">{COP.format(totalPending)}</p>
         </div>
-        <div className="bg-card border border-border rounded-xl p-4 card-shadow">
+        <div className="bg-card border border-border rounded-xl p-4 card-premium">
           <div className="flex items-center gap-2 mb-2"><AlertCircle className="w-4 h-4 text-red-500" /><p className="text-xs text-red-600 dark:text-red-400">Fallidos</p></div>
           <p className="text-2xl font-bold text-red-700 dark:text-red-400">{payments.filter(p => p.status === "FAILED").length}</p>
         </div>
@@ -243,7 +243,7 @@ export default function PaymentsAdminPage() {
           </button>
         </div>
       ) : (
-        <div className="bg-card rounded-xl border border-border overflow-x-auto card-shadow">
+        <div className="bg-card rounded-xl border border-border overflow-x-auto card-elevated">
           <table className="w-full text-sm min-w-[700px]">
             <thead className="bg-muted/50 border-b border-border">
               <tr>
@@ -259,7 +259,14 @@ export default function PaymentsAdminPage() {
             </thead>
             <tbody className="divide-y divide-border">
               {paged.map((p) => (
-                <tr key={p.id} className="hover:bg-muted/30 transition-colors">
+                <tr
+                  key={p.id}
+                  className={cn(
+                    "hover:bg-muted/30 transition-colors",
+                    p.status === "PENDING" && "border-l-2",
+                  )}
+                  style={p.status === "PENDING" ? { borderLeftColor: "#f59e0b" } : undefined}
+                >
                   <td className="px-4 py-3">
                     <button onClick={() => router.push(`/dashboard/projects/${p.project_id}`)} className="text-left group">
                       <p className="font-medium text-foreground group-hover:text-sd4a-dark flex items-center gap-1">

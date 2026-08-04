@@ -95,12 +95,12 @@ export function ProfileClient({ user }: { user: SessionUser }) {
       {/* Info cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {[
-          { icon: <span className="text-base">👤</span>, label: "Nombre",   val: user.name,  bg: "#f0fdfa",  color: "#0A7881" },
-          { icon: <Mail className="w-4 h-4" />,          label: "Email",    val: user.email, bg: "#eff6ff",  color: "#2563eb" },
-          { icon: <Shield className="w-4 h-4" />,        label: "Rol",      val: ROLE_LABEL[user.role] ?? user.role, bg: roleStyle.bg, color: roleStyle.color },
-        ].map(({ icon, label, val, bg, color }) => (
-          <div key={label} className="bg-card border border-border rounded-2xl p-4 shadow-sm flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: bg, color }}>
+          { icon: <span className="text-base">👤</span>, label: "Nombre",   val: user.name,  color: "#0A7881" },
+          { icon: <Mail className="w-4 h-4" />,          label: "Email",    val: user.email, color: "#2563eb" },
+          { icon: <Shield className="w-4 h-4" />,        label: "Rol",      val: ROLE_LABEL[user.role] ?? user.role, color: roleStyle.color },
+        ].map(({ icon, label, val, color }) => (
+          <div key={label} className="bg-card border border-border rounded-2xl p-4 card-premium flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${color}18`, color }}>
               {icon}
             </div>
             <div className="min-w-0">
@@ -112,7 +112,7 @@ export function ProfileClient({ user }: { user: SessionUser }) {
       </div>
 
       {/* Cambiar contraseña */}
-      <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
+      <div className="bg-card border border-border rounded-2xl p-6 card-elevated">
         <div className="flex items-center gap-2 mb-5">
           <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: "rgba(10,120,129,0.10)" }}>
             <Lock className="w-4 h-4" style={{ color: "#0A7881" }} />

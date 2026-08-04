@@ -8,24 +8,51 @@ import { Project, STATUS_LABELS, STATUS_COLORS } from "@/types/project";
 import { cn } from "@/lib/utils";
 import { SkeletonDashboard } from "@/components/ui/Skeleton";
 import { ErrorState } from "@/components/ui/ErrorState";
+import { MiniBarChart } from "@/components/ui/MiniBarChart";
 
 const COP = new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 });
+const MONTH_SHORT = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+
+type PaymentLite = { amount: string; status: string; confirmed_at: string | null };
+
+/** Recaudo confirmado de los últimos 6 meses (incluyendo el actual). */
+function monthlyRevenue(payments: PaymentLite[]) {
+  const now = new Date();
+  const buckets: { label: string; value: number }[] = [];
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    buckets.push({ label: MONTH_SHORT[d.getMonth()], value: 0 });
+  }
+  for (const p of payments) {
+    if (p.status !== "CONFIRMED" || !p.confirmed_at) continue;
+    const d = new Date(p.confirmed_at);
+    const monthsAgo = (now.getFullYear() - d.getFullYear()) * 12 + (now.getMonth() - d.getMonth());
+    if (monthsAgo >= 0 && monthsAgo <= 5) {
+      buckets[5 - monthsAgo].value += Number(p.amount);
+    }
+  }
+  return buckets;
+}
 
 export function AdminDashboard({ userName }: { userName: string }) {
   const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
+  const [payments, setPayments] = useState<PaymentLite[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);
     setError(false);
-    proxyFetch("/projects")
-      .then((r) => {
-        if (!r.ok) throw new Error(String(r.status));
-        return r.json();
+    Promise.all([
+      proxyFetch("/projects").then((r) => { if (!r.ok) throw new Error(String(r.status)); return r.json(); }),
+      proxyFetch("/payments").then((r) => (r.ok ? r.json() : [])).catch(() => []),
+    ])
+      .then(([projectsData, paymentsData]) => {
+        setProjects(Array.isArray(projectsData) ? projectsData : []);
+        setPayments(Array.isArray(paymentsData) ? paymentsData : []);
+        setLoading(false);
       })
-      .then((data) => { setProjects(Array.isArray(data) ? data : []); setLoading(false); })
       .catch(() => { setError(true); setLoading(false); });
   }, []);
 
@@ -128,8 +155,17 @@ export function AdminDashboard({ userName }: { userName: string }) {
         />
       </div>
 
+      {/* Recaudo mensual */}
+      <div className="bg-card rounded-2xl border border-border card-elevated p-5">
+        <div className="flex items-center justify-between mb-1">
+          <h2 className="font-bold text-foreground text-sm">Recaudo confirmado por mes</h2>
+          <span className="text-xs text-muted-foreground">Últimos 6 meses</span>
+        </div>
+        <MiniBarChart data={monthlyRevenue(payments)} formatValue={(v) => COP.format(v)} />
+      </div>
+
       {/* Proyectos recientes */}
-      <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
+      <div className="bg-card rounded-2xl border border-border overflow-hidden card-elevated">
         <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-muted/30">
           <h2 className="font-bold text-foreground">Proyectos recientes</h2>
           <button
