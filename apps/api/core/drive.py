@@ -53,6 +53,20 @@ def _create_folder(name: str, parent_id: str) -> str:
     return svc.files().create(body=meta, fields="id").execute()["id"]
 
 
+def find_or_create_folder(name: str, parent_id: str) -> str:
+    """Reutiliza la carpeta si ya existe (evita duplicados en corridas repetidas)."""
+    svc = _get_service()
+    q = (
+        f"name='{name}' and '{parent_id}' in parents "
+        "and mimeType='application/vnd.google-apps.folder' and trashed=false"
+    )
+    result = svc.files().list(q=q, fields="files(id)").execute()
+    files = result.get("files", [])
+    if files:
+        return files[0]["id"]
+    return _create_folder(name, parent_id)
+
+
 def create_project_folder(project_code: str, project_name: str) -> tuple[str, dict[str, str]]:
     root_id = _create_folder(project_name, settings.GOOGLE_DRIVE_ROOT_FOLDER)
     subfolders: dict[str, str] = {}

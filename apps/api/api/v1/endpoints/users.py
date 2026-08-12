@@ -10,6 +10,7 @@ from schemas.user import UserCreate, UserUpdate, PasswordReset, PasswordChange, 
 from core.security import hash_password
 from core.config import settings
 import core.email as mailer
+import core.admin_notify as admin_notify
 from deps import get_current_user, require_roles
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -45,7 +46,7 @@ async def list_users(
 async def create_user(
     body: UserCreate,
     db: AsyncSession = Depends(get_db),
-    _: User = AdminOnly,
+    current_user: User = AdminOnly,
 ):
     # Solo bloquear email duplicado si no es ingeniero
     existing_user = None
@@ -82,6 +83,10 @@ async def create_user(
             password=body.password,
             app_url=settings.APP_URL,
         ))
+        if body.role == Role.CLIENT:
+            await admin_notify.notify_admin_new_client(
+                db, client_name=user.name, client_email=user.email, created_by_id=current_user.id,
+            )
 
     return user
 

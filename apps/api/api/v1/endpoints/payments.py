@@ -19,6 +19,7 @@ from core.config import settings
 from core.audit import log_action
 import asyncio
 import core.email as mailer
+import core.admin_notify as admin_notify
 
 router = APIRouter(prefix="/payments", tags=["payments"])
 
@@ -306,6 +307,16 @@ async def wompi_webhook(event: WompiWebhookEvent, db: AsyncSession = Depends(get
 
     payment.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
     await db.commit()
+
+    if tx_status == "APPROVED" and proj:
+        client_result = await db.execute(select(User).where(User.id == payment.user_id))
+        client = client_result.scalar_one_or_none()
+        await admin_notify.notify_admin_payment_confirmed(
+            db, project=proj, client_name=client.name if client else "Cliente",
+            payment_type=payment.type if isinstance(payment.type, str) else payment.type.value,
+            amount=f"${float(payment.amount):,.0f} COP",
+        )
+
     return {"received": True}
 
 

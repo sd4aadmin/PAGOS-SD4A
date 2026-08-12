@@ -357,3 +357,52 @@ async def send_payment_link(
     )
     await send_email(to, f"SD4A — Pago pendiente: {project_code} ({type_label})", _base("Enlace de pago", body))
 
+
+# ─── AVISOS AL ADMINISTRADOR ──────────────────────────────────────────────────
+
+async def send_admin_payment_confirmed(
+    to: str, project_name: str, project_code: str, client_name: str,
+    payment_type: str, amount: str, app_url: str, project_id: str,
+) -> None:
+    type_map = {"ADVANCE": "Anticipo", "PARTIAL": "Pago parcial", "FINAL": "Pago final"}
+    type_label = type_map.get(payment_type, payment_type)
+    body = (
+        _h1("💰 Pago confirmado")
+        + _p_raw(f"Se confirmó un pago de <strong>{_esc(client_name)}</strong> en el proyecto <strong>{_esc(project_name)}</strong>.")
+        + _table(
+            _info_row("Proyecto", f"{project_code} — {project_name}"),
+            _info_row("Cliente", client_name),
+            _info_row("Tipo de pago", type_label),
+            _info_row("Monto", amount),
+        )
+        + _btn("Ver proyecto", f"{app_url}/dashboard/projects/{project_id}")
+    )
+    await send_email(to, f"SD4A — 💰 Pago confirmado: {project_code}", _base("Pago confirmado", body))
+
+
+async def send_admin_new_client(to: str, client_name: str, client_email: str, app_url: str) -> None:
+    body = (
+        _h1("Nuevo cliente registrado")
+        + _p_raw(f"Se creó una cuenta de cliente para <strong>{_esc(client_name)}</strong>.")
+        + _table(
+            _info_row("Nombre", client_name),
+            _info_row("Correo", client_email),
+        )
+        + _btn("Ver clientes", f"{app_url}/admin/clients")
+    )
+    await send_email(to, "SD4A — Nuevo cliente registrado", _base("Nuevo cliente", body))
+
+
+async def send_admin_overdue_projects(to: str, projects: list[dict], app_url: str) -> None:
+    rows = "".join(
+        _info_row(p["code"], f"{p['name']} — venció el {p['estimated_date']}")
+        for p in projects
+    )
+    body = (
+        _h1(f"⏰ {len(projects)} proyecto(s) con fecha de entrega vencida")
+        + _p("Estos proyectos siguen activos después de su fecha estimada de entrega:")
+        + _table(rows)
+        + _btn("Ver proyectos", f"{app_url}/dashboard/projects")
+    )
+    await send_email(to, f"SD4A — {len(projects)} proyecto(s) con entrega vencida", _base("Entregas vencidas", body))
+

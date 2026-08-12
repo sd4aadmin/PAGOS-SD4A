@@ -1,0 +1,35 @@
+name: Automatizaciones SD4A
+
+on:
+  schedule:
+    # 10:00 UTC = 5:00 a.m. Bogotá — hora de bajo tráfico
+    - cron: "0 10 * * *"
+  workflow_dispatch: {} # permite disparo manual desde la pestaña Actions
+
+jobs:
+  backup:
+    name: Respaldo diario de la base de datos
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ejecutar respaldo (JSON comprimido -> Google Drive)
+        run: |
+          code=$(curl -s -o /tmp/resp.json -w "%{http_code}" -X POST \
+            "${{ secrets.SD4A_API_URL }}/api/v1/automation/backup" \
+            -H "X-Cron-Secret: ${{ secrets.SD4A_CRON_SECRET }}")
+          echo "HTTP $code"
+          cat /tmp/resp.json
+          if [ "$code" != "200" ]; then exit 1; fi
+
+  check-overdue:
+    name: Revisión de proyectos con entrega vencida
+    runs-on: ubuntu-latest
+    needs: backup
+    steps:
+      - name: Ejecutar revisión
+        run: |
+          code=$(curl -s -o /tmp/resp.json -w "%{http_code}" -X POST \
+            "${{ secrets.SD4A_API_URL }}/api/v1/automation/check-overdue" \
+            -H "X-Cron-Secret: ${{ secrets.SD4A_CRON_SECRET }}")
+          echo "HTTP $code"
+          cat /tmp/resp.json
+          if [ "$code" != "200" ]; then exit 1; fi

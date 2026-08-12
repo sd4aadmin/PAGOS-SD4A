@@ -48,5 +48,9 @@ class Settings(BaseSettings):
     APS_CLIENT_ID: str = ""
     APS_CLIENT_SECRET: str = ""
 
+    # Automatizaciones (backup y revisiones programadas) — protegidas por secreto compartido,
+    # no por sesión de usuario, porque las dispara un cron externo (GitHub Actions).
+    CRON_SECRET: str = ""
+
 
 settings = Settings()
