@@ -466,6 +466,12 @@ function BillingModal({ paymentId, amount, type, onClose }: {
               <p className="text-xs text-muted-foreground">
                 El monto a facturar es <span className="font-bold text-foreground">{COP.format(amount)}</span>, correspondiente al {PAYMENT_TYPE_LABELS[type].toLowerCase()} del proyecto.
               </p>
+              <p className="text-[11px] text-muted-foreground/70">
+                Estos datos se usan únicamente para emitir tu factura electrónica. Ver{" "}
+                <a href="https://sd4a-web.vercel.app/privacidad.html" target="_blank" rel="noopener noreferrer" className="underline hover:text-foreground">
+                  Política de privacidad
+                </a>.
+              </p>
             </div>
           )}
 

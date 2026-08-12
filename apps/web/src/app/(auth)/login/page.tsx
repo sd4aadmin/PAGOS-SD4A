@@ -133,6 +133,11 @@ export default function LoginPage() {
 
       <p className="text-center text-xs mt-6 text-slate-400">
         © {new Date().getFullYear()} SD4A — Ingeniería Estructural
+        <br className="sm:hidden" />
+        <span className="hidden sm:inline"> · </span>
+        <a href="https://sd4a-web.vercel.app/privacidad.html" target="_blank" rel="noopener noreferrer" className="underline hover:text-slate-600">
+          Política de privacidad
+        </a>
       </p>
     </div>
   );
