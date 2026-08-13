@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { SessionProvider } from "@/components/providers/SessionProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
+import { CookieBanner } from "@/components/ui/CookieBanner";
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -36,6 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className={`${jakarta.variable} font-sans`}>
         <ThemeProvider>
           <SessionProvider>{children}</SessionProvider>
+          <CookieBanner />
         </ThemeProvider>
       </body>
     </html>
