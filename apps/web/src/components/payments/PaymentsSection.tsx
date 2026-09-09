@@ -19,6 +19,7 @@ export function PaymentsSection({ project, role }: { project: Project; role: str
   const [payments, setPayments]       = useState<Payment[]>([]);
   const [loading, setLoading]         = useState(true);
   const [showCreate, setShowCreate]   = useState(false);
+  const [showSelfPay, setShowSelfPay] = useState(false);
   const [editPayment, setEditPayment] = useState<Payment | null>(null);
 
   const load = useCallback(async () => {
@@ -96,6 +97,16 @@ export function PaymentsSection({ project, role }: { project: Project; role: str
             ))}
           </div>
         )}
+        {isClient && pendingPay.length === 0 && remaining > 0 && (
+          <button
+            onClick={() => setShowSelfPay(true)}
+            className="w-full flex items-center justify-center gap-2 py-3.5 text-white rounded-xl font-bold hover:opacity-90 transition-opacity"
+            style={{ background: "linear-gradient(135deg,#0A7881,#9BE3BF)", boxShadow: "0 4px 14px rgba(10,120,129,0.3)" }}
+          >
+            <ExternalLink className="w-4 h-4" />
+            Pagar
+          </button>
+        )}
 
         {/* Lista de pagos */}
         {loading ? (
@@ -118,6 +129,9 @@ export function PaymentsSection({ project, role }: { project: Project; role: str
       )}
       {editPayment && (
         <EditPaymentModal payment={editPayment} onClose={() => setEditPayment(null)} onSaved={load} />
+      )}
+      {showSelfPay && (
+        <SelfPaymentModal project={project} totalPaid={totalPaid} onClose={() => setShowSelfPay(false)} onCreated={load} />
       )}
     </div>
 
@@ -716,6 +730,85 @@ function CreatePaymentModal({ project, totalPaid, onClose, onCreated }: {
           </div>
         </div>
       )}
+    </ModalShell>
+  );
+}
+
+function SelfPaymentModal({ project, totalPaid, onClose, onCreated }: {
+  project: Project; totalPaid: number; onClose: () => void; onCreated: () => void;
+}) {
+  const remaining = Number(project.total_value) - totalPaid;
+  const advanceAmount = Math.min((Number(project.total_value) * project.advance_percent) / 100, remaining);
+
+  const [type, setType]       = useState<PaymentType>("ADVANCE");
+  const [amount, setAmount]   = useState(String(Math.round(advanceAmount)));
+  const [loading, setLoading] = useState(false);
+  const [error, setError]     = useState<string | null>(null);
+  const [created, setCreated] = useState<{ id: string; amount: number; type: PaymentType } | null>(null);
+
+  function prefillAmount(t: PaymentType) {
+    setType(t);
+    setError(null);
+    if (t === "ADVANCE") setAmount(String(Math.round(advanceAmount)));
+    else if (t === "FINAL") setAmount(String(remaining > 0 ? Math.round(remaining) : 0));
+    else setAmount("");
+  }
+
+  async function create() {
+    setError(null);
+    const numAmount = Number(amount);
+    if (!numAmount || numAmount <= 0) { setError("Ingresa un monto válido."); return; }
+    if (numAmount > remaining) { setError(`El monto no puede superar el saldo pendiente (${COP.format(remaining)}).`); return; }
+    setLoading(true);
+    const res = await proxyFetch("/payments/self", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ project_id: project.id, type, amount: numAmount }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      setError(err.detail ?? "Error al generar el pago");
+      setLoading(false);
+      return;
+    }
+    const data: PaymentWithCheckout = await res.json();
+    await onCreated();
+    setCreated({ id: data.id, amount: numAmount, type });
+    setLoading(false);
+  }
+
+  if (created) {
+    return <BillingModal paymentId={created.id} amount={created.amount} type={created.type} onClose={onClose} />;
+  }
+
+  return (
+    <ModalShell title="Pagar" subtitle={`${project.code} — ${project.name}`} onClose={onClose}>
+      <div className="space-y-4">
+        <div>
+          <label className="block text-xs font-bold mb-2 uppercase tracking-widest text-muted-foreground">Tipo de pago</label>
+          <TypeSelector value={type} onChange={prefillAmount} />
+          {type === "ADVANCE" && (
+            <p className="text-xs text-muted-foreground mt-1.5">
+              Sugerido: {COP.format(advanceAmount)} ({project.advance_percent}%)
+            </p>
+          )}
+        </div>
+        <div>
+          <label className="block text-xs font-bold mb-1.5 uppercase tracking-widest text-muted-foreground">Monto (COP)</label>
+          <AmountInput value={amount} onChange={setAmount} />
+          <p className="text-xs text-muted-foreground mt-1.5">Saldo pendiente del proyecto: {COP.format(remaining)}</p>
+        </div>
+        {error && <p className="text-sm text-red-500">{error}</p>}
+        <div className="flex gap-2 pt-1">
+          <button onClick={onClose} className="flex-1 py-2.5 border border-border rounded-xl text-sm text-muted-foreground hover:bg-muted transition-colors">Cancelar</button>
+          <button onClick={create} disabled={loading || !amount}
+            className="flex-1 py-2.5 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-70"
+            style={{ background: "linear-gradient(135deg,#0A7881,#9BE3BF)" }}>
+            {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+            Continuar
+          </button>
+        </div>
+      </div>
     </ModalShell>
   );
 }

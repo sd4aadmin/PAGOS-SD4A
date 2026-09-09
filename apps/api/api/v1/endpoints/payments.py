@@ -95,6 +95,73 @@ async def create_payment(
     return PaymentWithCheckout(**PaymentOut.model_validate(payment).model_dump(), checkout_url=checkout_url)
 
 
+# ─── CREATE PAYMENT (client, self-initiated) ─────────────────────────────────
+
+@router.post("/self", response_model=PaymentWithCheckout, status_code=status.HTTP_201_CREATED)
+async def create_own_payment(
+    body: PaymentCreate,
+    current_user: User = Depends(require_roles(Role.CLIENT)),
+    db: AsyncSession = Depends(get_db),
+):
+    proj = (await db.execute(select(Project).where(Project.id == body.project_id))).scalar_one_or_none()
+    if not proj:
+        raise HTTPException(404, "Proyecto no encontrado")
+    if proj.client_id != current_user.id:
+        raise HTTPException(403, "Sin acceso")
+
+    existing = (await db.execute(
+        select(Payment).where(
+            Payment.project_id == body.project_id,
+            Payment.type == body.type,
+            Payment.status == PaymentStatus.PENDING,
+        )
+    )).scalar_one_or_none()
+    if existing:
+        raise HTTPException(400, f"Ya existe un pago pendiente de tipo {body.type.value} para este proyecto")
+
+    from sqlalchemy import func as sqlfunc
+    from decimal import Decimal
+    paid_result = await db.execute(
+        select(sqlfunc.sum(Payment.amount)).where(
+            Payment.project_id == body.project_id,
+            Payment.status == PaymentStatus.CONFIRMED,
+        )
+    )
+    total_paid = paid_result.scalar() or Decimal(0)
+    remaining = Decimal(str(proj.total_value)) - total_paid
+    if body.amount > remaining:
+        raise HTTPException(400, f"El monto supera el saldo pendiente del proyecto (${remaining:,.0f} COP)")
+
+    reference = f"SD4A-{uuid.uuid4().hex[:12].upper()}"
+    redirect_url = f"{settings.APP_URL}/dashboard/projects/{body.project_id}?payment=done"
+
+    checkout_url = build_checkout_url(
+        reference=reference,
+        amount=body.amount,
+        description=f"{proj.code} — {body.type.value}",
+        redirect_url=redirect_url,
+    )
+
+    payment = Payment(
+        id=str(uuid.uuid4()),
+        project_id=body.project_id,
+        user_id=current_user.id,
+        type=body.type,
+        amount=body.amount,
+        wompi_ref=reference,
+        notes=body.notes,
+    )
+    db.add(payment)
+    await log_action(db, "PAYMENT_CREATED",
+                     f"Cliente generó su propio pago de {PAYMENT_TYPE_ES.get(body.type.value, body.type.value)} para {proj.code}: ${float(body.amount):,.0f} COP",
+                     user_id=current_user.id, project_id=body.project_id,
+                     metadata={"type": body.type.value, "amount": str(body.amount), "reference": reference, "self_initiated": True})
+    await db.commit()
+    await db.refresh(payment)
+
+    return PaymentWithCheckout(**PaymentOut.model_validate(payment).model_dump(), checkout_url=checkout_url)
+
+
 # ─── LIST ALL PAYMENTS (admin) ───────────────────────────────────────────────
 
 @router.get("")
