@@ -12,6 +12,7 @@ import {
 } from "@/types/payment";
 import { Project } from "@/types/project";
 import { cn } from "@/lib/utils";
+import { ConfirmDeleteModal } from "@/components/ui/ConfirmDeleteModal";
 
 const COP = new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 });
 
@@ -215,6 +216,7 @@ function PaymentRow({ payment, isAdmin, onConfirmed, onEdit, onDeleted }: {
 }) {
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting]     = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
 
   async function confirmPayment() {
     setConfirming(true);
@@ -224,11 +226,10 @@ function PaymentRow({ payment, isAdmin, onConfirmed, onEdit, onDeleted }: {
   }
 
   async function del() {
-    if (!window.confirm(`¿Eliminar este pago de ${COP.format(Number(payment.amount))}? No se puede deshacer.`)) return;
     setDeleting(true);
     try {
       const res = await proxyFetch(`/payments/${payment.id}`, { method: "DELETE" });
-      if (res.ok || res.status === 204) { await onDeleted(); }
+      if (res.ok || res.status === 204) { setShowDelete(false); await onDeleted(); }
       else {
         const text = await res.text().catch(() => "");
         let msg = "Error al eliminar el pago";
@@ -287,10 +288,19 @@ function PaymentRow({ payment, isAdmin, onConfirmed, onEdit, onDeleted }: {
               </button>
             </>
           )}
-          <button onClick={del} disabled={deleting} className="p-1.5 border border-red-200 rounded-xl hover:bg-red-50 text-red-500 disabled:opacity-50 transition-colors" title="Eliminar">
+          <button onClick={() => setShowDelete(true)} disabled={deleting} className="p-1.5 border border-red-200 rounded-xl hover:bg-red-50 text-red-500 disabled:opacity-50 transition-colors" title="Eliminar">
             {deleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
           </button>
         </div>
+      )}
+      {showDelete && (
+        <ConfirmDeleteModal
+          title="Eliminar pago"
+          description={`Vas a eliminar el pago de ${PAYMENT_TYPE_LABELS[payment.type].toLowerCase()} por ${COP.format(Number(payment.amount))}${payment.wompi_ref ? ` (${payment.wompi_ref})` : ""}.`}
+          loading={deleting}
+          onCancel={() => setShowDelete(false)}
+          onConfirm={del}
+        />
       )}
     </div>
   );

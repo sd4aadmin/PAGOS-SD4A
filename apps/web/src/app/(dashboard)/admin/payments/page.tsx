@@ -12,6 +12,7 @@ import {
 import { cn } from "@/lib/utils";
 import { PAYMENT_TYPE_LABELS, PAYMENT_STATUS_LABELS, PAYMENT_STATUS_COLORS, PaymentType } from "@/types/payment";
 import { Pagination } from "@/components/ui/Pagination";
+import { ConfirmDeleteModal } from "@/components/ui/ConfirmDeleteModal";
 
 const COP = new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 });
 const PAGE_SIZE = 15;
@@ -36,6 +37,7 @@ export default function PaymentsAdminPage() {
   const [confirming, setConfirming] = useState<string | null>(null);
   const [changingStatus, setChangingStatus] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<PaymentRow | null>(null);
   const [page, setPage] = useState(1);
   const [showCreate, setShowCreate] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -86,11 +88,11 @@ export default function PaymentsAdminPage() {
   }
 
   async function deletePayment(p: PaymentRow) {
-    if (!window.confirm(`¿Eliminar este pago de ${COP.format(Number(p.amount))} (${p.project_code ?? p.project_id})? No se puede deshacer.`)) return;
     setDeleting(p.id);
     try {
       const res = await proxyFetch(`/payments/${p.id}`, { method: "DELETE" });
       if (res.ok || res.status === 204) {
+        setDeleteTarget(null);
         await load();
       } else {
         const text = await res.text().catch(() => "");
@@ -338,7 +340,7 @@ export default function PaymentsAdminPage() {
                         onChange={(s) => changeStatus(p.id, s)}
                       />
                       <button
-                        onClick={() => deletePayment(p)}
+                        onClick={() => setDeleteTarget(p)}
                         disabled={deleting === p.id}
                         title="Eliminar pago"
                         className="p-1.5 border border-red-200 dark:border-red-800 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500 disabled:opacity-50 transition-colors"
@@ -356,6 +358,15 @@ export default function PaymentsAdminPage() {
       )}
 
       {showCreate && <CreatePaymentModal onClose={() => setShowCreate(false)} onCreated={load} />}
+      {deleteTarget && (
+        <ConfirmDeleteModal
+          title="Eliminar pago"
+          description={`Vas a eliminar el pago de ${PAYMENT_TYPE_LABELS[deleteTarget.type as keyof typeof PAYMENT_TYPE_LABELS] ?? deleteTarget.type} por ${COP.format(Number(deleteTarget.amount))} del proyecto ${deleteTarget.project_code ?? deleteTarget.project_id}${deleteTarget.wompi_ref ? ` (${deleteTarget.wompi_ref})` : ""}.`}
+          loading={deleting === deleteTarget.id}
+          onCancel={() => setDeleteTarget(null)}
+          onConfirm={() => deletePayment(deleteTarget)}
+        />
+      )}
     </div>
   );
 }
