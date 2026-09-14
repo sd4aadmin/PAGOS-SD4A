@@ -270,19 +270,23 @@ function PaymentRow({ payment, isAdmin, onConfirmed, onEdit, onDeleted }: {
           </span>
         )}
       </div>
-      {isAdmin && payment.status === "PENDING" && (
+      {isAdmin && (
         <div className="flex items-center gap-1.5 shrink-0">
-          <button
-            onClick={confirmPayment}
-            disabled={confirming}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs border border-emerald-300 text-emerald-700 rounded-xl hover:bg-emerald-50 disabled:opacity-50 transition-colors"
-          >
-            {confirming ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
-            <span className="hidden sm:inline">Confirmar</span>
-          </button>
-          <button onClick={onEdit} className="p-1.5 border border-border rounded-xl hover:bg-muted text-muted-foreground transition-colors" title="Editar">
-            <Pencil className="w-3.5 h-3.5" />
-          </button>
+          {payment.status === "PENDING" && (
+            <>
+              <button
+                onClick={confirmPayment}
+                disabled={confirming}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs border border-emerald-300 text-emerald-700 rounded-xl hover:bg-emerald-50 disabled:opacity-50 transition-colors"
+              >
+                {confirming ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
+                <span className="hidden sm:inline">Confirmar</span>
+              </button>
+              <button onClick={onEdit} className="p-1.5 border border-border rounded-xl hover:bg-muted text-muted-foreground transition-colors" title="Editar">
+                <Pencil className="w-3.5 h-3.5" />
+              </button>
+            </>
+          )}
           <button onClick={del} disabled={deleting} className="p-1.5 border border-red-200 rounded-xl hover:bg-red-50 text-red-500 disabled:opacity-50 transition-colors" title="Eliminar">
             {deleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
           </button>

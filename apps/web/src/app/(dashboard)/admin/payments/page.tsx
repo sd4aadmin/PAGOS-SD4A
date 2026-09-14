@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import {
   CreditCard, RefreshCw, CheckCircle2, Loader2, Search, ArrowUpRight,
   ChevronDown, X, TrendingUp, Clock, AlertCircle, Banknote, Plus,
-  ExternalLink, Copy, Check
+  ExternalLink, Copy, Check, Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PAYMENT_TYPE_LABELS, PAYMENT_STATUS_LABELS, PAYMENT_STATUS_COLORS, PaymentType } from "@/types/payment";
@@ -35,6 +35,7 @@ export default function PaymentsAdminPage() {
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [confirming, setConfirming] = useState<string | null>(null);
   const [changingStatus, setChangingStatus] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [showCreate, setShowCreate] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -82,6 +83,22 @@ export default function PaymentsAdminPage() {
       });
       await load();
     } finally { setChangingStatus(null); }
+  }
+
+  async function deletePayment(p: PaymentRow) {
+    if (!window.confirm(`¿Eliminar este pago de ${COP.format(Number(p.amount))} (${p.project_code ?? p.project_id})? No se puede deshacer.`)) return;
+    setDeleting(p.id);
+    try {
+      const res = await proxyFetch(`/payments/${p.id}`, { method: "DELETE" });
+      if (res.ok || res.status === 204) {
+        await load();
+      } else {
+        const text = await res.text().catch(() => "");
+        let msg = "Error al eliminar el pago";
+        try { msg = JSON.parse(text).detail ?? msg; } catch { if (text) msg = text; }
+        alert(`Error ${res.status}: ${msg}`);
+      }
+    } finally { setDeleting(null); }
   }
 
   const hasFilters = search.trim() !== "" || statusFilter !== "ALL";
@@ -320,6 +337,14 @@ export default function PaymentsAdminPage() {
                         loading={changingStatus === p.id}
                         onChange={(s) => changeStatus(p.id, s)}
                       />
+                      <button
+                        onClick={() => deletePayment(p)}
+                        disabled={deleting === p.id}
+                        title="Eliminar pago"
+                        className="p-1.5 border border-red-200 dark:border-red-800 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-500 disabled:opacity-50 transition-colors"
+                      >
+                        {deleting === p.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                      </button>
                     </div>
                   </td>
                 </tr>
