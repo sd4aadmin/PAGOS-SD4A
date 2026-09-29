@@ -241,7 +241,7 @@ function PaymentRow({ payment, isAdmin, onConfirmed, onEdit, onDeleted }: {
 
   return (
     <div className="flex items-center gap-3 p-3.5 border border-border rounded-xl hover:bg-muted/20 transition-colors">
-      <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(10,120,129,0.10)" }}>
+      <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ background: "rgba(10,120,129,0.10)" }}>
         <CreditCard className="w-4 h-4" style={{ color: "#0A7881" }} />
       </div>
       <div className="flex-1 min-w-0">

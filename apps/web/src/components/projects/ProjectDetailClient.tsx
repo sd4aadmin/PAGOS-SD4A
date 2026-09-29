@@ -155,6 +155,13 @@ export function ProjectDetailClient({ projectId, role }: { projectId: string; ro
         className="relative overflow-hidden rounded-2xl p-6 md:p-8 text-white"
         style={{ background: "linear-gradient(135deg,#0A7881 0%,#068a8a 50%,#9BE3BF 100%)" }}
       >
+        <div
+          className="absolute -right-16 -top-24 w-72 h-72 opacity-20 pointer-events-none"
+          style={{
+            background: "linear-gradient(135deg, #ffffff 0%, #9BE3BF 100%)",
+            clipPath: "polygon(30% 0%, 100% 0%, 100% 70%)",
+          }}
+        />
         <div className="absolute -right-8 -top-8 w-40 h-40 rounded-full opacity-20" style={{ background: "rgba(255,255,255,0.3)" }} />
         <div className="relative z-10">
           <div className="flex flex-wrap items-center gap-2 mb-3">
@@ -543,7 +550,7 @@ function EngineersPanel({ projectId, currentProfileId, currentProfileName, isAdm
         </div>
       ) : currentProfileName ? (
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: "rgba(10,120,129,0.10)" }}>
+          <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: "rgba(10,120,129,0.10)" }}>
             <Users className="w-4 h-4" style={{ color: "#0A7881" }} />
           </div>
           <div>
@@ -565,7 +572,7 @@ function InfoCard({ icon, label, children, color }: {
   return (
     <div className="bg-muted/40 border border-border rounded-xl p-4">
       <div className="flex items-center gap-2 mb-3">
-        <div className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0" style={{ background: `${color}18`, color }}>
+        <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ background: `${color}18`, color }}>
           {icon}
         </div>
         <p className="text-xs text-muted-foreground font-medium">{label}</p>
