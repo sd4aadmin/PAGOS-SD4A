@@ -8,7 +8,7 @@ import { Project, STATUS_LABELS, STATUS_COLORS } from "@/types/project";
 import { cn } from "@/lib/utils";
 import { SkeletonDashboard } from "@/components/ui/Skeleton";
 import { ErrorState } from "@/components/ui/ErrorState";
-import { MiniBarChart } from "@/components/ui/MiniBarChart";
+import { AreaChart } from "@/components/ui/AreaChart";
 
 const COP = new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 });
 const MONTH_SHORT = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
@@ -99,6 +99,14 @@ export function AdminDashboard({ userName }: { userName: string }) {
           boxShadow: "0 8px 32px -8px rgba(10,120,129,0.45)",
         }}
       >
+        {/* Forma diagonal decorativa */}
+        <div
+          className="absolute -right-16 -top-24 w-72 h-72 opacity-25 pointer-events-none"
+          style={{
+            background: "linear-gradient(135deg, #9BE3BF 0%, #68B2B7 100%)",
+            clipPath: "polygon(30% 0%, 100% 0%, 100% 70%)",
+          }}
+        />
         {/* Círculos decorativos */}
         <div className="absolute -right-8 -top-8 w-40 h-40 rounded-full opacity-20" style={{ background: "rgba(255,255,255,0.3)" }} />
         <div className="absolute -right-4 top-8 w-20 h-20 rounded-full opacity-10" style={{ background: "rgba(255,255,255,0.5)" }} />
@@ -161,7 +169,7 @@ export function AdminDashboard({ userName }: { userName: string }) {
           <h2 className="font-bold text-foreground text-sm">Recaudo confirmado por mes</h2>
           <span className="text-xs text-muted-foreground">Últimos 6 meses</span>
         </div>
-        <MiniBarChart data={monthlyRevenue(payments)} formatValue={(v) => COP.format(v)} />
+        <AreaChart data={monthlyRevenue(payments)} formatValue={(v) => COP.format(v)} />
       </div>
 
       {/* Proyectos recientes */}
@@ -248,7 +256,7 @@ function KpiCard({ icon, label, value, color }: { icon: React.ReactNode; label: 
       <div className="absolute top-0 left-0 right-0 h-[3px] opacity-80" style={{ background: color }} />
       <div className="flex items-center justify-between mb-4">
         <div
-          className="w-10 h-10 rounded-xl flex items-center justify-center"
+          className="w-10 h-10 rounded-full flex items-center justify-center"
           style={{ background: `${color}18`, color }}
         >
           {icon}
