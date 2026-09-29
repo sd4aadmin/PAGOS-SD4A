@@ -141,7 +141,7 @@ export function ActivityTimeline({
           return (
             <div key={log.id} className="relative flex gap-4 pl-9">
               {/* Dot */}
-              <div className={`absolute left-2 top-1 w-3 h-3 rounded-full ${color} ring-2 ring-white shrink-0`} />
+              <div className={`absolute left-2 top-1 w-3 h-3 rounded-full ${color} ring-2 ring-background shrink-0`} />
 
               <div className="flex-1 min-w-0 pb-1">
                 <div className="flex items-start justify-between gap-2">

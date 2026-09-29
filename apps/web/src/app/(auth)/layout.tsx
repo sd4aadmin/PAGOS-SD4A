@@ -17,6 +17,14 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           className="absolute inset-0"
           style={{ background: "linear-gradient(160deg, rgba(10,120,129,0.25) 0%, rgba(4,24,32,0.72) 100%)" }}
         />
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(155,227,191,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(155,227,191,0.08) 1px, transparent 1px)",
+            backgroundSize: "56px 56px",
+          }}
+        />
         <div className="relative z-10 flex flex-col justify-between h-full p-14">
           <span
             className="self-start inline-block px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase"
