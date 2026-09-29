@@ -71,6 +71,13 @@ export function ProfileClient({ user }: { user: SessionUser }) {
         className="relative overflow-hidden rounded-2xl p-6 text-white"
         style={{ background: "linear-gradient(135deg,#0A7881 0%,#068a8a 50%,#9BE3BF 100%)" }}
       >
+        <div
+          className="absolute -right-16 -top-24 w-72 h-72 opacity-20 pointer-events-none"
+          style={{
+            background: "linear-gradient(135deg, #ffffff 0%, #9BE3BF 100%)",
+            clipPath: "polygon(30% 0%, 100% 0%, 100% 70%)",
+          }}
+        />
         <div className="absolute -right-6 -top-6 w-28 h-28 rounded-full opacity-20" style={{ background: "rgba(255,255,255,0.4)" }} />
         <div className="relative z-10 flex items-center gap-5">
           <div
@@ -100,7 +107,7 @@ export function ProfileClient({ user }: { user: SessionUser }) {
           { icon: <Shield className="w-4 h-4" />,        label: "Rol",      val: ROLE_LABEL[user.role] ?? user.role, color: roleStyle.color },
         ].map(({ icon, label, val, color }) => (
           <div key={label} className="bg-card border border-border rounded-2xl p-4 card-premium flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${color}18`, color }}>
+            <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: `${color}18`, color }}>
               {icon}
             </div>
             <div className="min-w-0">
@@ -114,7 +121,7 @@ export function ProfileClient({ user }: { user: SessionUser }) {
       {/* Cambiar contraseña */}
       <div className="bg-card border border-border rounded-2xl p-6 card-elevated">
         <div className="flex items-center gap-2 mb-5">
-          <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: "rgba(10,120,129,0.10)" }}>
+          <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "rgba(10,120,129,0.10)" }}>
             <Lock className="w-4 h-4" style={{ color: "#0A7881" }} />
           </div>
           <h2 className="font-bold text-foreground">Cambiar contraseña</h2>
