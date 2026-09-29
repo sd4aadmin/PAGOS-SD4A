@@ -153,8 +153,15 @@ export default function PaymentsAdminPage() {
 
       {/* Banner recaudo */}
       {!loading && payments.length > 0 && (
-        <div className="rounded-xl p-4 md:p-5 text-white" style={{ background: "linear-gradient(135deg, #0A7881 0%, #68B2B7 60%, #9BE3BF 100%)" }}>
-          <p className="text-white/70 text-xs font-medium uppercase tracking-wide mb-3">Total recaudado confirmado</p>
+        <div className="relative overflow-hidden rounded-xl p-4 md:p-5 text-white" style={{ background: "linear-gradient(135deg, #0A7881 0%, #68B2B7 60%, #9BE3BF 100%)" }}>
+          <div
+            className="absolute -right-16 -top-24 w-72 h-72 opacity-20 pointer-events-none"
+            style={{
+              background: "linear-gradient(135deg, #ffffff 0%, #9BE3BF 100%)",
+              clipPath: "polygon(30% 0%, 100% 0%, 100% 70%)",
+            }}
+          />
+          <p className="relative text-white/70 text-xs font-medium uppercase tracking-wide mb-3">Total recaudado confirmado</p>
           <p className="text-2xl md:text-3xl font-bold mb-4">{COP.format(totalConfirmed)}</p>
           <div className="grid grid-cols-3 gap-3">
             <div className="bg-white/15 rounded-lg p-3">
@@ -176,19 +183,39 @@ export default function PaymentsAdminPage() {
       {/* KPIs */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="bg-card border border-border rounded-xl p-4 card-premium">
-          <div className="flex items-center gap-2 mb-2"><Banknote className="w-4 h-4 text-muted-foreground" /><p className="text-xs text-muted-foreground">Total pagos</p></div>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ background: "#64748b18" }}>
+              <Banknote className="w-3.5 h-3.5 text-muted-foreground" />
+            </span>
+            <p className="text-xs text-muted-foreground">Total pagos</p>
+          </div>
           <p className="text-2xl font-bold text-foreground">{payments.length}</p>
         </div>
         <div className="bg-card border border-border rounded-xl p-4 card-premium">
-          <div className="flex items-center gap-2 mb-2"><TrendingUp className="w-4 h-4 text-emerald-500" /><p className="text-xs text-emerald-600 dark:text-emerald-400">Confirmados</p></div>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ background: "#10b98118" }}>
+              <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
+            </span>
+            <p className="text-xs text-emerald-600 dark:text-emerald-400">Confirmados</p>
+          </div>
           <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">{payments.filter(p => p.status === "CONFIRMED").length}</p>
         </div>
         <div className="bg-card border border-border rounded-xl p-4 card-premium">
-          <div className="flex items-center gap-2 mb-2"><Clock className="w-4 h-4 text-amber-500" /><p className="text-xs text-amber-600 dark:text-amber-400">Pendientes</p></div>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ background: "#f59e0b18" }}>
+              <Clock className="w-3.5 h-3.5 text-amber-500" />
+            </span>
+            <p className="text-xs text-amber-600 dark:text-amber-400">Pendientes</p>
+          </div>
           <p className="text-2xl font-bold text-amber-700 dark:text-amber-400">{COP.format(totalPending)}</p>
         </div>
         <div className="bg-card border border-border rounded-xl p-4 card-premium">
-          <div className="flex items-center gap-2 mb-2"><AlertCircle className="w-4 h-4 text-red-500" /><p className="text-xs text-red-600 dark:text-red-400">Fallidos</p></div>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ background: "#ef444418" }}>
+              <AlertCircle className="w-3.5 h-3.5 text-red-500" />
+            </span>
+            <p className="text-xs text-red-600 dark:text-red-400">Fallidos</p>
+          </div>
           <p className="text-2xl font-bold text-red-700 dark:text-red-400">{payments.filter(p => p.status === "FAILED").length}</p>
         </div>
       </div>

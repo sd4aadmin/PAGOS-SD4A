@@ -69,7 +69,7 @@ export function UsersPageClient({ initialUsers, role, title, description }: Prop
           { label: "Inactivos",val: inactive,     color: "#f59e0b" },
         ].map(({ label, val, color }) => (
           <div key={label} className="bg-card border border-border rounded-2xl p-4 card-premium flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${color}18` }}>
+            <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: `${color}18` }}>
               <Users className="w-4 h-4" style={{ color }} />
             </div>
             <div>

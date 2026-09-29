@@ -200,7 +200,7 @@ export function UserTable({ users, onRefresh }: Props) {
               <div className="flex items-start justify-between gap-2 mb-3">
                 <div className="flex items-center gap-3">
                   <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-black text-white shrink-0"
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-black text-white shrink-0"
                     style={{ background: "linear-gradient(135deg,#0A7881,#68B2B7)" }}
                   >
                     {user.name.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase()}
