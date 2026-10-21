@@ -13,6 +13,7 @@ import { CreateProjectModal } from "./CreateProjectModal";
 import { cn } from "@/lib/utils";
 import { SkeletonTable } from "@/components/ui/Skeleton";
 import { ErrorState } from "@/components/ui/ErrorState";
+import { SummaryStat } from "@/components/ui/SummaryFilter";
 
 const COP = new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 });
 type SortField = "name" | "status" | "total_value" | "progress" | "estimated_date" | "client_name";
@@ -138,27 +139,15 @@ export function ProjectsPageClient({ role }: { role: string }) {
         </div>
       </div>
 
-      {/* Banner financiero cliente */}
+      {/* Resumen financiero del cliente: una franja, no un banner */}
       {isClient && projects.length > 0 && (
-        <div
-          className="relative overflow-hidden rounded-2xl p-6 text-white"
-          style={{ background: "linear-gradient(135deg,#0A7881 0%,#068a8a 50%,#9BE3BF 100%)" }}
-        >
-          <div className="absolute -right-6 -top-6 w-32 h-32 rounded-full opacity-20" style={{ background: "rgba(255,255,255,0.4)" }} />
-          <p className="text-white/70 text-xs font-semibold uppercase tracking-widest mb-4">Resumen financiero</p>
-          <div className="grid grid-cols-3 gap-2 relative z-10">
-            {[
-              { label: "Valor total",  val: totalValue },
-              { label: "Anticipo",     val: totalAdvance },
-              { label: "Saldo",        val: totalRemaining },
-            ].map(({ label, val }) => (
-              <div key={label} className="min-w-0">
-                <p className="text-xs text-white/70 mb-1 truncate">{label}</p>
-                <p className="text-sm sm:text-base md:text-xl font-black leading-tight break-all">{COP.format(val)}</p>
-              </div>
-            ))}
+        <section aria-label="Resumen financiero" className="bg-card border border-border rounded-xl card-elevated overflow-hidden">
+          <div className="grid grid-cols-3 divide-x divide-border">
+            <SummaryStat label="Valor total" value={COP.format(totalValue)} />
+            <SummaryStat label="Anticipo" value={COP.format(totalAdvance)} />
+            <SummaryStat label="Saldo" value={COP.format(totalRemaining)} tone={totalRemaining > 0 ? "text-amber-700 dark:text-amber-400" : "text-emerald-700 dark:text-emerald-400"} />
           </div>
-        </div>
+        </section>
       )}
 
       {/* Filtros */}

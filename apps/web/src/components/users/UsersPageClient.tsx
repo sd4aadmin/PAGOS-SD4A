@@ -4,7 +4,8 @@ import { useState } from "react";
 import { User, Role } from "@/types/user";
 import { UserTable } from "./UserTable";
 import { CreateUserModal } from "./CreateUserModal";
-import { UserPlus, Users, RefreshCw } from "lucide-react";
+import { UserPlus, RefreshCw } from "lucide-react";
+import { SummaryFilter } from "@/components/ui/SummaryFilter";
 
 type Props = {
   initialUsers: User[];
@@ -17,6 +18,7 @@ export function UsersPageClient({ initialUsers, role, title, description }: Prop
   const [users, setUsers]     = useState(initialUsers);
   const [creating, setCreating] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<"ALL" | "ACTIVE" | "INACTIVE">("ALL");
 
   async function refresh() {
     setLoading(true);
@@ -30,6 +32,7 @@ export function UsersPageClient({ initialUsers, role, title, description }: Prop
 
   const active   = users.filter(u => u.is_active).length;
   const inactive = users.length - active;
+  const visibleUsers = statusFilter === "ALL" ? users : users.filter((u) => (statusFilter === "ACTIVE" ? u.is_active : !u.is_active));
 
   return (
     <div className="p-4 md:p-8 space-y-6 max-w-6xl mx-auto">
@@ -61,26 +64,28 @@ export function UsersPageClient({ initialUsers, role, title, description }: Prop
         </div>
       </div>
 
-      {/* KPI strip */}
-      <div className="grid grid-cols-3 gap-3">
-        {[
-          { label: "Total",    val: users.length, color: "#0A7881" },
-          { label: "Activos",  val: active,       color: "#10b981" },
-          { label: "Inactivos",val: inactive,     color: "#f59e0b" },
-        ].map(({ label, val, color }) => (
-          <div key={label} className="bg-card border border-border rounded-2xl p-4 card-premium flex items-center gap-3">
-            <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: `${color}18` }}>
-              <Users className="w-4 h-4" style={{ color }} />
-            </div>
-            <div>
-              <p className="text-xl font-black text-foreground">{val}</p>
-              <p className="text-xs text-muted-foreground">{label}</p>
-            </div>
-          </div>
-        ))}
-      </div>
+      {/* Resumen compacto: los contadores filtran la tabla */}
+      <section aria-label="Resumen de cuentas" className="bg-card border border-border rounded-xl card-elevated overflow-hidden">
+        <div className="grid grid-cols-3 divide-x divide-border">
+          <SummaryFilter
+            label="Total" value={String(users.length)} detail={users.length === 1 ? "cuenta" : "cuentas"}
+            tone="text-foreground" active={statusFilter === "ALL"}
+            onClick={() => setStatusFilter("ALL")}
+          />
+          <SummaryFilter
+            label="Activos" value={String(active)} detail="pueden ingresar"
+            tone="text-emerald-700 dark:text-emerald-400" active={statusFilter === "ACTIVE"}
+            onClick={() => setStatusFilter(statusFilter === "ACTIVE" ? "ALL" : "ACTIVE")}
+          />
+          <SummaryFilter
+            label="Inactivos" value={String(inactive)} detail={inactive === 0 ? "ninguno" : "sin acceso"}
+            tone={inactive > 0 ? "text-amber-700 dark:text-amber-400" : "text-muted-foreground"} active={statusFilter === "INACTIVE"}
+            onClick={() => setStatusFilter(statusFilter === "INACTIVE" ? "ALL" : "INACTIVE")}
+          />
+        </div>
+      </section>
 
-      <UserTable users={users} onRefresh={refresh} />
+      <UserTable key={statusFilter} users={visibleUsers} onRefresh={refresh} />
 
       {creating && (
         <CreateUserModal

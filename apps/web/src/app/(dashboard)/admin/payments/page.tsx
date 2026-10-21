@@ -14,6 +14,7 @@ import { PAYMENT_TYPE_LABELS, PAYMENT_STATUS_LABELS, PAYMENT_STATUS_COLORS, Paym
 import { Pagination } from "@/components/ui/Pagination";
 import { ConfirmDeleteModal } from "@/components/ui/ConfirmDeleteModal";
 import { useDialog } from "@/components/ui/useDialog";
+import { SummaryFilter } from "@/components/ui/SummaryFilter";
 import { apiErrorMessage } from "@/lib/errors";
 
 const COP = new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 });
@@ -363,27 +364,6 @@ export default function PaymentsAdminPage() {
         />
       )}
     </div>
-  );
-}
-
-function SummaryFilter({ label, value, detail, tone, active, onClick }: {
-  label: string; value: string; detail: string; tone: string; active: boolean; onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      title={active ? "Quitar filtro" : `Filtrar: ${label.toLowerCase()}`}
-      className={cn(
-        "px-3 py-3 text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#0A7881]/40",
-        active && "bg-muted/60"
-      )}
-    >
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className={cn("text-lg font-bold tabular-nums leading-tight", tone)}>{value}</p>
-      <p className="text-xs text-muted-foreground">{detail}</p>
-    </button>
   );
 }
 
