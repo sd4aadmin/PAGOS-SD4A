@@ -20,7 +20,7 @@ export function CookieBanner() {
       role="dialog"
       aria-live="polite"
       aria-label="Aviso de cookies"
-      className="fixed inset-x-4 bottom-4 z-50 mx-auto flex max-w-xl flex-wrap items-center gap-4 rounded-2xl bg-slate-900 px-5 py-4 text-white shadow-2xl dark:bg-slate-800"
+      className="fixed inset-x-4 bottom-4 z-40 mx-auto flex max-w-xl flex-wrap items-center gap-4 rounded-2xl bg-slate-900 px-5 py-4 text-white shadow-2xl dark:bg-slate-800"
     >
       <p className="flex-1 basis-64 text-sm leading-relaxed text-white/85">
         Usamos cookies esenciales para el funcionamiento del sitio. Al continuar navegando, aceptas nuestra{" "}

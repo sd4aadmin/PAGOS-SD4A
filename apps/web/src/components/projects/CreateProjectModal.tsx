@@ -7,6 +7,8 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { X, Loader2 } from "lucide-react";
+import { useDialog } from "@/components/ui/useDialog";
+import { apiErrorMessage, NETWORK_ERROR_MESSAGE } from "@/lib/errors";
 
 const schema = z.object({
   name: z.string().min(3, "Mínimo 3 caracteres"),
@@ -48,6 +50,7 @@ export function CreateProjectModal({
   onClose: () => void;
   onCreated: () => void;
 }) {
+  const dialog = useDialog(onClose);
   const [error, setError] = useState<string | null>(null);
   const [clients, setClients] = useState<ClientOption[]>([]);
   const [engineerProfiles, setEngineerProfiles] = useState<EngineerProfile[]>([]);
@@ -82,22 +85,18 @@ export function CreateProjectModal({
       start_date: data.start_date ? new Date(data.start_date).toISOString() : null,
       estimated_date: data.estimated_date ? new Date(data.estimated_date).toISOString() : null,
     };
-    const res = await proxyFetch("/projects", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    if (!res.ok) {
-      const text = await res.text();
-      let message = "Error al crear proyecto";
-      try {
-        const err = JSON.parse(text);
-        if (typeof err.detail === "string") message = err.detail;
-        else if (Array.isArray(err.detail)) message = err.detail.map((d: any) => d.msg).join(" · ");
-      } catch {
-        if (text) message = text.slice(0, 200);
+    try {
+      const res = await proxyFetch("/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        setError(await apiErrorMessage(res, "No se pudo crear el proyecto."));
+        return;
       }
-      setError(message);
+    } catch {
+      setError(NETWORK_ERROR_MESSAGE);
       return;
     }
     onCreated();
@@ -105,15 +104,15 @@ export function CreateProjectModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="bg-card border border-border rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-lg max-h-[92vh] overflow-y-auto">
+    <div {...dialog.overlayProps} className="modal-overlay fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm">
+      <div {...dialog.panelProps} className="modal-panel outline-none bg-card border border-border rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:max-w-lg max-h-[92vh] overflow-y-auto">
         {/* Header fijo */}
         <div className="flex items-center justify-between p-5 border-b border-border sticky top-0 bg-card z-10">
           <div>
-            <h2 className="font-semibold text-foreground">Nuevo proyecto</h2>
+            <h2 id={dialog.titleId} className="font-semibold text-foreground">Nuevo proyecto</h2>
             <p className="text-xs text-muted-foreground mt-0.5">El código se genera automáticamente</p>
           </div>
-          <button onClick={onClose} className="p-1.5 hover:bg-muted rounded-lg">
+          <button onClick={onClose} aria-label="Cerrar" className="p-1.5 hover:bg-muted rounded-lg">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -174,7 +173,7 @@ export function CreateProjectModal({
             </Field>
           )}
 
-          {error && <p className="text-sm text-red-500">{error}</p>}
+          {error && <p role="alert" className="text-sm text-red-500">{error}</p>}
 
           {/* Botones fijos abajo */}
           <div className="flex gap-2 pt-2 pb-1">

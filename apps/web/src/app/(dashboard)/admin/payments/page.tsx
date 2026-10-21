@@ -13,6 +13,8 @@ import { cn } from "@/lib/utils";
 import { PAYMENT_TYPE_LABELS, PAYMENT_STATUS_LABELS, PAYMENT_STATUS_COLORS, PaymentType } from "@/types/payment";
 import { Pagination } from "@/components/ui/Pagination";
 import { ConfirmDeleteModal } from "@/components/ui/ConfirmDeleteModal";
+import { useDialog } from "@/components/ui/useDialog";
+import { apiErrorMessage } from "@/lib/errors";
 
 const COP = new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 });
 const PAGE_SIZE = 15;
@@ -154,14 +156,7 @@ export default function PaymentsAdminPage() {
       {/* Banner recaudo */}
       {!loading && payments.length > 0 && (
         <div className="relative overflow-hidden rounded-xl p-4 md:p-5 text-white" style={{ background: "linear-gradient(135deg, #0A7881 0%, #68B2B7 60%, #9BE3BF 100%)" }}>
-          <div
-            className="absolute -right-16 -top-24 w-72 h-72 opacity-20 pointer-events-none"
-            style={{
-              background: "linear-gradient(135deg, #ffffff 0%, #9BE3BF 100%)",
-              clipPath: "polygon(30% 0%, 100% 0%, 100% 70%)",
-            }}
-          />
-          <p className="relative text-white/70 text-xs font-medium uppercase tracking-wide mb-3">Total recaudado confirmado</p>
+          <p className="text-white/70 text-xs font-medium uppercase tracking-wide mb-3">Total recaudado confirmado</p>
           <p className="text-2xl md:text-3xl font-bold mb-4">{COP.format(totalConfirmed)}</p>
           <div className="grid grid-cols-3 gap-3">
             <div className="bg-white/15 rounded-lg p-3">
@@ -407,6 +402,7 @@ function formatAmt(raw: string) {
 function parseAmt(display: string) { return display.replace(/\./g, "").replace(/\s/g, ""); }
 
 function CreatePaymentModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
+  const dialog = useDialog(onClose);
   const [projects, setProjects] = useState<ProjectOption[]>([]);
   const [selectedProject, setSelectedProject] = useState<ProjectOption | null>(null);
   const [type, setType] = useState<PaymentType>("ADVANCE");
@@ -448,8 +444,7 @@ function CreatePaymentModal({ onClose, onCreated }: { onClose: () => void; onCre
       body: JSON.stringify({ project_id: selectedProject.id, type, amount: Number(amount), notes: notes || null }),
     });
     if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      setError(err.detail ?? "Error al crear el pago");
+      setError(await apiErrorMessage(res, "No se pudo crear el pago."));
       setLoading(false);
       return;
     }
@@ -467,15 +462,15 @@ function CreatePaymentModal({ onClose, onCreated }: { onClose: () => void; onCre
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-card border border-border rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md">
+    <div {...dialog.overlayProps} className="modal-overlay fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-sm">
+      <div {...dialog.panelProps} className="modal-panel outline-none bg-card border border-border rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md">
         {/* Header */}
         <div className="sticky top-0 bg-card z-10 flex items-center justify-between px-5 py-4 border-b border-border rounded-t-2xl sm:rounded-t-2xl">
           <div>
-            <h2 className="font-semibold text-foreground">Nuevo enlace de pago</h2>
+            <h2 id={dialog.titleId} className="font-semibold text-foreground">Nuevo enlace de pago</h2>
             {selectedProject && <p className="text-xs text-muted-foreground mt-0.5">{selectedProject.code} — {selectedProject.name}</p>}
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground">
+          <button onClick={onClose} aria-label="Cerrar" className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground">
             <X className="w-4 h-4" />
           </button>
         </div>

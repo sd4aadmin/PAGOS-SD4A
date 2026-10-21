@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { AlertTriangle, Loader2, Trash2 } from "lucide-react";
+import { useDialog } from "./useDialog";
 
 const CONFIRM_WORD = "ELIMINAR";
 
@@ -14,15 +15,16 @@ export function ConfirmDeleteModal({
   onConfirm: () => void;
   loading?: boolean;
 }) {
+  const dialog = useDialog(onCancel, { closeOnOverlay: true });
   const [step, setStep] = useState<1 | 2>(1);
   const [typed, setTyped] = useState("");
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="bg-card border border-border rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+    <div {...dialog.overlayProps} className="modal-overlay fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div {...dialog.panelProps} className="modal-panel outline-none bg-card border border-border rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
         <div className="px-5 py-4 flex items-center gap-3" style={{ background: "linear-gradient(135deg,#ef4444,#f87171)" }}>
-          <AlertTriangle className="w-5 h-5 text-white shrink-0" />
-          <p className="text-sm font-bold text-white">{title}</p>
+          <AlertTriangle className="w-5 h-5 text-white shrink-0" aria-hidden="true" />
+          <h2 id={dialog.titleId} className="text-sm font-bold text-white">{title}</h2>
         </div>
 
         <div className="p-5 space-y-4">

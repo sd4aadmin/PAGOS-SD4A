@@ -155,13 +155,6 @@ export function ProjectDetailClient({ projectId, role }: { projectId: string; ro
         className="relative overflow-hidden rounded-2xl p-6 md:p-8 text-white"
         style={{ background: "linear-gradient(135deg,#0A7881 0%,#068a8a 50%,#9BE3BF 100%)" }}
       >
-        <div
-          className="absolute -right-16 -top-24 w-72 h-72 opacity-20 pointer-events-none"
-          style={{
-            background: "linear-gradient(135deg, #ffffff 0%, #9BE3BF 100%)",
-            clipPath: "polygon(30% 0%, 100% 0%, 100% 70%)",
-          }}
-        />
         <div className="absolute -right-8 -top-8 w-40 h-40 rounded-full opacity-20" style={{ background: "rgba(255,255,255,0.3)" }} />
         <div className="relative z-10">
           <div className="flex flex-wrap items-center gap-2 mb-3">

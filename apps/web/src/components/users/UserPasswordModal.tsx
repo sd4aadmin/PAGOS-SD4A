@@ -6,6 +6,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { X, Loader2, CheckCircle } from "lucide-react";
 import { User } from "@/types/user";
+import { useDialog } from "@/components/ui/useDialog";
+import { apiErrorMessage, NETWORK_ERROR_MESSAGE } from "@/lib/errors";
 
 const schema = z.object({
   new_password: z.string().min(8, "Mínimo 8 caracteres"),
@@ -18,6 +20,7 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>;
 
 export function UserPasswordModal({ user, onClose }: { user: User; onClose: () => void }) {
+  const dialog = useDialog(onClose);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,25 +30,29 @@ export function UserPasswordModal({ user, onClose }: { user: User; onClose: () =
 
   async function onSubmit(data: FormData) {
     setError(null);
-    const res = await fetch(`/api/proxy/users/${user.id}/reset-password`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ new_password: data.new_password }),
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      setError(err.detail ?? "Error al cambiar contraseña");
+    try {
+      const res = await fetch(`/api/proxy/users/${user.id}/reset-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ new_password: data.new_password }),
+      });
+      if (!res.ok) {
+        setError(await apiErrorMessage(res, "No se pudo cambiar la contraseña."));
+        return;
+      }
+    } catch {
+      setError(NETWORK_ERROR_MESSAGE);
       return;
     }
     setDone(true);
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="bg-card border border-border rounded-2xl shadow-xl w-full max-w-sm p-6 mx-4">
+    <div {...dialog.overlayProps} className="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div {...dialog.panelProps} className="modal-panel outline-none bg-card border border-border rounded-2xl shadow-xl w-full max-w-sm p-6 mx-4">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-semibold text-foreground">Cambiar contraseña</h2>
-          <button onClick={onClose} className="p-1.5 hover:bg-muted rounded-lg">
+          <h2 id={dialog.titleId} className="font-semibold text-foreground">Cambiar contraseña</h2>
+          <button onClick={onClose} aria-label="Cerrar" className="p-1.5 hover:bg-muted rounded-lg">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -71,7 +78,7 @@ export function UserPasswordModal({ user, onClose }: { user: User; onClose: () =
               {errors.confirm && <p className="text-xs text-red-500 mt-1">{errors.confirm.message}</p>}
             </div>
 
-            {error && <p className="text-sm text-red-500">{error}</p>}
+            {error && <p role="alert" className="text-sm text-red-500">{error}</p>}
 
             <div className="flex gap-2 pt-1">
               <button type="button" onClick={onClose} className="flex-1 py-2 rounded-lg border text-sm text-muted-foreground hover:bg-muted/50">Cancelar</button>

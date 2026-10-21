@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { AlertTriangle } from "lucide-react";
+import { useDialog } from "./useDialog";
 
 type Variant = "destructive" | "warning";
 
@@ -14,9 +15,14 @@ interface Props {
   onCancel: () => void;
 }
 
-export function ConfirmModal({ open, title, description, confirmLabel = "Confirmar", variant = "destructive", onConfirm, onCancel }: Props) {
+export function ConfirmModal(props: Props) {
+  if (!props.open) return null;
+  return <ConfirmModalOpen {...props} />;
+}
+
+function ConfirmModalOpen({ title, description, confirmLabel = "Confirmar", variant = "destructive", onConfirm, onCancel }: Props) {
+  const dialog = useDialog(onCancel, { closeOnOverlay: true });
   const [loading, setLoading] = useState(false);
-  if (!open) return null;
 
   async function handle() {
     setLoading(true);
@@ -29,14 +35,14 @@ export function ConfirmModal({ open, title, description, confirmLabel = "Confirm
     : "bg-amber-500 hover:bg-amber-600 text-white";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="bg-card border border-border rounded-xl p-6 max-w-sm w-full mx-4 card-shadow-md">
+    <div {...dialog.overlayProps} className="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div {...dialog.panelProps} className="modal-panel outline-none bg-card border border-border rounded-xl p-6 max-w-sm w-full mx-4 card-shadow-md">
         <div className="flex items-start gap-3 mb-4">
           <div className={`p-2 rounded-lg ${variant === "destructive" ? "bg-red-100 dark:bg-red-900/30" : "bg-amber-100 dark:bg-amber-900/30"}`}>
-            <AlertTriangle className={`w-5 h-5 ${variant === "destructive" ? "text-red-600" : "text-amber-600"}`} />
+            <AlertTriangle aria-hidden="true" className={`w-5 h-5 ${variant === "destructive" ? "text-red-600" : "text-amber-600"}`} />
           </div>
           <div>
-            <h3 className="font-semibold text-foreground">{title}</h3>
+            <h3 id={dialog.titleId} className="font-semibold text-foreground">{title}</h3>
             <p className="text-sm text-muted-foreground mt-1">{description}</p>
           </div>
         </div>

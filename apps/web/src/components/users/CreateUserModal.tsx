@@ -4,6 +4,8 @@ import { proxyFetch } from "@/lib/proxy-fetch";
 
 import { useState, useEffect } from "react";
 import { X, Loader2, ChevronDown } from "lucide-react";
+import { useDialog } from "@/components/ui/useDialog";
+import { apiErrorMessage, NETWORK_ERROR_MESSAGE } from "@/lib/errors";
 
 function generatePassword() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
@@ -19,6 +21,7 @@ export function CreateUserModal({
   onCreated: () => void;
   defaultRole?: "ADMIN" | "ENGINEER" | "CLIENT";
 }) {
+  const dialog = useDialog(onClose);
   const isEngineer = defaultRole === "ENGINEER";
 
   // Engineer-simple state
@@ -59,24 +62,28 @@ export function CreateUserModal({
     if (!isEngineer && auto_password.length < 8) { setError("La contraseña debe tener mínimo 8 caracteres"); return; }
 
     setLoading(true);
-    const res = await proxyFetch("/users", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: name.trim(),
-        email: email.trim(),
-        password: auto_password,
-        role: isEngineer ? "ENGINEER" : role,
-        phone: phone || undefined,
-        company: company || undefined,
-      }),
-    });
-    setLoading(false);
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      setError(err.detail ?? "Error al crear usuario");
+    try {
+      const res = await proxyFetch("/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name.trim(),
+          email: email.trim(),
+          password: auto_password,
+          role: isEngineer ? "ENGINEER" : role,
+          phone: phone || undefined,
+          company: company || undefined,
+        }),
+      });
+      if (!res.ok) {
+        setError(await apiErrorMessage(res, "No se pudo crear el usuario."));
+        return;
+      }
+    } catch {
+      setError(NETWORK_ERROR_MESSAGE);
       return;
+    } finally {
+      setLoading(false);
     }
     onCreated();
     onClose();
@@ -85,13 +92,13 @@ export function CreateUserModal({
   const inputCls = "w-full px-3 py-2 rounded-lg text-sm border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-sd4a-mid/50 focus:border-sd4a-mid transition-colors";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="bg-card border border-border rounded-2xl shadow-xl w-full max-w-sm p-6 mx-4">
+    <div {...dialog.overlayProps} className="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div {...dialog.panelProps} className="modal-panel outline-none bg-card border border-border rounded-2xl shadow-xl w-full max-w-sm p-6 mx-4">
         <div className="flex items-center justify-between mb-5">
-          <h2 className="font-semibold text-foreground">
+          <h2 id={dialog.titleId} className="font-semibold text-foreground">
             {isEngineer ? "Nuevo ingeniero" : "Crear usuario"}
           </h2>
-          <button onClick={onClose} className="p-1.5 hover:bg-muted rounded-lg transition-colors">
+          <button onClick={onClose} aria-label="Cerrar" className="p-1.5 hover:bg-muted rounded-lg transition-colors">
             <X className="w-4 h-4 text-muted-foreground" />
           </button>
         </div>
@@ -203,7 +210,7 @@ export function CreateUserModal({
           )}
 
           {error && (
-            <div className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-3 py-2">
+            <div role="alert" className="text-sm text-red-600 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg px-3 py-2">
               {error}
             </div>
           )}

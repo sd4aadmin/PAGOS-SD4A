@@ -140,6 +140,21 @@
   }
 }
 
+/* Entrada de modales: fundido + leve ascenso desde 97 %, curva exponencial de salida suave */
+@keyframes modal-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.97); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes modal-overlay-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.modal-panel   { animation: modal-in 180ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+.modal-overlay { animation: modal-overlay-in 140ms ease-out both; }
+@media (prefers-reduced-motion: reduce) {
+  .modal-panel, .modal-overlay { animation: none; }
+}
+
 @media print {
   aside, header, nav, .print\:hidden { display: none !important; }
   body, main { background: white !important; color: black !important; }

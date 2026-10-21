@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
+import { useDialog } from "@/components/ui/useDialog";
 import { Upload, X, FileText, Image, Archive, FileSpreadsheet, FileType, FolderOpen, Download, Trash2, Loader2, Tag, AlignLeft, Calendar, Eye } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -293,6 +294,7 @@ export default function FilesSection({ projectId, canUpload, role }: Props) {
 function PreviewModal({ file, canDownload, onClose, onDownload }: {
   file: ProjectFile; canDownload: boolean; onClose: () => void; onDownload: () => void;
 }) {
+  const dialog = useDialog(onClose, { closeOnOverlay: true });
   const [url, setUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [limited, setLimited] = useState(false);
@@ -325,17 +327,17 @@ function PreviewModal({ file, canDownload, onClose, onDownload }: {
   const isImage = mime.startsWith("image/");
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-3 sm:p-6" onClick={onClose}>
+    <div {...dialog.overlayProps} className="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-3 sm:p-6">
       <div
-        className="bg-card border border-border rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden"
-        onClick={(e) => e.stopPropagation()}
+        {...dialog.panelProps}
+        className="modal-panel outline-none bg-card border border-border rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden"
       >
         {/* Header */}
         <div className="flex items-center justify-between gap-3 px-4 sm:px-5 py-3.5 border-b border-border shrink-0">
           <div className="flex items-center gap-2.5 min-w-0">
             {fileIcon(file.mime_type)}
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-foreground truncate">{file.filename}</p>
+              <p id={dialog.titleId} className="text-sm font-semibold text-foreground truncate">{file.filename}</p>
               <p className="text-xs text-muted-foreground">{formatSize(file.size_bytes)}</p>
             </div>
           </div>
@@ -349,7 +351,7 @@ function PreviewModal({ file, canDownload, onClose, onDownload }: {
                 <Download className="w-3.5 h-3.5" /> <span className="hidden sm:inline">Descargar</span>
               </button>
             )}
-            <button onClick={onClose} className="p-2 rounded-lg hover:bg-muted text-muted-foreground transition-colors">
+            <button onClick={onClose} aria-label="Cerrar vista previa" className="p-2 rounded-lg hover:bg-muted text-muted-foreground transition-colors">
               <X className="w-4 h-4" />
             </button>
           </div>
@@ -389,6 +391,7 @@ function PreviewModal({ file, canDownload, onClose, onDownload }: {
 function UploadModal({ projectId, onClose, onUploaded }: {
   projectId: string; onClose: () => void; onUploaded: () => void;
 }) {
+  const dialog = useDialog(onClose);
   const { data: session } = useSession();
   const [category, setCategory] = useState(CATEGORIES[0].value);
   const [description, setDescription] = useState("");
@@ -430,12 +433,14 @@ function UploadModal({ projectId, onClose, onUploaded }: {
         xhr.onload = () => {
           if (xhr.status >= 200 && xhr.status < 300) {
             resolve();
+          } else if (xhr.status >= 500) {
+            reject(new Error("Ocurrió un problema de nuestro lado y el archivo no se subió. Intenta de nuevo; si se repite, avisa a soporte."));
           } else {
             try {
               const err = JSON.parse(xhr.responseText);
-              reject(new Error(typeof err.detail === "string" ? err.detail : "Error al subir el archivo"));
+              reject(new Error(typeof err.detail === "string" ? err.detail : "No se pudo subir el archivo."));
             } catch {
-              reject(new Error(`Error ${xhr.status} al subir el archivo`));
+              reject(new Error("No se pudo subir el archivo."));
             }
           }
         };
@@ -453,12 +458,12 @@ function UploadModal({ projectId, onClose, onUploaded }: {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-sm">
-      <div className="bg-card border border-border rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md">
+    <div {...dialog.overlayProps} className="modal-overlay fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-sm">
+      <div {...dialog.panelProps} className="modal-panel outline-none bg-card border border-border rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-md">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-          <h2 className="font-semibold text-foreground">Subir archivo</h2>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground">
+          <h2 id={dialog.titleId} className="font-semibold text-foreground">Subir archivo</h2>
+          <button onClick={onClose} aria-label="Cerrar" className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground">
             <X className="w-4 h-4" />
           </button>
         </div>

@@ -13,6 +13,8 @@ import {
 import { Project } from "@/types/project";
 import { cn } from "@/lib/utils";
 import { ConfirmDeleteModal } from "@/components/ui/ConfirmDeleteModal";
+import { useDialog } from "@/components/ui/useDialog";
+import { apiErrorMessage, NETWORK_ERROR_MESSAGE } from "@/lib/errors";
 
 const COP = new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 });
 
@@ -334,6 +336,7 @@ function ClientPayButton({ paymentId, amount, type }: { paymentId: string; amoun
 function BillingModal({ paymentId, amount, type, onClose }: {
   paymentId: string; amount: number; type: PaymentType; onClose: () => void;
 }) {
+  const dialog = useDialog(onClose);
   const [wantsBilling, setWantsBilling] = useState(false);
   const [company, setCompany]           = useState("");
   const [nit, setNit]                   = useState("");
@@ -375,25 +378,24 @@ function BillingModal({ paymentId, amount, type, onClose }: {
       const url = `/api/proxy/payments/${paymentId}/checkout${params.size ? `?${params}` : ""}`;
       const res = await fetch(url);
       if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        setError(err.detail ?? "Error al generar el enlace de pago.");
+        setError(await apiErrorMessage(res, "No se pudo generar el enlace de pago."));
         return;
       }
       const data: PaymentWithCheckout = await res.json();
       window.location.href = data.checkout_url;
     } catch {
-      setError("Error de red. Intenta de nuevo.");
+      setError(NETWORK_ERROR_MESSAGE);
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="bg-card border border-border rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+    <div {...dialog.overlayProps} className="modal-overlay fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div {...dialog.panelProps} className="modal-panel outline-none bg-card border border-border rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
         {/* Header */}
         <div className="px-5 py-4 border-b border-border" style={{ background: "linear-gradient(135deg,#0A7881,#68B2B7)" }}>
-          <p className="text-xs text-white/70 font-medium uppercase tracking-widest mb-0.5">
+          <p id={dialog.titleId} className="text-xs text-white/70 font-medium uppercase tracking-widest mb-0.5">
             {PAYMENT_TYPE_LABELS[type]}
           </p>
           <p className="text-xl font-black text-white">{COP.format(amount)}</p>
@@ -554,12 +556,13 @@ function AmountInput({ value, onChange, placeholder }: { value: string; onChange
 }
 
 function ModalShell({ title, subtitle, onClose, children }: { title: string; subtitle?: string; onClose: () => void; children: React.ReactNode }) {
+  const dialog = useDialog(onClose);
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-      <div className="bg-card border border-border rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+    <div {...dialog.overlayProps} className="modal-overlay fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div {...dialog.panelProps} className="modal-panel outline-none bg-card border border-border rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
         <div className="flex items-start justify-between p-5 border-b border-border">
           <div>
-            <h2 className="font-bold text-foreground">{title}</h2>
+            <h2 id={dialog.titleId} className="font-bold text-foreground">{title}</h2>
             {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
           </div>
         </div>
@@ -606,7 +609,7 @@ function EditPaymentModal({ payment, onClose, onSaved }: { payment: Payment; onC
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ type, amount: Number(amount), notes: notes || null }),
     });
-    if (!res.ok) { const err = await res.json().catch(() => ({})); setError(err.detail ?? "Error al guardar"); setLoading(false); return; }
+    if (!res.ok) { setError(await apiErrorMessage(res, "No se pudieron guardar los cambios.")); setLoading(false); return; }
     await onSaved();
     onClose();
   }
@@ -672,8 +675,7 @@ function CreatePaymentModal({ project, totalPaid, onClose, onCreated }: {
       body: JSON.stringify({ project_id: project.id, type, amount: Number(amount), notes: notes || null }),
     });
     if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      setError(err.detail ?? "Error al crear el pago");
+      setError(await apiErrorMessage(res, "No se pudo crear el pago."));
       setLoading(false);
       return;
     }
@@ -780,8 +782,7 @@ function SelfPaymentModal({ project, totalPaid, onClose, onCreated }: {
       body: JSON.stringify({ project_id: project.id, type, amount: numAmount }),
     });
     if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      setError(err.detail ?? "Error al generar el pago");
+      setError(await apiErrorMessage(res, "No se pudo generar el pago."));
       setLoading(false);
       return;
     }

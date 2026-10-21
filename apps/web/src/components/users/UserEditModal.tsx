@@ -6,6 +6,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { X, Loader2 } from "lucide-react";
 import { User } from "@/types/user";
+import { useDialog } from "@/components/ui/useDialog";
+import { apiErrorMessage, NETWORK_ERROR_MESSAGE } from "@/lib/errors";
 
 const schema = z.object({
   name: z.string().min(2, "Mínimo 2 caracteres"),
@@ -25,6 +27,7 @@ export function UserEditModal({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const dialog = useDialog(onClose);
   const [error, setError] = useState<string | null>(null);
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
@@ -39,14 +42,18 @@ export function UserEditModal({
 
   async function onSubmit(data: FormData) {
     setError(null);
-    const res = await fetch(`/api/proxy/users/${user.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      setError(err.detail ?? "Error al guardar");
+    try {
+      const res = await fetch(`/api/proxy/users/${user.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        setError(await apiErrorMessage(res, "No se pudieron guardar los cambios."));
+        return;
+      }
+    } catch {
+      setError(NETWORK_ERROR_MESSAGE);
       return;
     }
     onSaved();
@@ -54,11 +61,11 @@ export function UserEditModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="bg-card border border-border rounded-2xl shadow-xl w-full max-w-md p-6 mx-4">
+    <div {...dialog.overlayProps} className="modal-overlay fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div {...dialog.panelProps} className="modal-panel outline-none bg-card border border-border rounded-2xl shadow-xl w-full max-w-md p-6 mx-4">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-semibold text-foreground">Editar usuario</h2>
-          <button onClick={onClose} className="p-1.5 hover:bg-muted rounded-lg">
+          <h2 id={dialog.titleId} className="font-semibold text-foreground">Editar usuario</h2>
+          <button onClick={onClose} aria-label="Cerrar" className="p-1.5 hover:bg-muted rounded-lg">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -81,7 +88,7 @@ export function UserEditModal({
             </select>
           </Field>
 
-          {error && <p className="text-sm text-red-500">{error}</p>}
+          {error && <p role="alert" className="text-sm text-red-500">{error}</p>}
 
           <div className="flex gap-2 pt-2">
             <button type="button" onClick={onClose} className="flex-1 py-2 rounded-lg border text-sm text-muted-foreground hover:bg-muted/50">

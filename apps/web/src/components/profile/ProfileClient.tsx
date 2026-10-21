@@ -1,6 +1,7 @@
 "use client";
 
 import { proxyFetch } from "@/lib/proxy-fetch";
+import { apiErrorMessage } from "@/lib/errors";
 import { useState } from "react";
 import { Eye, EyeOff, Mail, Shield, Loader2, CheckCircle2, Lock } from "lucide-react";
 
@@ -48,8 +49,7 @@ export function ProfileClient({ user }: { user: SessionUser }) {
       setSuccess(true);
       setCurrentPw(""); setNewPw(""); setConfirmPw("");
     } else {
-      const data = await res.json().catch(() => ({}));
-      setError(data.detail ?? "Error al cambiar la contraseña");
+      setError(await apiErrorMessage(res, "No se pudo cambiar la contraseña."));
     }
     setLoading(false);
   }
@@ -71,13 +71,6 @@ export function ProfileClient({ user }: { user: SessionUser }) {
         className="relative overflow-hidden rounded-2xl p-6 text-white"
         style={{ background: "linear-gradient(135deg,#0A7881 0%,#068a8a 50%,#9BE3BF 100%)" }}
       >
-        <div
-          className="absolute -right-16 -top-24 w-72 h-72 opacity-20 pointer-events-none"
-          style={{
-            background: "linear-gradient(135deg, #ffffff 0%, #9BE3BF 100%)",
-            clipPath: "polygon(30% 0%, 100% 0%, 100% 70%)",
-          }}
-        />
         <div className="absolute -right-6 -top-6 w-28 h-28 rounded-full opacity-20" style={{ background: "rgba(255,255,255,0.4)" }} />
         <div className="relative z-10 flex items-center gap-5">
           <div
