@@ -8,6 +8,8 @@ import { UserEditModal } from "./UserEditModal";
 import { UserPasswordModal } from "./UserPasswordModal";
 import { MoreHorizontal, Pencil, KeyRound, Ban, CheckCircle, Trash2, FolderMinus } from "lucide-react";
 import { Pagination } from "@/components/ui/Pagination";
+import { ConfirmDeleteModal } from "@/components/ui/ConfirmDeleteModal";
+import { apiErrorMessage, NETWORK_ERROR_MESSAGE } from "@/lib/errors";
 
 const PAGE_SIZE = 10;
 
@@ -30,6 +32,9 @@ export function UserTable({ users, onRefresh }: Props) {
   const [passwordUser, setPasswordUser] = useState<User | null>(null);
   const [openMenu, setOpenMenu]         = useState<string | null>(null);
   const [page, setPage]                 = useState(1);
+  const [deleteTarget, setDeleteTarget] = useState<User | null>(null);
+  const [deleting, setDeleting]         = useState(false);
+  const [deleteError, setDeleteError]   = useState<string | null>(null);
 
   const totalPages = Math.ceil(users.length / PAGE_SIZE);
   const paged      = users.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -43,13 +48,27 @@ export function UserTable({ users, onRefresh }: Props) {
     if (res.ok) onRefresh();
   }
 
-  async function deleteUser(user: User) {
-    if (!window.confirm(`¿Eliminar permanentemente a ${user.name}? Esta acción no se puede deshacer.`)) return;
-    const res = await fetch(`/api/proxy/users/${user.id}`, { method: "DELETE" });
-    if (res.ok || res.status === 204) onRefresh();
-    else {
-      const err = await res.json().catch(() => ({ detail: "Error al eliminar" }));
-      alert(err.detail ?? "No se pudo eliminar el usuario");
+  function deleteUser(user: User) {
+    setDeleteError(null);
+    setDeleteTarget(user);
+  }
+
+  async function confirmDeleteUser() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      const res = await fetch(`/api/proxy/users/${deleteTarget.id}`, { method: "DELETE" });
+      if (res.ok || res.status === 204) {
+        setDeleteTarget(null);
+        onRefresh();
+      } else {
+        setDeleteError(await apiErrorMessage(res, "No se pudo eliminar la cuenta."));
+      }
+    } catch {
+      setDeleteError(NETWORK_ERROR_MESSAGE);
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -238,6 +257,20 @@ export function UserTable({ users, onRefresh }: Props) {
 
       {editUser && <UserEditModal user={editUser} onClose={() => setEditUser(null)} onSaved={onRefresh} />}
       {passwordUser && <UserPasswordModal user={passwordUser} onClose={() => setPasswordUser(null)} />}
+      {deleteTarget && (
+        <ConfirmDeleteModal
+          title="Eliminar cuenta"
+          description={`Vas a eliminar la cuenta de ${deleteTarget.name} (${deleteTarget.email}) de forma permanente. ${
+            deleteTarget.role === "CLIENT"
+              ? "Solo es posible si no tiene proyectos a su nombre."
+              : "Se quitará de los proyectos en los que esté asignada."
+          } Si solo quieres que deje de ingresar, usa Desactivar: es reversible. Esta acción no se puede deshacer.`}
+          loading={deleting}
+          error={deleteError}
+          onCancel={() => { setDeleteTarget(null); setDeleteError(null); }}
+          onConfirm={confirmDeleteUser}
+        />
+      )}
     </>
   );
 }
