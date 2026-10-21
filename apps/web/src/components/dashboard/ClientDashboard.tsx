@@ -44,7 +44,7 @@ export function ClientDashboard({ userName }: { userName: string }) {
         <div>
           <p className="text-sm font-medium text-muted-foreground mb-0.5">Portal de cliente</p>
           <h1 className="text-2xl md:text-3xl font-black text-foreground">
-            Hola, <span style={{ color: "#0A7881" }}>{userName.split(" ")[0]}</span> 👋
+            Hola, <span style={{ color: "#0A7881" }}>{userName.split(" ")[0]}</span>
           </h1>
         </div>
         <span className="hidden sm:block text-xs text-muted-foreground bg-muted px-3 py-1.5 rounded-full">

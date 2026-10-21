@@ -3,7 +3,7 @@
 import { proxyFetch } from "@/lib/proxy-fetch";
 import { apiErrorMessage } from "@/lib/errors";
 import { useState } from "react";
-import { Eye, EyeOff, Mail, Shield, Loader2, CheckCircle2, Lock } from "lucide-react";
+import { Eye, EyeOff, Mail, Shield, Loader2, CheckCircle2, Lock, User } from "lucide-react";
 
 const ROLE_LABEL: Record<string, string> = {
   ADMIN: "Administrador",
@@ -95,7 +95,7 @@ export function ProfileClient({ user }: { user: SessionUser }) {
       {/* Info cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {[
-          { icon: <span className="text-base">👤</span>, label: "Nombre",   val: user.name,  color: "#0A7881" },
+          { icon: <User className="w-4 h-4" />, label: "Nombre",   val: user.name,  color: "#0A7881" },
           { icon: <Mail className="w-4 h-4" />,          label: "Email",    val: user.email, color: "#2563eb" },
           { icon: <Shield className="w-4 h-4" />,        label: "Rol",      val: ROLE_LABEL[user.role] ?? user.role, color: roleStyle.color },
         ].map(({ icon, label, val, color }) => (

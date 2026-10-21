@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useDialog } from "@/components/ui/useDialog";
-import { Upload, X, FileText, Image, Archive, FileSpreadsheet, FileType, FolderOpen, Download, Trash2, Loader2, Tag, AlignLeft, Calendar, Eye } from "lucide-react";
+import { Upload, X, FileText, Image, Archive, FileSpreadsheet, FileType, FolderOpen, Download, Trash2, Loader2, Tag, AlignLeft, Calendar, Eye, Lock, Ruler, Box, HardDrive } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ProjectFile {
@@ -29,11 +29,11 @@ interface Props {
 }
 
 const CATEGORIES = [
-  { value: "01_MEMORIAS",   label: "Memorias",    icon: "📋" },
-  { value: "02_PLANOS",     label: "Planos",       icon: "📐" },
-  { value: "03_FOTOGRAFIAS",label: "Fotografías",  icon: "🖼️" },
-  { value: "04_MODELOS_BIM",label: "Modelos",      icon: "🏗️" },
-  { value: "05_RESPALDOS",  label: "Respaldos",    icon: "💾" },
+  { value: "01_MEMORIAS",   label: "Memorias",    Icon: FileText },
+  { value: "02_PLANOS",     label: "Planos",       Icon: Ruler },
+  { value: "03_FOTOGRAFIAS",label: "Fotografías",  Icon: Image },
+  { value: "04_MODELOS_BIM",label: "Modelos",      Icon: Box },
+  { value: "05_RESPALDOS",  label: "Respaldos",    Icon: HardDrive },
 ];
 
 function fileIcon(mime: string) {
@@ -125,7 +125,7 @@ export default function FilesSection({ projectId, canUpload, role }: Props) {
           <h3 className="font-semibold text-foreground">Archivos del proyecto</h3>
           {isBlocked && (
             <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5 flex items-center gap-1">
-              🔒 Paga el saldo pendiente para descargar archivos
+              <Lock className="w-3 h-3 shrink-0" aria-hidden="true" /> Paga el saldo pendiente para descargar archivos
             </p>
           )}
         </div>
@@ -160,15 +160,15 @@ export default function FilesSection({ projectId, canUpload, role }: Props) {
             key={c.value}
             onClick={() => setActiveCategory(c.value)}
             className={cn(
-              "text-xs px-3 py-1.5 rounded-full border transition-colors",
+              "inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border transition-colors",
               activeCategory === c.value
                 ? "text-white border-transparent"
                 : "border-border text-muted-foreground hover:bg-muted"
             )}
             style={activeCategory === c.value ? { background: "linear-gradient(135deg, #0A7881, #68B2B7)" } : {}}
           >
-            {c.icon} {c.label}
-            {fileCounts[c.value] > 0 && <span className="ml-1 opacity-80">({fileCounts[c.value]})</span>}
+            <c.Icon className="w-3.5 h-3.5" aria-hidden="true" /> {c.label}
+            {fileCounts[c.value] > 0 && <span className="opacity-80">({fileCounts[c.value]})</span>}
           </button>
         ))}
       </div>
@@ -223,7 +223,7 @@ export default function FilesSection({ projectId, canUpload, role }: Props) {
                       <Calendar className="w-3 h-3" />
                       {formatDate(f.created_at)}
                     </span>
-                    <span>{catInfo ? `${catInfo.icon} ${catInfo.label}` : f.category}</span>
+                    <span className="inline-flex items-center gap-1">{catInfo ? (<><catInfo.Icon className="w-3 h-3" aria-hidden="true" />{catInfo.label}</>) : f.category}</span>
                     <span>{formatSize(f.size_bytes)}</span>
                   </div>
                 </div>
@@ -248,7 +248,7 @@ export default function FilesSection({ projectId, canUpload, role }: Props) {
                       <Download className="w-4 h-4" />
                     </button>
                   ) : (
-                    <span className="p-2 text-amber-400" title="Pago pendiente">🔒</span>
+                    <span className="p-2 text-amber-500" title="Pago pendiente" role="img" aria-label="Descarga bloqueada: pago pendiente"><Lock className="w-4 h-4" /></span>
                   )}
                   {canUpload && (
                     <button
@@ -361,7 +361,7 @@ function PreviewModal({ file, canDownload, onClose, onDownload }: {
         {limited && (
           <div className="px-4 sm:px-5 py-2.5 border-b border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-800 shrink-0">
             <p className="text-xs font-semibold text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
-              🔒 Vista previa parcial — paga el saldo pendiente para ver el documento completo y descargarlo.
+              <Lock className="w-3.5 h-3.5 shrink-0" aria-hidden="true" /> Vista previa parcial — paga el saldo pendiente para ver el documento completo y descargarlo.
             </p>
           </div>
         )}
@@ -488,7 +488,7 @@ function UploadModal({ projectId, onClose, onUploaded }: {
                   )}
                   style={category === c.value ? { background: "linear-gradient(135deg, #0A7881, #68B2B7)" } : {}}
                 >
-                  <span className="text-xl">{c.icon}</span>
+                  <c.Icon className="w-5 h-5" aria-hidden="true" />
                   {c.label}
                 </button>
               ))}

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import {
   ArrowLeft, RefreshCw, Pencil, Trash2, CalendarDays,
   TrendingUp, BadgeCheck, Loader2, Printer, UserPlus, X,
-  Users, FolderKanban,
+  Users, FolderKanban, ClipboardList, Check,
 } from "lucide-react";
 import { Project, ProjectStatus, STATUS_LABELS, STATUS_COLORS } from "@/types/project";
 import { PaymentsSection } from "@/components/payments/PaymentsSection";
@@ -412,7 +412,7 @@ export function ProjectDetailClient({ projectId, role }: { projectId: string; ro
       {(role === "ADMIN" || role === "ENGINEER") && (
         <div className="bg-card border border-border rounded-2xl p-5">
           <h3 className="font-bold text-foreground mb-4 flex items-center gap-2">
-            <span className="text-base">📋</span> Historial de actividad
+            <ClipboardList className="w-4 h-4" style={{ color: "#0A7881" }} aria-hidden="true" /> Historial de actividad
           </h3>
           <ActivityTimeline projectId={project.id} />
         </div>
@@ -453,7 +453,7 @@ function StatusPipeline({ current }: { current: ProjectStatus }) {
                 active ? "border-[#0A7881] text-white shadow-lg" :
                 "bg-background border-border text-muted-foreground"
               )} style={done ? { background: "#0A7881" } : active ? { background: "linear-gradient(135deg,#0A7881,#68B2B7)" } : {}}>
-                {done ? "✓" : i + 1}
+                {done ? <Check className="w-4 h-4" aria-label="Completado" /> : i + 1}
               </div>
               <span className={cn(
                 "text-[10px] text-center leading-tight px-0.5",

@@ -6,7 +6,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   CreditCard, RefreshCw, CheckCircle2, Loader2, Search, ArrowUpRight,
-  ChevronDown, X, TrendingUp, Clock, AlertCircle, Banknote, Plus,
+  ChevronDown, X, Plus,
   ExternalLink, Copy, Check, Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -122,6 +122,9 @@ export default function PaymentsAdminPage() {
 
   const totalConfirmed = payments.filter((p) => p.status === "CONFIRMED").reduce((s, p) => s + Number(p.amount), 0);
   const totalPending = payments.filter((p) => p.status === "PENDING").reduce((s, p) => s + Number(p.amount), 0);
+  const pendingCount = payments.filter((p) => p.status === "PENDING").length;
+  const confirmedCount = payments.filter((p) => p.status === "CONFIRMED").length;
+  const failedCount = payments.filter((p) => p.status === "FAILED").length;
   const byType = {
     ADVANCE: payments.filter((p) => p.type === "ADVANCE" && p.status === "CONFIRMED").reduce((s, p) => s + Number(p.amount), 0),
     PARTIAL: payments.filter((p) => p.type === "PARTIAL" && p.status === "CONFIRMED").reduce((s, p) => s + Number(p.amount), 0),
@@ -153,67 +156,37 @@ export default function PaymentsAdminPage() {
         </div>
       </div>
 
-      {/* Banner recaudo */}
+      {/* Resumen compacto: la tabla es lo importante; los contadores filtran al hacer clic */}
       {!loading && payments.length > 0 && (
-        <div className="relative overflow-hidden rounded-xl p-4 md:p-5 text-white" style={{ background: "linear-gradient(135deg, #0A7881 0%, #68B2B7 60%, #9BE3BF 100%)" }}>
-          <p className="text-white/70 text-xs font-medium uppercase tracking-wide mb-3">Total recaudado confirmado</p>
-          <p className="text-2xl md:text-3xl font-bold mb-4">{COP.format(totalConfirmed)}</p>
-          <div className="grid grid-cols-3 gap-3">
-            <div className="bg-white/15 rounded-lg p-3">
-              <p className="text-white/70 text-[11px] mb-1">Anticipos</p>
-              <p className="font-bold text-sm">{COP.format(byType.ADVANCE)}</p>
+        <section aria-label="Resumen de pagos" className="bg-card border border-border rounded-xl card-elevated overflow-hidden">
+          <div className="flex flex-col lg:flex-row divide-y lg:divide-y-0 lg:divide-x divide-border">
+            <div className="px-4 py-3 lg:flex-[1.6]">
+              <p className="text-xs text-muted-foreground">Recaudado confirmado</p>
+              <p className="text-2xl font-bold text-foreground tabular-nums">{COP.format(totalConfirmed)}</p>
+              <p className="text-xs text-muted-foreground mt-0.5 tabular-nums">
+                Anticipos {COP.format(byType.ADVANCE)} · Parciales {COP.format(byType.PARTIAL)} · Finales {COP.format(byType.FINAL)}
+              </p>
             </div>
-            <div className="bg-white/15 rounded-lg p-3">
-              <p className="text-white/70 text-[11px] mb-1">Parciales</p>
-              <p className="font-bold text-sm">{COP.format(byType.PARTIAL)}</p>
-            </div>
-            <div className="bg-white/15 rounded-lg p-3">
-              <p className="text-white/70 text-[11px] mb-1">Finales</p>
-              <p className="font-bold text-sm">{COP.format(byType.FINAL)}</p>
+            <div className="grid grid-cols-3 divide-x divide-border lg:flex-[2]">
+              <SummaryFilter
+                label="Pendientes" value={COP.format(totalPending)} detail={`${pendingCount} pago${pendingCount !== 1 ? "s" : ""}`}
+                tone="text-amber-700 dark:text-amber-400" active={statusFilter === "PENDING"}
+                onClick={() => { setStatusFilter(statusFilter === "PENDING" ? "ALL" : "PENDING"); setPage(1); }}
+              />
+              <SummaryFilter
+                label="Confirmados" value={String(confirmedCount)} detail={`de ${payments.length}`}
+                tone="text-emerald-700 dark:text-emerald-400" active={statusFilter === "CONFIRMED"}
+                onClick={() => { setStatusFilter(statusFilter === "CONFIRMED" ? "ALL" : "CONFIRMED"); setPage(1); }}
+              />
+              <SummaryFilter
+                label="Fallidos" value={String(failedCount)} detail={failedCount === 0 ? "ninguno" : "revisar"}
+                tone={failedCount > 0 ? "text-red-700 dark:text-red-400" : "text-muted-foreground"} active={statusFilter === "FAILED"}
+                onClick={() => { setStatusFilter(statusFilter === "FAILED" ? "ALL" : "FAILED"); setPage(1); }}
+              />
             </div>
           </div>
-        </div>
+        </section>
       )}
-
-      {/* KPIs */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="bg-card border border-border rounded-xl p-4 card-premium">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ background: "#64748b18" }}>
-              <Banknote className="w-3.5 h-3.5 text-muted-foreground" />
-            </span>
-            <p className="text-xs text-muted-foreground">Total pagos</p>
-          </div>
-          <p className="text-2xl font-bold text-foreground">{payments.length}</p>
-        </div>
-        <div className="bg-card border border-border rounded-xl p-4 card-premium">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ background: "#10b98118" }}>
-              <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
-            </span>
-            <p className="text-xs text-emerald-600 dark:text-emerald-400">Confirmados</p>
-          </div>
-          <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-400">{payments.filter(p => p.status === "CONFIRMED").length}</p>
-        </div>
-        <div className="bg-card border border-border rounded-xl p-4 card-premium">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ background: "#f59e0b18" }}>
-              <Clock className="w-3.5 h-3.5 text-amber-500" />
-            </span>
-            <p className="text-xs text-amber-600 dark:text-amber-400">Pendientes</p>
-          </div>
-          <p className="text-2xl font-bold text-amber-700 dark:text-amber-400">{COP.format(totalPending)}</p>
-        </div>
-        <div className="bg-card border border-border rounded-xl p-4 card-premium">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ background: "#ef444418" }}>
-              <AlertCircle className="w-3.5 h-3.5 text-red-500" />
-            </span>
-            <p className="text-xs text-red-600 dark:text-red-400">Fallidos</p>
-          </div>
-          <p className="text-2xl font-bold text-red-700 dark:text-red-400">{payments.filter(p => p.status === "FAILED").length}</p>
-        </div>
-      </div>
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:flex-wrap sm:items-center">
@@ -390,6 +363,27 @@ export default function PaymentsAdminPage() {
         />
       )}
     </div>
+  );
+}
+
+function SummaryFilter({ label, value, detail, tone, active, onClick }: {
+  label: string; value: string; detail: string; tone: string; active: boolean; onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      title={active ? "Quitar filtro" : `Filtrar: ${label.toLowerCase()}`}
+      className={cn(
+        "px-3 py-3 text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#0A7881]/40",
+        active && "bg-muted/60"
+      )}
+    >
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className={cn("text-lg font-bold tabular-nums leading-tight", tone)}>{value}</p>
+      <p className="text-xs text-muted-foreground">{detail}</p>
+    </button>
   );
 }
 
