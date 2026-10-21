@@ -70,11 +70,13 @@ async def _build_out(project: Project, db: AsyncSession) -> ProjectOut:
 async def _next_code(db: AsyncSession) -> str:
     year = datetime.now(timezone.utc).year
     prefix = f"SD4A-{year}-"
-    result = await db.execute(
-        select(func.count()).select_from(Project).where(Project.code.like(f"{prefix}%"))
-    )
-    count = result.scalar() or 0
-    return f"{prefix}{(count + 1):03d}"
+    result = await db.execute(select(Project.code).where(Project.code.like(f"{prefix}%")))
+    numbers = [
+        int(code[len(prefix):])
+        for (code,) in result.all()
+        if code[len(prefix):].isdigit()
+    ]
+    return f"{prefix}{(max(numbers, default=0) + 1):03d}"
 
 
 # ─── LIST ─────────────────────────────────────────────────────────────────────
