@@ -7,13 +7,14 @@ import { useDialog } from "./useDialog";
 const CONFIRM_WORD = "ELIMINAR";
 
 export function ConfirmDeleteModal({
-  title, description, onCancel, onConfirm, loading,
+  title, description, onCancel, onConfirm, loading, error,
 }: {
   title: string;
   description: string;
   onCancel: () => void;
   onConfirm: () => void;
   loading?: boolean;
+  error?: string | null;
 }) {
   const dialog = useDialog(onCancel, { closeOnOverlay: true });
   const [step, setStep] = useState<1 | 2>(1);
@@ -29,6 +30,7 @@ export function ConfirmDeleteModal({
 
         <div className="p-5 space-y-4">
           <p className="text-sm text-muted-foreground">{description}</p>
+          {error && <p role="alert" className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
           {step === 1 ? (
             <div className="flex gap-2 pt-1">

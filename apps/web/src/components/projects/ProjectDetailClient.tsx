@@ -11,7 +11,8 @@ import {
 import { Project, ProjectStatus, STATUS_LABELS, STATUS_COLORS } from "@/types/project";
 import { PaymentsSection } from "@/components/payments/PaymentsSection";
 import { ActivityTimeline } from "@/components/activity/ActivityTimeline";
-import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { ConfirmDeleteModal } from "@/components/ui/ConfirmDeleteModal";
+import { apiErrorMessage, NETWORK_ERROR_MESSAGE } from "@/lib/errors";
 import FilesSection from "@/components/files/FilesSection";
 import { cn } from "@/lib/utils";
 
@@ -36,6 +37,7 @@ export function ProjectDetailClient({ projectId, role }: { projectId: string; ro
   const [newStatus, setNewStatus] = useState<ProjectStatus>("IN_PROGRESS");
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [showIva, setShowIva] = useState(false);
   const [editDates, setEditDates] = useState(false);
   const [startDate, setStartDate] = useState("");
@@ -101,7 +103,19 @@ export function ProjectDetailClient({ projectId, role }: { projectId: string; ro
 
   async function handleDelete() {
     setDeleting(true);
-    await fetch(`/api/proxy/projects/${projectId}`, { method: "DELETE" });
+    setDeleteError(null);
+    try {
+      const res = await fetch(`/api/proxy/projects/${projectId}`, { method: "DELETE" });
+      if (!res.ok && res.status !== 204) {
+        setDeleteError(await apiErrorMessage(res, "No se pudo eliminar el proyecto."));
+        setDeleting(false);
+        return;
+      }
+    } catch {
+      setDeleteError(NETWORK_ERROR_MESSAGE);
+      setDeleting(false);
+      return;
+    }
     router.push("/dashboard/projects");
   }
 
@@ -418,15 +432,16 @@ export function ProjectDetailClient({ projectId, role }: { projectId: string; ro
         </div>
       )}
 
-      <ConfirmModal
-        open={confirmDelete}
-        title="Eliminar proyecto"
-        description={`¿Eliminar el proyecto "${project?.name}"? Esta acción no se puede deshacer.`}
-        confirmLabel="Eliminar"
-        variant="destructive"
-        onConfirm={handleDelete}
-        onCancel={() => setConfirmDelete(false)}
-      />
+      {confirmDelete && project && (
+        <ConfirmDeleteModal
+          title="Eliminar proyecto"
+          description={`Vas a eliminar el proyecto ${project.code} — ${project.name}. Se borrarán también sus pagos, archivos registrados, entregables e historial de actividad. Esta acción no se puede deshacer.`}
+          loading={deleting}
+          error={deleteError}
+          onCancel={() => { setConfirmDelete(false); setDeleteError(null); }}
+          onConfirm={handleDelete}
+        />
+      )}
     </div>
   );
 }

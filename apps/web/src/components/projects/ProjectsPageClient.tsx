@@ -13,6 +13,8 @@ import { CreateProjectModal } from "./CreateProjectModal";
 import { cn } from "@/lib/utils";
 import { SkeletonTable } from "@/components/ui/Skeleton";
 import { ErrorState } from "@/components/ui/ErrorState";
+import { ConfirmDeleteModal } from "@/components/ui/ConfirmDeleteModal";
+import { apiErrorMessage, NETWORK_ERROR_MESSAGE } from "@/lib/errors";
 import { SummaryStat } from "@/components/ui/SummaryFilter";
 
 const COP = new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 });
@@ -32,6 +34,9 @@ export function ProjectsPageClient({ role }: { role: string }) {
   const [engineerProfiles, setEngineerProfiles] = useState<{ id: string; name: string }[]>([]);
 
   const [loadError, setLoadError] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Project | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -56,16 +61,22 @@ export function ProjectsPageClient({ role }: { role: string }) {
       .catch(() => {});
   }, [role]);
 
-  async function deleteProject(e: React.MouseEvent, p: Project) {
-    e.stopPropagation();
-    if (!window.confirm(`¿Eliminar "${p.name}" (${p.code})? Esta acción no se puede deshacer.`)) return;
-    const res = await proxyFetch(`/projects/${p.id}`, { method: "DELETE" });
-    if (res.ok || res.status === 204) { load(); }
-    else {
-      const text = await res.text().catch(() => "");
-      let msg = "Error al eliminar el proyecto";
-      try { msg = JSON.parse(text).detail ?? msg; } catch { if (text) msg = text; }
-      alert(msg);
+  async function confirmDeleteProject() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      const res = await proxyFetch(`/projects/${deleteTarget.id}`, { method: "DELETE" });
+      if (res.ok || res.status === 204) {
+        setDeleteTarget(null);
+        await load();
+      } else {
+        setDeleteError(await apiErrorMessage(res, "No se pudo eliminar el proyecto."));
+      }
+    } catch {
+      setDeleteError(NETWORK_ERROR_MESSAGE);
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -314,7 +325,7 @@ export function ProjectsPageClient({ role }: { role: string }) {
                     {isAdmin && (
                       <td className="px-5 py-4" onClick={(e) => e.stopPropagation()}>
                         <button
-                          onClick={(e) => deleteProject(e, p)}
+                          onClick={(e) => { e.stopPropagation(); setDeleteError(null); setDeleteTarget(p); }}
                           className="p-1.5 rounded-lg text-muted-foreground/40 hover:text-red-500 hover:bg-red-50 transition-colors opacity-0 group-hover:opacity-100"
                           title="Eliminar proyecto"
                         >
@@ -386,6 +397,16 @@ export function ProjectsPageClient({ role }: { role: string }) {
       )}
 
       {showCreate && <CreateProjectModal onClose={() => setShowCreate(false)} onCreated={load} />}
+      {deleteTarget && (
+        <ConfirmDeleteModal
+          title="Eliminar proyecto"
+          description={`Vas a eliminar el proyecto ${deleteTarget.code} — ${deleteTarget.name}. Se borrarán también sus pagos, archivos registrados, entregables e historial de actividad. Esta acción no se puede deshacer.`}
+          loading={deleting}
+          error={deleteError}
+          onCancel={() => { setDeleteTarget(null); setDeleteError(null); }}
+          onConfirm={confirmDeleteProject}
+        />
+      )}
     </div>
   );
 }
