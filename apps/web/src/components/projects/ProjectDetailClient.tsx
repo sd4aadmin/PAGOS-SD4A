@@ -14,6 +14,7 @@ import { ActivityTimeline } from "@/components/activity/ActivityTimeline";
 import { ConfirmDeleteModal } from "@/components/ui/ConfirmDeleteModal";
 import { apiErrorMessage, NETWORK_ERROR_MESSAGE } from "@/lib/errors";
 import FilesSection from "@/components/files/FilesSection";
+import { ChangesSection } from "@/components/projects/ChangesSection";
 import { cn } from "@/lib/utils";
 
 const COP = new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 });
@@ -46,8 +47,9 @@ export function ProjectDetailClient({ projectId, role }: { projectId: string; ro
   const isAdmin = role === "ADMIN";
   const canEdit = role === "ADMIN" || role === "ENGINEER";
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  // `silent`: refresca los datos sin mostrar el indicador de carga ni mover el scroll
+  const load = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     const res = await fetch(`/api/proxy/projects/${projectId}`);
     if (res.ok) {
       const data: Project = await res.json();
@@ -418,6 +420,9 @@ export function ProjectDetailClient({ projectId, role }: { projectId: string; ro
 
       {/* ── Archivos ── */}
       <FilesSection projectId={project.id} canUpload={canEdit} role={role} />
+
+      {/* ── Solicitudes de cambio (el admin registra; el cliente las ve) ── */}
+      <ChangesSection projectId={project.id} role={role} onChanged={() => load(true)} />
 
       {/* ── Pagos ── */}
       {role !== "ENGINEER" && <PaymentsSection project={project} role={role} />}

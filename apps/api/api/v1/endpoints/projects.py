@@ -264,6 +264,7 @@ async def delete_project(
     from models.payment import Payment
     from models.activity_log import ActivityLog
     from models.deliverable import Deliverable
+    from models.project_change import ProjectChange
 
     code, name = project.code, project.name
 
@@ -278,6 +279,7 @@ async def delete_project(
     await db.execute(sql_delete(ProjectFile).where(ProjectFile.project_id == project_id))
     await db.execute(sql_delete(Payment).where(Payment.project_id == project_id))
     await db.execute(sql_delete(Deliverable).where(Deliverable.project_id == project_id))
+    await db.execute(sql_delete(ProjectChange).where(ProjectChange.project_id == project_id))
 
     await db.delete(project)
     await db.commit()

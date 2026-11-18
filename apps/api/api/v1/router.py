@@ -10,6 +10,7 @@ from api.v1.endpoints.files import router as files_router
 from api.v1.endpoints.deliverables import router as deliverables_router
 from api.v1.endpoints.engineer_profiles import router as engineer_profiles_router
 from api.v1.endpoints.automation import router as automation_router
+from api.v1.endpoints.changes import router as changes_router
 
 api_router = APIRouter()
 
@@ -23,3 +24,4 @@ api_router.include_router(files_router)
 api_router.include_router(deliverables_router)
 api_router.include_router(engineer_profiles_router)
 api_router.include_router(automation_router)
+api_router.include_router(changes_router)

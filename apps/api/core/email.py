@@ -283,6 +283,31 @@ async def send_project_updated(
     await send_email(to, f"SD4A — Actualización en {project_code}", _base("Proyecto actualizado", body))
 
 
+async def send_project_change(
+    to: str, client_name: str, project_name: str, project_code: str,
+    description: str, charged: bool, amount: str, new_total: str,
+    app_url: str, project_id: str,
+) -> None:
+    if charged:
+        resumen = _info_row("Valor del cambio", f"+{amount}") + _info_row("Nuevo valor del proyecto", new_total)
+        nota = _p("Este cambio fue acordado previamente con nosotros y su valor se suma al valor total del proyecto.")
+    else:
+        resumen = _info_row_raw("Costo", _badge("Sin costo para ti", "#d1fae5", "#065f46"))
+        nota = _p("Este ajuste corresponde a SD4A, por lo que no genera ningún cobro adicional.")
+    body = (
+        _h1("Cambio registrado en tu proyecto")
+        + _p_raw(f"Hola {_esc(client_name)}, registramos un cambio en el proyecto <strong>{_esc(project_name)}</strong>.")
+        + _table(
+            _info_row("Proyecto", f"{project_code} — {project_name}"),
+            _info_row("Cambio", description),
+            resumen,
+        )
+        + nota
+        + _btn("Ver proyecto", f"{app_url}/dashboard/projects/{project_id}")
+    )
+    await send_email(to, f"SD4A — Cambio registrado en {project_code}", _base("Cambio registrado", body))
+
+
 async def send_payment_confirmed(
     to: str, client_name: str, project_name: str, project_code: str,
     payment_type: str, amount: str, app_url: str, project_id: str,
