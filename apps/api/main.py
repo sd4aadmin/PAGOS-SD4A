@@ -65,6 +65,10 @@ async def lifespan(app: FastAPI):
         await conn.execute(text(
             "ALTER TABLE payments ADD COLUMN IF NOT EXISTS billing_phone VARCHAR(30)"
         ))
+        # Estados: de 7 a 4 (Revisión → En curso, Saldo → Terminado, Pagado → Entregado). Idempotente.
+        await conn.execute(text("UPDATE projects SET status = 'IN_PROGRESS' WHERE status::text = 'IN_REVIEW'"))
+        await conn.execute(text("UPDATE projects SET status = 'FINISHED' WHERE status::text = 'PENDING_FINAL'"))
+        await conn.execute(text("UPDATE projects SET status = 'DELIVERED' WHERE status::text = 'PAID'"))
         # Solicitudes de cambio de un proyecto (suman al valor si las paga el cliente)
         await conn.execute(text("""
             CREATE TABLE IF NOT EXISTS project_changes (

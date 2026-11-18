@@ -19,10 +19,6 @@ import { cn } from "@/lib/utils";
 
 const COP = new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", minimumFractionDigits: 0 });
 
-const STATUSES: ProjectStatus[] = [
-  "PENDING_ADVANCE", "IN_PROGRESS", "IN_REVIEW", "FINISHED", "PENDING_FINAL", "PAID", "DELIVERED"
-];
-
 function toDateInput(iso: string | null | undefined): string {
   return iso ? iso.slice(0, 10) : "";
 }
@@ -32,10 +28,6 @@ export function ProjectDetailClient({ projectId, role }: { projectId: string; ro
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [editProgress, setEditProgress] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [editStatus, setEditStatus] = useState(false);
-  const [newStatus, setNewStatus] = useState<ProjectStatus>("IN_PROGRESS");
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -54,8 +46,6 @@ export function ProjectDetailClient({ projectId, role }: { projectId: string; ro
     if (res.ok) {
       const data: Project = await res.json();
       setProject(data);
-      setProgress(data.progress);
-      setNewStatus(data.status);
       setStartDate(toDateInput(data.start_date));
       setEstimatedDate(toDateInput(data.estimated_date));
     }
@@ -64,27 +54,15 @@ export function ProjectDetailClient({ projectId, role }: { projectId: string; ro
 
   useEffect(() => { load(); }, [load]);
 
-  async function saveProgress() {
+  // Único cambio de estado manual: Terminado (y reabrir). Lo demás se calcula con los pagos.
+  async function changeStatus(next: ProjectStatus) {
     setSaving(true);
     await fetch(`/api/proxy/projects/${projectId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ progress }),
+      body: JSON.stringify({ status: next }),
     });
-    setEditProgress(false);
-    await load();
-    setSaving(false);
-  }
-
-  async function saveStatus() {
-    setSaving(true);
-    await fetch(`/api/proxy/projects/${projectId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status: newStatus }),
-    });
-    setEditStatus(false);
-    await load();
+    await load(true);
     setSaving(false);
   }
 
@@ -180,6 +158,11 @@ export function ProjectDetailClient({ projectId, role }: { projectId: string; ro
             <span className={cn("px-2.5 py-1 rounded-full text-xs font-semibold", STATUS_COLORS[project.status])}>
               {STATUS_LABELS[project.status]}
             </span>
+            {project.fully_paid && project.status !== "DELIVERED" && (
+              <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
+                Pagado
+              </span>
+            )}
           </div>
           <h1 className="text-xl md:text-2xl font-black leading-tight mb-1">{project.name}</h1>
           {project.description && <p className="text-white/70 text-sm">{project.description}</p>}
@@ -306,105 +289,52 @@ export function ProjectDetailClient({ projectId, role }: { projectId: string; ro
         </div>
       </div>
 
-      {/* ── Pipeline de estado ── */}
+      {/* ── Estado del proyecto (4 pasos; se calcula con los pagos) ── */}
       <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-3">
           <h3 className="font-bold text-foreground flex items-center gap-2">
-            <BadgeCheck className="w-4 h-4" style={{ color: "#0A7881" }} /> Estado del proyecto
+            <BadgeCheck className="w-4 h-4" style={{ color: "#0A7881" }} aria-hidden="true" /> Estado del proyecto
           </h3>
-          {isAdmin && !editStatus && (
+          {isAdmin && project.status === "IN_PROGRESS" && (
             <button
-              onClick={() => setEditStatus(true)}
-              className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-xl border border-border hover:bg-muted transition-colors text-muted-foreground"
+              onClick={() => changeStatus("FINISHED")}
+              disabled={saving}
+              className="flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-xl text-white disabled:opacity-60 transition-opacity"
+              style={{ background: "linear-gradient(135deg,#0A7881,#68B2B7)" }}
             >
-              <Pencil className="w-3 h-3" /> Cambiar
+              {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" /> : <Check className="w-3.5 h-3.5" aria-hidden="true" />}
+              Marcar como terminado
+            </button>
+          )}
+          {isAdmin && project.status === "FINISHED" && (
+            <button
+              onClick={() => changeStatus("IN_PROGRESS")}
+              disabled={saving}
+              className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-xl border border-border hover:bg-muted transition-colors text-muted-foreground disabled:opacity-60"
+            >
+              Reabrir proyecto
             </button>
           )}
         </div>
         <StatusPipeline current={project.status} />
-        {editStatus && (
-          <div className="space-y-3 pt-2 border-t border-border">
-            <select
-              value={newStatus}
-              onChange={(e) => setNewStatus(e.target.value as ProjectStatus)}
-              className="w-full px-3 py-2.5 border border-border rounded-xl text-sm bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-[#0A7881]/30"
-            >
-              {STATUSES.map((s) => (
-                <option key={s} value={s}>{STATUS_LABELS[s]}</option>
-              ))}
-            </select>
-            <div className="flex gap-2">
-              <button onClick={() => setEditStatus(false)} className="flex-1 py-2.5 text-sm border border-border rounded-xl hover:bg-muted text-foreground transition-colors">
-                Cancelar
-              </button>
-              <button
-                onClick={saveStatus}
-                disabled={saving}
-                className="flex-1 py-2.5 text-sm text-white rounded-xl flex items-center justify-center gap-1.5 transition-opacity disabled:opacity-60"
-                style={{ background: "linear-gradient(135deg,#0A7881,#68B2B7)" }}
-              >
-                {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Guardar
-              </button>
-            </div>
-          </div>
-        )}
+        <p className="text-xs text-muted-foreground">{statusHint(project, advanceAmount)}</p>
       </div>
 
-      {/* ── Avance ── */}
-      <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
-        <div className="flex items-center justify-between">
-          <h3 className="font-bold text-foreground flex items-center gap-2">
-            <TrendingUp className="w-4 h-4" style={{ color: "#0A7881" }} /> Avance del proyecto
-          </h3>
-          {canEdit && !editProgress && (
-            <button
-              onClick={() => setEditProgress(true)}
-              className="flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-xl border border-border hover:bg-muted transition-colors text-muted-foreground"
-            >
-              <Pencil className="w-3 h-3" /> Editar
-            </button>
-          )}
-        </div>
+      {/* ── Avance (automático, fijo por estado) ── */}
+      <div className="bg-card border border-border rounded-2xl p-5 space-y-3">
+        <h3 className="font-bold text-foreground flex items-center gap-2">
+          <TrendingUp className="w-4 h-4" style={{ color: "#0A7881" }} aria-hidden="true" /> Avance del proyecto
+        </h3>
         <div className="flex items-center gap-4">
           <div className="flex-1 bg-muted rounded-full h-3 overflow-hidden">
             <div
               className="h-3 rounded-full transition-all"
-              style={{
-                width: `${editProgress ? progress : project.progress}%`,
-                background: "linear-gradient(90deg,#0A7881,#9BE3BF)",
-              }}
+              style={{ width: `${project.progress}%`, background: "linear-gradient(90deg,#0A7881,#9BE3BF)" }}
             />
           </div>
-          <span className="text-2xl font-black text-foreground w-16 text-right">
-            {editProgress ? progress : project.progress}%
-          </span>
+          <span className="text-2xl font-black text-foreground w-16 text-right">{project.progress}%</span>
         </div>
-        {editProgress && (
-          <div className="space-y-3 pt-2 border-t border-border">
-            <div className="flex items-center gap-4">
-              <input
-                type="range" min={0} max={100} value={progress}
-                onChange={(e) => setProgress(Number(e.target.value))}
-                className="flex-1"
-                style={{ accentColor: "#0A7881" }}
-              />
-              <span className="text-xl font-black text-foreground w-12 text-right">{progress}%</span>
-            </div>
-            <div className="flex gap-2">
-              <button onClick={() => setEditProgress(false)} className="flex-1 py-2.5 text-sm border border-border rounded-xl hover:bg-muted text-foreground transition-colors">
-                Cancelar
-              </button>
-              <button
-                onClick={saveProgress}
-                disabled={saving}
-                className="flex-1 py-2.5 text-sm text-white rounded-xl flex items-center justify-center gap-1.5 disabled:opacity-60"
-                style={{ background: "linear-gradient(135deg,#0A7881,#68B2B7)" }}
-              >
-                {saving && <Loader2 className="w-3.5 h-3.5 animate-spin" />} Guardar
-              </button>
-            </div>
-          </div>
-        )}
+        <p className="text-xs text-muted-foreground">Se actualiza solo según el estado del proyecto.</p>
       </div>
 
       {/* ── Ingeniero asignado (admin only) ── */}
@@ -451,13 +381,29 @@ export function ProjectDetailClient({ projectId, role }: { projectId: string; ro
   );
 }
 
+/* ── Texto de ayuda bajo el estado ── */
+function statusHint(p: Project, advanceAmount: number): string {
+  const pending = Math.max(Number(p.total_value) - Number(p.amount_paid), 0);
+  switch (p.status) {
+    case "PENDING_ADVANCE":
+      return `Pasa a «En curso» cuando se confirme el anticipo (${COP.format(advanceAmount)}).`;
+    case "IN_PROGRESS":
+      return p.fully_paid
+        ? "El valor total ya está pagado. Al marcar el proyecto como terminado pasa directo a «Entregado»."
+        : "Se marca como terminado cuando el trabajo esté listo. Ahí queda el saldo por pagar.";
+    case "FINISHED":
+      return `Pasa a «Entregado» cuando se pague el saldo (${COP.format(pending)}). Mientras tanto las descargas están bloqueadas.`;
+    case "DELIVERED":
+      return p.delivered_at ? `Pagado y entregado el ${new Date(p.delivered_at).toLocaleDateString("es-CO")}.` : "Pagado y entregado.";
+  }
+}
+
 /* ── Pipeline visual ── */
 function StatusPipeline({ current }: { current: ProjectStatus }) {
-  const steps: ProjectStatus[] = ["PENDING_ADVANCE", "IN_PROGRESS", "IN_REVIEW", "FINISHED", "PENDING_FINAL", "PAID", "DELIVERED"];
+  const steps: ProjectStatus[] = ["PENDING_ADVANCE", "IN_PROGRESS", "FINISHED", "DELIVERED"];
   const idx = steps.indexOf(current);
   const SHORT: Record<string, string> = {
-    PENDING_ADVANCE: "Anticipo", IN_PROGRESS: "En curso", IN_REVIEW: "Revisión",
-    FINISHED: "Terminado", PENDING_FINAL: "Saldo", PAID: "Pagado", DELIVERED: "Entregado",
+    PENDING_ADVANCE: "Anticipo", IN_PROGRESS: "En curso", FINISHED: "Terminado", DELIVERED: "Entregado",
   };
   return (
     <div className="flex items-start gap-0 overflow-x-auto pb-2 -mx-1 px-1">
@@ -483,7 +429,7 @@ function StatusPipeline({ current }: { current: ProjectStatus }) {
               </span>
             </div>
             {i < steps.length - 1 && (
-              <div className={cn("h-0.5 w-5 mt-4 shrink-0", done ? "bg-[#0A7881]" : "bg-border")} />
+              <div className={cn("h-0.5 w-10 sm:w-16 mt-4 shrink-0", done ? "bg-[#0A7881]" : "bg-border")} />
             )}
           </div>
         );

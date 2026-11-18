@@ -17,6 +17,7 @@ from schemas.payment import (
 from core.wompi import build_checkout_url, verify_webhook_signature, amount_to_cents
 from core.config import settings
 from core.audit import log_action
+from core.project_status import refresh_project_status
 import asyncio
 import core.email as mailer
 import core.admin_notify as admin_notify
@@ -310,6 +311,10 @@ async def update_payment_status(
     elif new_status == PaymentStatus.PENDING:
         payment.confirmed_at = None
 
+    proj = (await db.execute(select(Project).where(Project.id == payment.project_id))).scalar_one_or_none()
+    if proj:
+        await refresh_project_status(db, proj)
+
     old_str = old_status if isinstance(old_status, str) else old_status.value
     await log_action(db, "PAYMENT_STATUS_UPDATED",
                      f"Estado de pago modificado: {PAYMENT_STATUS_ES.get(old_str, old_str)} → {PAYMENT_STATUS_ES.get(new_status.value, new_status.value)}",
@@ -360,13 +365,11 @@ async def wompi_webhook(event: WompiWebhookEvent, db: AsyncSession = Depends(get
         payment.wompi_id = tx_id
         payment.confirmed_at = datetime.now(timezone.utc).replace(tzinfo=None)
 
-        # Auto-advance project status
+        # El estado del proyecto se recalcula solo según lo pagado (anticipo → En curso;
+        # Terminado + pago total → Entregado)
         proj = (await db.execute(select(Project).where(Project.id == payment.project_id))).scalar_one_or_none()
         if proj:
-            if payment.type == PaymentType.ADVANCE and proj.status == ProjectStatus.PENDING_ADVANCE:
-                proj.status = ProjectStatus.IN_PROGRESS
-            elif payment.type == PaymentType.FINAL and proj.status == ProjectStatus.PENDING_FINAL:
-                proj.status = ProjectStatus.PAID
+            await refresh_project_status(db, proj)
 
     elif tx_status in ("DECLINED", "VOIDED", "ERROR"):
         payment.status = PaymentStatus.FAILED
@@ -435,7 +438,11 @@ async def delete_payment(
                      f"Pago eliminado: {PAYMENT_TYPE_ES.get(payment.type, payment.type)} ${float(payment.amount):,.0f} COP",
                      user_id=current_user.id, project_id=payment.project_id,
                      metadata={"payment_id": payment_id})
+    project_id = payment.project_id
     await db.delete(payment)
+    proj = (await db.execute(select(Project).where(Project.id == project_id))).scalar_one_or_none()
+    if proj:
+        await refresh_project_status(db, proj)  # si era un pago confirmado, el proyecto puede volver a Terminado
     await db.commit()
 
 
@@ -459,10 +466,7 @@ async def manual_confirm(
 
     proj = (await db.execute(select(Project).where(Project.id == payment.project_id))).scalar_one_or_none()
     if proj:
-        if payment.type == PaymentType.ADVANCE and proj.status == ProjectStatus.PENDING_ADVANCE:
-            proj.status = ProjectStatus.IN_PROGRESS
-        elif payment.type == PaymentType.FINAL and proj.status == ProjectStatus.PENDING_FINAL:
-            proj.status = ProjectStatus.PAID
+        await refresh_project_status(db, proj)
 
     await log_action(db, "PAYMENT_CONFIRMED",
                      f"{PAYMENT_TYPE_ES.get(payment.type, payment.type)} confirmado manualmente: ${float(payment.amount):,.0f} COP",

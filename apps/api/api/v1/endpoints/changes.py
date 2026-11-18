@@ -18,6 +18,7 @@ from models.project import Project
 from models.project_change import ProjectChange
 from schemas.change import ProjectChangeCreate, ProjectChangeOut, ChangeResponsible
 from core.audit import log_action
+from core.project_status import refresh_project_status, confirmed_paid_total
 from core.config import settings
 import core.email as mailer
 
@@ -95,6 +96,7 @@ async def create_change(
         created_by=current_user.id,
     )
     db.add(change)
+    await refresh_project_status(db, proj)  # el nuevo valor puede dejar saldo pendiente (Entregado → Terminado)
 
     cobro = f"+{_cop(body.amount)}" if body.amount > 0 else "sin cobro (responsabilidad de SD4A)"
     await log_action(
@@ -147,7 +149,16 @@ async def delete_change(
                 status_code=400,
                 detail="No se puede eliminar: el valor del proyecto quedaría en cero o negativo.",
             )
+        if await confirmed_paid_total(db, project_id) > restante:
+            raise HTTPException(
+                status_code=400,
+                detail="No se puede eliminar: el cliente ya pagó más de lo que quedaría como valor del proyecto. "
+                       "Ajusta primero ese pago.",
+            )
         proj.total_value = restante
+
+    await db.delete(change)
+    await refresh_project_status(db, proj)  # al bajar el valor, un proyecto Terminado y pagado pasa a Entregado
 
     await log_action(
         db, "CHANGE_REQUEST_DELETED",
@@ -155,5 +166,4 @@ async def delete_change(
         user_id=current_user.id, project_id=project_id,
         metadata={"change_id": change_id, "amount": str(change.amount)},
     )
-    await db.delete(change)
     await db.commit()

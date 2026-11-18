@@ -229,9 +229,9 @@ async def send_status_changed(
     old_status: str, new_status: str, app_url: str, project_id: str,
 ) -> None:
     status_map = {
-        "PENDING_ADVANCE": "Pendiente anticipo", "IN_PROGRESS": "En ejecución",
-        "IN_REVIEW": "En revisión", "FINISHED": "Finalizado",
-        "PENDING_FINAL": "Pendiente pago final", "PAID": "Pagado", "DELIVERED": "Entregado",
+        "PENDING_ADVANCE": "Anticipo", "IN_PROGRESS": "En curso",
+        "IN_REVIEW": "En curso", "FINISHED": "Terminado",
+        "PENDING_FINAL": "Terminado", "PAID": "Entregado", "DELIVERED": "Entregado",
     }
     new_label = status_map.get(new_status, new_status)
     old_label = status_map.get(old_status, old_status)
@@ -257,9 +257,9 @@ async def send_project_updated(
     # Internal ID fields — never shown to clients
     skip_fields = {"engineer_profile_id", "assigned_engineer_id", "drive_folder_id", "client_id"}
     status_map = {
-        "PENDING_ADVANCE": "Pendiente anticipo", "IN_PROGRESS": "En ejecución",
-        "IN_REVIEW": "En revisión", "FINISHED": "Finalizado",
-        "PENDING_FINAL": "Pendiente pago final", "PAID": "Pagado", "DELIVERED": "Entregado",
+        "PENDING_ADVANCE": "Anticipo", "IN_PROGRESS": "En curso",
+        "IN_REVIEW": "En curso", "FINISHED": "Terminado",
+        "PENDING_FINAL": "Terminado", "PAID": "Entregado", "DELIVERED": "Entregado",
     }
     rows = ""
     for key, val in changes.items():

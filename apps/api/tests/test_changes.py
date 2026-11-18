@@ -52,6 +52,9 @@ class _Res:
     def scalar_one_or_none(self):
         return self.valor
 
+    def scalar_one(self):
+        return self.valor
+
     def all(self):
         return self.valor
 
@@ -74,6 +77,9 @@ class _DbFalsa:
     async def commit(self):
         self.commits += 1
 
+    async def flush(self):
+        pass
+
     async def refresh(self, obj):
         if getattr(obj, "created_at", None) is None:
             obj.created_at = datetime.utcnow()
@@ -81,7 +87,7 @@ class _DbFalsa:
 
 def _proyecto(client_id="c1", total="1000000"):
     return SimpleNamespace(id="p1", code="SD4A-2026-001", name="Proyecto", client_id=client_id,
-                           total_value=Decimal(total))
+                           total_value=Decimal(total), status="IN_PROGRESS", advance_percent=30, delivered_at=None)
 
 
 CLIENTE = SimpleNamespace(id="c1", email="cliente@example.com", name="Cliente")
@@ -102,7 +108,7 @@ class EndpointsTest(unittest.TestCase):
 
     def test_admin_registra_cambio_del_cliente_y_suma_al_valor(self):
         proyecto = _proyecto()
-        db = _DbFalsa(proyecto, CLIENTE)
+        db = _DbFalsa(proyecto, 0, CLIENTE)  # proyecto, lo pagado, cliente
         self._usar(db, "ADMIN")
         r = self.client.post("/api/v1/projects/p1/changes",
                              json={"description": "Agregar un piso", "responsible": "CLIENT", "amount": 2500000})
@@ -113,7 +119,7 @@ class EndpointsTest(unittest.TestCase):
 
     def test_cambio_de_sd4a_no_modifica_el_valor_pero_notifica(self):
         proyecto = _proyecto()
-        db = _DbFalsa(proyecto, CLIENTE)
+        db = _DbFalsa(proyecto, 0, CLIENTE)
         self._usar(db, "ADMIN")
         r = self.client.post("/api/v1/projects/p1/changes",
                              json={"description": "Plano mal dimensionado", "responsible": "SD4A", "amount": 500})
@@ -146,12 +152,22 @@ class EndpointsTest(unittest.TestCase):
         proyecto = _proyecto(total="3500000")
         cambio = SimpleNamespace(id="x", project_id="p1", description="Cambio", responsible="CLIENT",
                                  amount=Decimal("2500000"))
-        db = _DbFalsa(proyecto, cambio)
+        db = _DbFalsa(proyecto, cambio, 0, 0)  # proyecto, cambio, lo pagado (guarda), lo pagado (estado)
         self._usar(db, "ADMIN")
         r = self.client.delete("/api/v1/projects/p1/changes/x")
         self.assertEqual(r.status_code, 204, r.text)
         self.assertEqual(proyecto.total_value, Decimal("1000000"))
         self.assertEqual(db.borrados, [cambio])
+
+    def test_no_se_elimina_un_cambio_que_el_cliente_ya_pago(self):
+        proyecto = _proyecto(total="3500000")
+        cambio = SimpleNamespace(id="x", project_id="p1", description="Cambio", responsible="CLIENT",
+                                 amount=Decimal("2500000"))
+        self._usar(_DbFalsa(proyecto, cambio, Decimal("3500000")), "ADMIN")  # el cliente ya pagó todo
+        r = self.client.delete("/api/v1/projects/p1/changes/x")
+        self.assertEqual(r.status_code, 400)
+        self.assertIn("ya pagó", r.json()["detail"])
+        self.assertEqual(proyecto.total_value, Decimal("3500000"))
 
     def test_no_se_elimina_si_el_valor_quedaria_en_cero(self):
         proyecto = _proyecto(total="1000000")

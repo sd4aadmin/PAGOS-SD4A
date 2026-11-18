@@ -29,7 +29,7 @@ export function EngineerDashboard({ userName }: { userName: string }) {
 
   useEffect(() => { load(); }, [load]);
 
-  const inProgress = projects.filter((p) => p.status === "IN_PROGRESS" || p.status === "IN_REVIEW");
+  const inProgress = projects.filter((p) => p.status === "IN_PROGRESS");
   const avgProgress = projects.length
     ? Math.round(projects.reduce((s, p) => s + p.progress, 0) / projects.length)
     : 0;

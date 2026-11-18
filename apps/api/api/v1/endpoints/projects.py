@@ -13,6 +13,7 @@ from models.project import Project, ProjectMember, ProjectStatus
 from schemas.project import ProjectCreate, ProjectUpdate, ProjectOut, AddMemberBody
 from core.audit import log_action
 from core.permissions import admin_only_fields_touched
+from core.project_status import canonical_status, progress_for, is_fully_paid, confirmed_paid_total, refresh_project_status
 from core.config import settings
 import asyncio
 import core.email as mailer
@@ -20,8 +21,8 @@ import core.email as mailer
 router = APIRouter(prefix="/projects", tags=["projects"])
 
 
-async def _build_out(project: Project, db: AsyncSession) -> ProjectOut:
-    """Populate client info, member ids, and engineer profile."""
+async def _build_out(project: Project, db: AsyncSession, paid=None) -> ProjectOut:
+    """Populate client info, member ids, engineer profile y lo pagado."""
     from sqlalchemy import select as sel
     from models.engineer_profile import EngineerProfile
     client_result = await db.execute(sel(User).where(User.id == project.client_id))
@@ -41,15 +42,20 @@ async def _build_out(project: Project, db: AsyncSession) -> ProjectOut:
         ep = ep_result.scalar_one_or_none()
         engineer_profile_name = ep.name if ep else None
 
+    if paid is None:
+        paid = await confirmed_paid_total(db, project.id)
+
     return ProjectOut(
         id=project.id,
         code=project.code,
         name=project.name,
         description=project.description,
-        status=project.status,
+        status=canonical_status(project.status),
         total_value=project.total_value,
         advance_percent=project.advance_percent,
-        progress=project.progress,
+        progress=progress_for(project.status),  # fijo por estado: ya no se edita a mano
+        amount_paid=paid,
+        fully_paid=is_fully_paid(project.total_value, paid),
         start_date=project.start_date,
         estimated_date=project.estimated_date,
         delivered_at=project.delivered_at,
@@ -104,7 +110,17 @@ async def list_projects(
     result = await db.execute(q)
     projects = result.scalars().all()
 
-    return [await _build_out(p, db) for p in projects]
+    from sqlalchemy import func as sqlfunc
+    from models.payment import Payment, PaymentStatus
+    paid_rows = (await db.execute(
+        select(Payment.project_id, sqlfunc.sum(Payment.amount))
+        .where(Payment.status == PaymentStatus.CONFIRMED)
+        .group_by(Payment.project_id)
+    )).all()
+    paid_map = {pid: total for pid, total in paid_rows}
+
+    from decimal import Decimal
+    return [await _build_out(p, db, paid=paid_map.get(p.id, Decimal("0"))) for p in projects]
 
 
 # ─── CREATE ───────────────────────────────────────────────────────────────────
@@ -206,9 +222,17 @@ async def update_project(
             detail=f"Solo un administrador puede modificar: {', '.join(blocked)}",
         )
 
-    old_status = str(project.status)
+    changes.pop("progress", None)  # el avance es automático (fijo por estado)
+    if "status" in changes:
+        changes["status"] = canonical_status(changes["status"])
+
+    old_status = canonical_status(project.status)
     for field, value in changes.items():
         setattr(project, field, value)
+
+    # Entregado no se puede forzar: depende de que esté Terminado y pagado por completo
+    if "status" in changes or "total_value" in changes:
+        await refresh_project_status(db, project)
 
     project.updated_at = datetime.now(timezone.utc)
     await log_action(db, "PROJECT_UPDATED", f"Proyecto {project.code} actualizado",
@@ -220,7 +244,7 @@ async def update_project(
     client_result = await db.execute(select(User).where(User.id == project.client_id))
     client = client_result.scalar_one_or_none()
     if client and changes:
-        new_status = str(project.status)
+        new_status = canonical_status(project.status)
         if "status" in changes and old_status != new_status:
             mailer.fire(mailer.send_status_changed(
                 to=client.email,

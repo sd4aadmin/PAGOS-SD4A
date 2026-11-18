@@ -24,9 +24,9 @@ export function ClientDashboard({ userName }: { userName: string }) {
       .catch(() => setLoading(false));
   }, []);
 
-  const active         = projects.filter((p) => !["DELIVERED", "PAID"].includes(p.status));
+  const active         = projects.filter((p) => p.status !== "DELIVERED");
   const delivered      = projects.filter((p) => p.status === "DELIVERED");
-  const pendingPayment = projects.filter((p) => p.status === "PENDING_ADVANCE" || p.status === "PENDING_FINAL");
+  const pendingPayment = projects.filter((p) => p.status === "PENDING_ADVANCE" || p.status === "FINISHED");
 
   if (loading) {
     return (

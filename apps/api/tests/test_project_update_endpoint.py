@@ -39,6 +39,9 @@ class _Resultado:
     def scalar_one_or_none(self):
         return self._valor
 
+    def scalar_one(self):
+        return 0  # lo pagado: sin pagos confirmados
+
 
 class _BaseFalsa:
     """Devuelve siempre el proyecto de prueba; el commit/refresh no hacen nada."""
@@ -50,6 +53,9 @@ class _BaseFalsa:
         return _Resultado(self.proyecto)
 
     def add(self, *_a, **_k):
+        pass
+
+    async def flush(self):
         pass
 
     async def commit(self):
@@ -92,17 +98,30 @@ class ActualizarProyectoTest(unittest.TestCase):
         self.assertEqual(r.status_code, 403)
         self.assertEqual(self.proyecto.status, "IN_PROGRESS")
 
-    def test_ingeniero_si_puede_actualizar_el_avance(self):
+    def test_ingeniero_si_puede_actualizar_la_descripcion(self):
         self._como("ENGINEER")
-        r = self.client.patch("/api/v1/projects/p1", json={"progress": 60})
-        self.assertNotEqual(r.status_code, 403)
-        self.assertEqual(self.proyecto.progress, 60)
+        r = self.client.patch("/api/v1/projects/p1", json={"description": "Nueva descripcion"})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(self.proyecto.description, "Nueva descripcion")
 
-    def test_admin_si_puede_cambiar_el_estado(self):
+    def test_el_avance_ya_no_se_edita_a_mano(self):
         self._como("ADMIN")
-        r = self.client.patch("/api/v1/projects/p1", json={"status": "IN_REVIEW"})
-        self.assertNotEqual(r.status_code, 403)
-        self.assertEqual(self.proyecto.status, "IN_REVIEW")
+        r = self.client.patch("/api/v1/projects/p1", json={"progress": 60})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(self.proyecto.progress, 10)       # el valor guardado no cambia
+        self.assertEqual(r.json()["progress"], 50)         # el avance sale del estado (En curso = 50)
+
+    def test_admin_marca_terminado(self):
+        self._como("ADMIN")
+        r = self.client.patch("/api/v1/projects/p1", json={"status": "FINISHED"})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(self.proyecto.status, "FINISHED")   # sin pago total no pasa a Entregado
+        self.assertEqual(r.json()["progress"], 100)
+
+    def test_un_estado_antiguo_se_guarda_como_el_nuevo(self):
+        self._como("ADMIN")
+        self.client.patch("/api/v1/projects/p1", json={"status": "IN_REVIEW"})
+        self.assertEqual(self.proyecto.status, "IN_PROGRESS")
 
 
 if __name__ == "__main__":

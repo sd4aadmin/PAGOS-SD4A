@@ -58,8 +58,8 @@ export function AdminDashboard({ userName }: { userName: string }) {
 
   useEffect(() => { load(); }, [load]);
 
-  const active  = projects.filter((p) => p.status === "IN_PROGRESS" || p.status === "IN_REVIEW");
-  const pending = projects.filter((p) => p.status === "PENDING_ADVANCE" || p.status === "PENDING_FINAL");
+  const active  = projects.filter((p) => p.status === "IN_PROGRESS");
+  const pending = projects.filter((p) => p.status === "PENDING_ADVANCE" || p.status === "FINISHED");
   const avgProgress = projects.length
     ? Math.round(projects.reduce((s, p) => s + p.progress, 0) / projects.length)
     : 0;

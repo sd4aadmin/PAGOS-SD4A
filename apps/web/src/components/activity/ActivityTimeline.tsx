@@ -66,12 +66,12 @@ const TERM_TRANSLATIONS: Record<string, string> = {
   CONFIRMED: "Confirmado",
   PENDING: "Pendiente",
   FAILED: "Fallido",
-  IN_PROGRESS: "En ejecución",
-  PENDING_ADVANCE: "Pendiente anticipo",
-  PENDING_FINAL: "Pendiente pago final",
-  IN_REVIEW: "En revisión",
+  IN_PROGRESS: "En curso",
+  PENDING_ADVANCE: "Anticipo",
+  PENDING_FINAL: "Terminado",
+  IN_REVIEW: "En curso",
   FINISHED: "Terminado",
-  PAID: "Pagado",
+  PAID: "Entregado",
   DELIVERED: "Entregado",
 };
 

@@ -63,6 +63,8 @@ class ProjectOut(BaseModel):
     total_value: Decimal
     advance_percent: int
     progress: int
+    amount_paid: Decimal = Decimal("0")
+    fully_paid: bool = False
     start_date: Optional[datetime]
     estimated_date: Optional[datetime]
     delivered_at: Optional[datetime]
