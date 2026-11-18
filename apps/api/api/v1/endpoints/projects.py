@@ -12,6 +12,7 @@ from models.user import User, Role
 from models.project import Project, ProjectMember, ProjectStatus
 from schemas.project import ProjectCreate, ProjectUpdate, ProjectOut, AddMemberBody
 from core.audit import log_action
+from core.permissions import admin_only_fields_touched
 from core.config import settings
 import asyncio
 import core.email as mailer
@@ -194,6 +195,17 @@ async def update_project(
         raise HTTPException(status_code=404, detail="Proyecto no encontrado")
 
     changes = body.model_dump(exclude_none=True)
+
+    # Seguridad: valor, anticipo, estado y carpeta de Drive solo los cambia un ADMIN.
+    # Si un ingeniero pudiera editarlos, bajaría el valor del proyecto y el cliente
+    # descargaría los archivos sin pagar.
+    blocked = admin_only_fields_touched(current_user.role, changes)
+    if blocked:
+        raise HTTPException(
+            status_code=403,
+            detail=f"Solo un administrador puede modificar: {', '.join(blocked)}",
+        )
+
     old_status = str(project.status)
     for field, value in changes.items():
         setattr(project, field, value)
