@@ -120,7 +120,7 @@ export function ChangesSection({
                         : "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300")
                     }
                   >
-                    {c.responsible === "CLIENT" ? "A cargo del cliente" : "Error de SD4A · sin costo"}
+                    {c.responsible === "CLIENT" ? "A cargo del cliente" : "SD4A · sin costo"}
                   </span>
                   <span>{formatDate(c.created_at)}</span>
                   {isAdmin && c.created_by_name && <span>Registró: {c.created_by_name}</span>}
@@ -159,7 +159,7 @@ export function ChangesSection({
           description={
             toDelete.charged
               ? `Vas a eliminar este cambio y se restarán ${formatCurrency(Number(toDelete.amount))} del valor del proyecto. Úsalo solo si lo registraste por error.`
-              : "Vas a eliminar este cambio del historial del proyecto. No afecta el valor, porque era un error de SD4A sin cobro."
+              : "Vas a eliminar este cambio del historial del proyecto. No afecta el valor, porque estaba a cargo de SD4A y no tenía cobro."
           }
           loading={deleting}
           error={deleteError}
@@ -249,7 +249,7 @@ function ChangeModal({
             <legend className="block text-sm font-medium text-foreground mb-1.5">¿A quién corresponde?</legend>
             <div className="space-y-2">
               {option("CLIENT", "Al cliente", "Se cobra: el valor se suma al valor del proyecto.")}
-              {option("SD4A", "A SD4A (error nuestro)", "No se cobra. Queda registrado y el cliente lo ve.")}
+              {option("SD4A", "A SD4A", "No se cobra. Queda registrado y el cliente lo ve.")}
             </div>
           </fieldset>
 
